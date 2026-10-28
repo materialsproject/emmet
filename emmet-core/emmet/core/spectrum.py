@@ -4,7 +4,7 @@ from pydantic import Field
 
 from emmet.core.base import EmmetBaseModel
 from emmet.core.structure import StructureMetadata
-from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.types.typing import DateTimeType, TaskIdentifierType
 
 
 class SpectrumDoc(StructureMetadata, EmmetBaseModel):
@@ -15,7 +15,7 @@ class SpectrumDoc(StructureMetadata, EmmetBaseModel):
 
     spectrum_name: str
 
-    task_id: IdentifierType | None = Field(
+    task_id: TaskIdentifierType | None = Field(
         None,
         description="The ID of the material, used as a universal reference across proeprty documents. "
         "This comes in an alphanumeric form.",

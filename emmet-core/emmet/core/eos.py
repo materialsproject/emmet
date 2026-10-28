@@ -9,7 +9,7 @@ from pydantic import BaseModel, BeforeValidator, Field
 from emmet.core.io.pymatgen import EOS, EOSError
 
 from emmet.core.types.enums import ValueEnum
-from emmet.core.types.typing import IdentifierType
+from emmet.core.types.typing import IdentifierType, TaskIdentifierType
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -112,7 +112,7 @@ def _migrate_legacy_data(
 class EOSDoc(BaseModel):
     """Fitted equations of state, and energy-volume fit data."""
 
-    task_id: IdentifierType | None = Field(
+    task_id: TaskIdentifierType | None = Field(
         None,
         description="task_id corresponding to this EOS document",
     )

@@ -7,7 +7,7 @@ from warnings import warn
 
 from pydantic import BaseModel, Field
 
-from emmet.core.types.typing import DateTimeType, IdentifierType
+from emmet.core.types.typing import DateTimeType, TaskIdentifierType
 from emmet.core.vasp.models import ChgcarLike
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ class VolumetricDataDoc(BaseModel):
         description="Timestamp for the most recent update to the charge density data.",
     )
 
-    task_id: IdentifierType | None = Field(
+    task_id: TaskIdentifierType | None = Field(
         None,
         description="The Materials Project ID of the calculation producing the charge density data. "
         "This comes in the form: mp-******.",

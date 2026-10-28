@@ -20,7 +20,7 @@ from emmet.core.math import Matrix3D, MatrixVoigt
 from emmet.core.settings import EmmetSettings
 from emmet.core.types.enums import TaskState
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.types.typing import IdentifierType
+from emmet.core.types.typing import IdentifierType, TaskIdentifierType
 
 SETTINGS = EmmetSettings()
 
@@ -112,7 +112,7 @@ class FittingData(BaseModel):
     second_pk_stresses: list[Matrix3D] = Field(
         description="Second Piola-Kirchhoff stress tensors on structures"
     )
-    deformation_tasks: list[IdentifierType] | None = Field(
+    deformation_tasks: list[TaskIdentifierType] | None = Field(
         None,
         description="Deformation task ids corresponding to the strained structures",
     )
@@ -124,7 +124,7 @@ class FittingData(BaseModel):
     equilibrium_cauchy_stress: Matrix3D | None = Field(
         None, description="Cauchy stress tensor of the relaxed structure"
     )
-    optimization_task: IdentifierType | None = Field(
+    optimization_task: TaskIdentifierType | None = Field(
         None, description="Optimization task corresponding to the relaxed structure"
     )
     optimization_dir_name: str | None = Field(

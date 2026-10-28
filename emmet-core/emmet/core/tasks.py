@@ -43,6 +43,7 @@ from emmet.core.types.typing import (
     JsonDictType,
     JsonListType,
     NullableDateTimeType,
+    TaskIdentifierType,
     _deser_json_like,
     _ser_json_like,
 )
@@ -331,7 +332,7 @@ class CoreTaskDoc(StructureMetadata):
     tags: list[str] | None = Field(
         None, title="tag", description="Metadata tagged to a given task."
     )
-    task_id: IdentifierType | None = Field(
+    task_id: TaskIdentifierType | None = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents.",
     )
@@ -909,7 +910,7 @@ class TrajectoryDoc(BaseModel):
 class EntryDoc(BaseModel):
     """Model for task entry data."""
 
-    task_id: str | None = Field(
+    task_id: TaskIdentifierType | None = Field(
         None,
         description="The (task) ID of this calculation, used as a universal reference across property documents."
         "This comes in the form: mp-******.",

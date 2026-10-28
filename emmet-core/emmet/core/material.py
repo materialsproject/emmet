@@ -15,7 +15,12 @@ from emmet.core.types.pymatgen_types.structure_adapter import (
     MoleculeType,
     StructureType,
 )
-from emmet.core.types.typing import DateTimeType, IdentifierType, MaterialIdentifierType
+from emmet.core.types.typing import (
+    DateTimeType,
+    IdentifierType,
+    MaterialIdentifierType,
+    TaskIdentifierType,
+)
 
 if TYPE_CHECKING:
 
@@ -28,7 +33,7 @@ class PropertyOrigin(BaseModel):
     """
 
     name: str = Field(..., description="The property name")
-    task_id: IdentifierType = Field(
+    task_id: TaskIdentifierType = Field(
         ..., description="The calculation ID this property comes from."
     )
     last_updated: DateTimeType = Field(  # type: ignore
@@ -109,7 +114,7 @@ class MaterialsDoc(BasePropertyMetadata):
         description="Initial structures used in the DFT optimizations corresponding to this material.",
     )
 
-    task_ids: list[IdentifierType] = Field(
+    task_ids: list[TaskIdentifierType] = Field(
         [],
         description="List of Calculations IDs used to make this Materials Document.",
     )
