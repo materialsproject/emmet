@@ -16,7 +16,7 @@ from emmet.core.band_theory import (
     _coarse_list_superset,
     _loose_path_match,
 )
-from emmet.core.testing_utils import DataArchive
+from emmet.core.testing_utils import DataArchive, assert_nested_close
 
 if ARROW_COMPATIBLE:
     import pyarrow as pa
@@ -172,7 +172,8 @@ def test_arrow(bs_fixture, dos_fixture):
         elec_bs.model_dump(context={"format": "arrow"}), type=arrowize(ElectronicBS)
     )
     test_arrow_bs_doc = ElectronicBS(**bs_arrow_struct.as_py(maps_as_pydicts="strict"))
-    assert test_arrow_bs_doc == elec_bs
+    # arrow stores band energies and projections as float32
+    assert_nested_close(test_arrow_bs_doc, elec_bs)
 
     _, _, edos = dos_fixture
     dos_arrow_struct = pa.scalar(
@@ -181,7 +182,53 @@ def test_arrow(bs_fixture, dos_fixture):
     test_arrow_dos_doc = ElectronicDos(
         **dos_arrow_struct.as_py(maps_as_pydicts="strict")
     )
-    assert test_arrow_dos_doc == edos
+    # arrow stores densities as float32
+    assert_nested_close(test_arrow_dos_doc, edos)
+
+
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
+def test_arrow_float32_types(bs_fixture, dos_fixture):
+    f32 = pa.float32()
+
+    bs_type = arrowize(ElectronicBS)
+    assert bs_type.field("spin_up_bands").type == pa.list_(pa.list_(f32))
+    assert bs_type.field("spin_down_bands").type == pa.list_(pa.list_(f32))
+    assert bs_type.field("projections").type.field("spin_up").type == pa.large_list(f32)
+    assert bs_type.field("projections").type.field("spin_down").type == pa.large_list(
+        f32
+    )
+    # quantities not downcast: k-points, lattice, Fermi level
+    assert bs_type.field("qpoints").type == pa.list_(pa.list_(pa.float64()))
+    assert bs_type.field("efermi").type == pa.float64()
+
+    dos_type = arrowize(ElectronicDos)
+    assert dos_type.field("spin_up_densities").type == pa.list_(f32)
+    assert dos_type.field("spin_down_densities").type == pa.list_(f32)
+    assert dos_type.field("energies").type == pa.list_(pa.float64())
+    pdos_type = dos_type.field("projected_densities").type
+    assert pdos_type.field("spin_up_densities").type == pa.list_(pa.list_(f32))
+    assert pdos_type.field("spin_down_densities").type == pa.list_(pa.list_(f32))
+
+    # the types are used when building tables, including nested projections
+    _, _, elec_bs = bs_fixture
+    assert elec_bs.projections is not None
+    table = pa.Table.from_pylist(
+        [elec_bs.model_dump(context={"format": "arrow"})],
+        schema=pa.schema(bs_type),
+    )
+    assert table["projections"].type.field("spin_up").type == pa.large_list(f32)
+
+    _, _, edos = dos_fixture
+    assert edos.projected_densities is not None
+    table = pa.Table.from_pylist(
+        [edos.model_dump(context={"format": "arrow"})], schema=pa.schema(dos_type)
+    )
+    assert table["spin_up_densities"].type == pa.list_(f32)
+    assert table["projected_densities"].type.field("spin_up_densities").type == (
+        pa.list_(pa.list_(f32))
+    )
 
 
 def test_obtain_path_type(fe_line_mode_bandstructure):

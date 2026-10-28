@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -10,9 +11,13 @@ from pydantic import BaseModel, Field
 from emmet.core.io.pymatgen import (
     Structure,
     BaseVolumetricData as PmgVolumetricData,
+    Chgcar,
+    Elfcar,
+    Locpot,
     Poscar,
 )
 
+from emmet.core.types.arrow_annotations import Float32Grid
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 
@@ -46,13 +51,64 @@ class ElectronicStep(BaseModel):
 
 
 class VolumetricLabel(ValueEnum):
+    """Labels of the data blocks in CHGCAR-like files.
+
+    - TOTAL / DIFF: the total (charge) density and the spin difference
+        (magnetization density) of a collinear CHGCAR-like file.
+    - DIFF_X / DIFF_Y / DIFF_Z: the magnetization density components of a
+        noncollinear CHGCAR-like file. pymatgen also adds a derived
+        scalar `diff` to noncollinear data, so DIFF may accompany these.
+    - SPIN_UP / SPIN_DOWN: the spin-resolved blocks of LOCPOT and ELFCAR files
+        (pymatgen >= 2026.10 no longer labels these total / diff).
+    """
+
     TOTAL = "total"
     DIFF = "diff"
+    DIFF_X = "diff_x"
+    DIFF_Y = "diff_y"
+    DIFF_Z = "diff_z"
+    SPIN_UP = "spin_up"
+    SPIN_DOWN = "spin_down"
 
-    # NB: we only need these if we have noncolinear calculations
-    # DIFF_X = "diff_x"
-    # DIFF_Y = "diff_y"
-    # DIFF_Z = "diff_z"
+
+VOLUMETRIC_PARSERS: dict[str, type[PmgVolumetricData]] = {
+    "CHGCAR": Chgcar,
+    "CHG": Chgcar,
+    "AECCAR0": Chgcar,
+    "AECCAR1": Chgcar,
+    "AECCAR2": Chgcar,
+    "POT": Chgcar,  # includes augmentation data
+    "PARCHG": Chgcar,
+    "LOCPOT": Locpot,
+    "ELFCAR": Elfcar,
+}
+"""Map of VASP volumetric file types to the pymatgen class which parses them.
+
+LOCPOT and ELFCAR do not contain augmentation charges. Everything else is
+CHGCAR-formatted.
+"""
+
+
+def volumetric_file_type(file_name: str) -> str | None:
+    """Get the type of a volumetric file from its name.
+
+    Calculation suffixes and compression extensions are ignored, e.g.,
+    "CHGCAR.relax1.gz" -> "CHGCAR". Names are matched exactly, so that
+    "PARCHG" is not mistaken for "CHG", or "POTCAR" for "POT".
+
+    Parameters
+    -----------
+    file_name : str
+        The name of a file, not including its parent directories.
+
+    Returns
+    -----------
+    str or None
+        The key of VOLUMETRIC_PARSERS if the name is a known volumetric
+        file type, None otherwise.
+    """
+    base = Path(file_name).name.split(".", 1)[0].upper()
+    return base if base in VOLUMETRIC_PARSERS else None
 
 
 class AugChargeData(BaseModel):
@@ -65,10 +121,15 @@ class AugChargeData(BaseModel):
 class ChgcarLike(BaseModel):
     """Model for VASP CHGCAR-like data.
 
-    Includes CHGCAR, CHG, LOCPOT, ELFCAR, AECCAR0, AECCAR1, AECCAR2, POT.
+    Includes CHGCAR, CHG, LOCPOT, ELFCAR, AECCAR0, AECCAR1, AECCAR2, POT, PARCHG.
     All volumetric data is flattened upon storage in the model from a
     rank-3 tensor.
     C-order is used throughout.
+
+    When serialized to arrow, the volumetric data is stored with 32-bit
+    floats and 64-bit list offsets (see `Float32Grid`). The in-memory model
+    retains full float64 precision, but a round trip through arrow
+    will only preserve values to float32 precision.
     """
 
     identifier: str | None = Field(
@@ -78,7 +139,7 @@ class ChgcarLike(BaseModel):
     labels: list[VolumetricLabel] | None = Field(
         None, description="The spin resolution of the volumetric data."
     )
-    data: list[list[float] | None] | None = Field(
+    data: list[Float32Grid | None] | None = Field(
         description="The primary volumetric data."
     )
     data_rank: list[tuple[int, int, int]] | None = Field(

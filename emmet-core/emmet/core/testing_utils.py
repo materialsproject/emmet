@@ -86,6 +86,58 @@ def assert_schemas_equal(
         assert test_schema == valid_schema
 
 
+def assert_nested_close(
+    test: Any,
+    ref: Any,
+    float_comparator: Callable = _float_comparator,
+    _path: str = "",
+) -> None:
+    """
+    Recursively assert that two (nested) objects are equal, up to float tolerance.
+
+    Unlike `assert_schemas_equal`, this checks both directions: the objects
+    must have the same keys / lengths. Pydantic models are compared by their
+    `model_dump()`, and numpy arrays by value.
+
+    Mainly useful to compare an object with its round-trip through a lossy
+    format, such as float32 columns in arrow.
+
+    Args:
+        test : The object under test.
+        ref : The reference object.
+        float_comparator (Callable) : A method to compare floats. Defaults to
+            math.isclose with rel_tol = 1e-6.
+    """
+    if isinstance(test, BaseModel):
+        test = test.model_dump()
+    if isinstance(ref, BaseModel):
+        ref = ref.model_dump()
+    if isinstance(test, np.ndarray):
+        test = test.tolist()
+    if isinstance(ref, np.ndarray):
+        ref = ref.tolist()
+
+    where = f" at `{_path}`" if _path else ""
+    if isinstance(ref, dict):
+        assert isinstance(test, dict) and set(test) == set(
+            ref
+        ), f"Keys differ{where}: {set(test) ^ set(ref) if isinstance(test, dict) else type(test)}"
+        for k, v in ref.items():
+            assert_nested_close(test[k], v, float_comparator, f"{_path}.{k}")
+    elif isinstance(ref, list | tuple):
+        assert isinstance(test, list | tuple) and len(test) == len(
+            ref
+        ), f"Lengths differ{where}"
+        for i, v in enumerate(ref):
+            assert_nested_close(test[i], v, float_comparator, f"{_path}[{i}]")
+    elif isinstance(ref, float) and not isinstance(ref, bool):
+        assert isinstance(test, int | float) and float_comparator(
+            test, ref
+        ), f"{test} != {ref}{where}"
+    else:
+        assert test == ref, f"{test} != {ref}{where}"
+
+
 @arrow_incompatible
 class DataArchive(BaseModel):
     """Tool to compress test data into a lower disk / innode use file."""

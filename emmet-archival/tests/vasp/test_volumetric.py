@@ -4,6 +4,7 @@ from tempfile import NamedTemporaryFile
 import numpy as np
 
 from emmet.core.io.pymatgen import StructureMatcher, Chgcar, Vasprun
+from emmet.core.testing_utils import assert_nested_close
 
 from emmet.archival.volumetric import VolumetricArchive
 from emmet.archival.vasp.volumetric import DosArchive, BandStructureArchive
@@ -88,7 +89,8 @@ def test_dos(test_dir, tmp_dir):
                     obj.structure, vasprun.complete_dos.structure
                 )
             else:
-                assert v == orig_dos_dict[k]
+                # DOS data is stored as float32
+                assert_nested_close(v, orig_dos_dict[k])
 
 
 def test_bs(test_dir, tmp_dir):
@@ -104,4 +106,5 @@ def test_bs(test_dir, tmp_dir):
                 pmg_from_parquet.structure, vasprun.final_structure
             )
         else:
-            assert v == pmg_bs_dict[k]
+            # band energies and projections are stored as float32
+            assert_nested_close(v, pmg_bs_dict[k])

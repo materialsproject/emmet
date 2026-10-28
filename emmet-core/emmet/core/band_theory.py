@@ -22,6 +22,7 @@ from emmet.core.io.pymatgen import (
 )
 from emmet.core.math import Matrix3D, Vector3D
 from emmet.core.settings import EmmetSettings
+from emmet.core.types.arrow_annotations import Float32Grid, Float32List, Float32Matrix
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
 from emmet.core.vasp.calc_types import RunType
@@ -143,10 +144,10 @@ class ProjectedBS(BaseModel):
             s, py, pz, px, dxy, dyz, dz2, dxz, dx2-y2,...
     """
 
-    spin_up: list[float] | None = Field(
+    spin_up: Float32Grid | None = Field(
         None, description="The flattened spin-up band projections."
     )
-    spin_down: list[float] | None = Field(
+    spin_down: Float32Grid | None = Field(
         None, description="The flattened spin-down band projections."
     )
     rank: tuple[int, int, int, int] = Field(
@@ -190,12 +191,12 @@ class ElectronicBS(BandStructure):
 
     band_gap: float | None = Field(None, description="The value of the band gap.")
 
-    spin_up_bands: list[list[float]] | None = Field(
+    spin_up_bands: Float32Matrix | None = Field(
         None,
         description="The eigen-energies of the spin-up electrons. The first index represents the band, the second the k-point index.",
     )
 
-    spin_down_bands: list[list[float]] | None = Field(
+    spin_down_bands: Float32Matrix | None = Field(
         None,
         description="The eigen-energies of the spin-down electrons. The first index represents the band, the second the k-point index.",
     )
@@ -279,11 +280,11 @@ class ElectronicBS(BandStructure):
 class ProjectedDos(BaseModel):
     """Atom and orbital projected DOS."""
 
-    spin_up_densities: list[list[float] | None] | None = Field(
+    spin_up_densities: list[Float32List | None] | None = Field(
         None, description="The spin-up projected densities of state."
     )
 
-    spin_down_densities: list[list[float] | None] | None = Field(
+    spin_down_densities: list[Float32List | None] | None = Field(
         None, description="The spin-down projected densities of state."
     )
 
@@ -364,11 +365,11 @@ class ProjectedDos(BaseModel):
 class ElectronicDos(BandTheoryBase):
     """Electronic density of states (DOS) with possible projections."""
 
-    spin_up_densities: list[float] | None = Field(
+    spin_up_densities: Float32List | None = Field(
         None, description="The spin-up densities of state."
     )
 
-    spin_down_densities: list[float] | None = Field(
+    spin_down_densities: Float32List | None = Field(
         None, description="The spin-down densities of state."
     )
 
