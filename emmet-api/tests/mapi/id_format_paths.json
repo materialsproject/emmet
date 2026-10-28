@@ -1,0 +1,404 @@
+{
+ "_consumer.resources:settings_resource": {
+  "sub_path": "/",
+  "id_format": null
+ },
+ "_general_store.resources:general_store_resource": {
+  "sub_path": "/",
+  "id_format": null
+ },
+ "_messages.resources:messages_resource": {
+  "sub_path": "/",
+  "id_format": null
+ },
+ "dois.resources:dois_resource": {
+  "sub_path": "/",
+  "id_format": [
+   "material_id -> format_identifier"
+  ]
+ },
+ "legacy.jcesr.resources:jcesr_resource": {
+  "sub_path": "/jcesr/",
+  "id_format": []
+ },
+ "materials.absorption.resources:absorption_resource": {
+  "sub_path": "/absorption/",
+  "id_format": [
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.alloys.resources:alloy_pairs_resource": {
+  "sub_path": "/alloys/",
+  "id_format": [
+   "alloy_pair.id_a -> format_identifier",
+   "alloy_pair.id_b -> format_identifier",
+   "alloy_pair.members.id_ -> format_identifier",
+   "alloy_pair.pair_id.id_a -> format_identifier",
+   "alloy_pair.pair_id.id_b -> format_identifier",
+   "pair_id.id_a -> format_identifier",
+   "pair_id.id_b -> format_identifier"
+  ]
+ },
+ "materials.bonds.resources:bonds_resource": {
+  "sub_path": "/bonds/",
+  "id_format": [
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.charge_density.resources:charge_density_url_resource": {
+  "sub_path": "/charge_density/",
+  "id_format": null
+ },
+ "materials.chemenv.resources:chemenv_resource": {
+  "sub_path": "/chemenv/",
+  "id_format": [
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.conversion_electrodes.resources:conversion_electrodes_resource": {
+  "sub_path": "/conversion_electrodes/",
+  "id_format": [
+   "electrode_object.voltage_pairs.entries_charge.data.material_id -> format_identifier",
+   "electrode_object.voltage_pairs.entries_charge.data.task_id -> format_task_id",
+   "electrode_object.voltage_pairs.entries_charge.entry_id -> format_entry_id",
+   "electrode_object.voltage_pairs.entries_discharge.data.material_id -> format_identifier",
+   "electrode_object.voltage_pairs.entries_discharge.data.task_id -> format_task_id",
+   "electrode_object.voltage_pairs.entries_discharge.entry_id -> format_entry_id",
+   "electrode_object.voltage_pairs.working_ion_entry.data.material_id -> format_identifier",
+   "electrode_object.voltage_pairs.working_ion_entry.data.task_id -> format_task_id",
+   "electrode_object.voltage_pairs.working_ion_entry.entry_id -> format_entry_id",
+   "electrode_object.working_ion_entry.data.material_id -> format_identifier",
+   "electrode_object.working_ion_entry.data.task_id -> format_task_id",
+   "electrode_object.working_ion_entry.entry_id -> format_entry_id",
+   "material_ids -> format_identifier"
+  ]
+ },
+ "materials.dielectric.resources:dielectric_resource": {
+  "sub_path": "/dielectric/",
+  "id_format": [
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.elasticity.resources:elasticity_resource": {
+  "sub_path": "/elasticity/",
+  "id_format": [
+   "fitting_data.deformation_tasks -> format_task_id",
+   "fitting_data.optimization_task -> format_task_id",
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.electronic_structure.resources:bs_resource": {
+  "sub_path": "/electronic_structure/bandstructure/",
+  "id_format": [
+   "bandstructure.hinuma.task_id -> format_task_id",
+   "bandstructure.latimer_munro.task_id -> format_task_id",
+   "bandstructure.setyawan_curtarolo.task_id -> format_task_id",
+   "dos.task_id -> format_task_id",
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.electronic_structure.resources:dos_resource": {
+  "sub_path": "/electronic_structure/dos/",
+  "id_format": [
+   "bandstructure.hinuma.task_id -> format_task_id",
+   "bandstructure.latimer_munro.task_id -> format_task_id",
+   "bandstructure.setyawan_curtarolo.task_id -> format_task_id",
+   "dos.task_id -> format_task_id",
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.electronic_structure.resources:es_resource": {
+  "sub_path": "/electronic_structure/",
+  "id_format": [
+   "bandstructure.hinuma.task_id -> format_task_id",
+   "bandstructure.latimer_munro.task_id -> format_task_id",
+   "bandstructure.setyawan_curtarolo.task_id -> format_task_id",
+   "dos.task_id -> format_task_id",
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.eos.resources:eos_resource": {
+  "sub_path": "/eos/",
+  "id_format": [
+   "task_id -> format_task_id"
+  ]
+ },
+ "materials.grain_boundary.resources:gb_resource": {
+  "sub_path": "/grain_boundaries/",
+  "id_format": [
+   "material_id -> format_identifier"
+  ]
+ },
+ "materials.insertion_electrodes.resources:insertion_electrodes_resource": {
+  "sub_path": "/insertion_electrodes/",
+  "id_format": [
+   "adj_pairs.id_charge -> format_identifier",
+   "adj_pairs.id_discharge -> format_identifier",
+   "electrode_object.stable_entries.data.material_id -> format_identifier",
+   "electrode_object.stable_entries.data.task_id -> format_task_id",
+   "electrode_object.stable_entries.entry_id -> format_entry_id",
+   "electrode_object.unstable_entries.data.material_id -> format_identifier",
+   "electrode_object.unstable_entries.data.task_id -> format_task_id",
+   "electrode_object.unstable_entries.entry_id -> format_entry_id",
+   "electrode_object.voltage_pairs.entry_charge.data.material_id -> format_identifier",
+   "electrode_object.voltage_pairs.entry_charge.data.task_id -> format_task_id",
+   "electrode_object.voltage_pairs.entry_charge.entry_id -> format_entry_id",
+   "electrode_object.voltage_pairs.entry_discharge.data.material_id -> format_identifier",
+   "electrode_object.voltage_pairs.entry_discharge.data.task_id -> format_task_id",
+   "electrode_object.voltage_pairs.entry_discharge.entry_id -> format_entry_id",
+   "electrode_object.voltage_pairs.working_ion_entry.data.material_id -> format_identifier",
+   "electrode_object.voltage_pairs.working_ion_entry.data.task_id -> format_task_id",
+   "electrode_object.voltage_pairs.working_ion_entry.entry_id -> format_entry_id",
+   "electrode_object.working_ion_entry.data.material_id -> format_identifier",
+   "electrode_object.working_ion_entry.data.task_id -> format_task_id",
+   "electrode_object.working_ion_entry.entry_id -> format_entry_id",
+   "id_charge -> format_identifier",
+   "id_discharge -> format_identifier",
+   "material_ids -> format_identifier"
+  ]
+ },
+ "materials.magnetism.resources:magnetism_resource": {
+  "sub_path": "/magnetism/",
+  "id_format": [
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.materials.resources:blessed_tasks_resource": {
+  "sub_path": "/core/blessed_tasks/",
+  "id_format": [
+   "calc_types.*key -> format_task_id",
+   "entries.GGA+U.data.material_id -> format_identifier",
+   "entries.GGA+U.data.task_id -> format_task_id",
+   "entries.GGA+U.entry_id -> format_entry_id",
+   "entries.GGA.data.material_id -> format_identifier",
+   "entries.GGA.data.task_id -> format_task_id",
+   "entries.GGA.entry_id -> format_entry_id",
+   "entries.GGA_U.data.material_id -> format_identifier",
+   "entries.GGA_U.data.task_id -> format_task_id",
+   "entries.GGA_U.entry_id -> format_entry_id",
+   "entries.HSE.data.material_id -> format_identifier",
+   "entries.HSE.data.task_id -> format_task_id",
+   "entries.HSE.entry_id -> format_entry_id",
+   "entries.HSE06.data.material_id -> format_identifier",
+   "entries.HSE06.data.task_id -> format_task_id",
+   "entries.HSE06.entry_id -> format_entry_id",
+   "entries.PBESol.data.material_id -> format_identifier",
+   "entries.PBESol.data.task_id -> format_task_id",
+   "entries.PBESol.entry_id -> format_entry_id",
+   "entries.PBEsol.data.material_id -> format_identifier",
+   "entries.PBEsol.data.task_id -> format_task_id",
+   "entries.PBEsol.entry_id -> format_entry_id",
+   "entries.R2SCAN.data.material_id -> format_identifier",
+   "entries.R2SCAN.data.task_id -> format_task_id",
+   "entries.R2SCAN.entry_id -> format_entry_id",
+   "entries.SCAN.data.material_id -> format_identifier",
+   "entries.SCAN.data.task_id -> format_task_id",
+   "entries.SCAN.entry_id -> format_entry_id",
+   "entries.r2SCAN.data.material_id -> format_identifier",
+   "entries.r2SCAN.data.task_id -> format_task_id",
+   "entries.r2SCAN.entry_id -> format_entry_id",
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id",
+   "run_types.*key -> format_task_id",
+   "task_ids -> format_task_id",
+   "task_types.*key -> format_task_id"
+  ]
+ },
+ "materials.materials.resources:find_structure_resource": {
+  "sub_path": "/core/find_structure/",
+  "id_format": [
+   "material_id -> format_identifier"
+  ]
+ },
+ "materials.materials.resources:formula_autocomplete_resource": {
+  "sub_path": "/core/formula_autocomplete/",
+  "id_format": []
+ },
+ "materials.materials.resources:materials_resource": {
+  "sub_path": "/core/",
+  "id_format": [
+   "calc_types.*key -> format_task_id",
+   "entries.GGA+U.data.material_id -> format_identifier",
+   "entries.GGA+U.data.task_id -> format_task_id",
+   "entries.GGA+U.entry_id -> format_entry_id",
+   "entries.GGA.data.material_id -> format_identifier",
+   "entries.GGA.data.task_id -> format_task_id",
+   "entries.GGA.entry_id -> format_entry_id",
+   "entries.GGA_U.data.material_id -> format_identifier",
+   "entries.GGA_U.data.task_id -> format_task_id",
+   "entries.GGA_U.entry_id -> format_entry_id",
+   "entries.HSE.data.material_id -> format_identifier",
+   "entries.HSE.data.task_id -> format_task_id",
+   "entries.HSE.entry_id -> format_entry_id",
+   "entries.HSE06.data.material_id -> format_identifier",
+   "entries.HSE06.data.task_id -> format_task_id",
+   "entries.HSE06.entry_id -> format_entry_id",
+   "entries.PBESol.data.material_id -> format_identifier",
+   "entries.PBESol.data.task_id -> format_task_id",
+   "entries.PBESol.entry_id -> format_entry_id",
+   "entries.PBEsol.data.material_id -> format_identifier",
+   "entries.PBEsol.data.task_id -> format_task_id",
+   "entries.PBEsol.entry_id -> format_entry_id",
+   "entries.R2SCAN.data.material_id -> format_identifier",
+   "entries.R2SCAN.data.task_id -> format_task_id",
+   "entries.R2SCAN.entry_id -> format_entry_id",
+   "entries.SCAN.data.material_id -> format_identifier",
+   "entries.SCAN.data.task_id -> format_task_id",
+   "entries.SCAN.entry_id -> format_entry_id",
+   "entries.r2SCAN.data.material_id -> format_identifier",
+   "entries.r2SCAN.data.task_id -> format_task_id",
+   "entries.r2SCAN.entry_id -> format_entry_id",
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id",
+   "run_types.*key -> format_task_id",
+   "task_ids -> format_task_id",
+   "task_types.*key -> format_task_id"
+  ]
+ },
+ "materials.mpcomplete.resources:mpcomplete_resource": {
+  "sub_path": "/",
+  "id_format": null
+ },
+ "materials.oxidation_states.resources:oxi_states_resource": {
+  "sub_path": "/oxidation_states/",
+  "id_format": [
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.phonon.resources:phonon_bsdos_resource": {
+  "sub_path": "/phonon/",
+  "id_format": [
+   "identifier -> format_task_id"
+  ]
+ },
+ "materials.piezo.resources:piezo_resource": {
+  "sub_path": "/piezoelectric/",
+  "id_format": [
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.provenance.resources:provenance_resource": {
+  "sub_path": "/provenance/",
+  "id_format": [
+   "history.description.materialsid -> format_identifier",
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.robocrys.resources:robo_resource": {
+  "sub_path": "/robocrys/",
+  "id_format": [
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.robocrys.resources:robo_search_resource": {
+  "sub_path": "/robocrys/text_search/",
+  "id_format": [
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.similarity.resources:similarity_feature_vector_resource": {
+  "sub_path": "/similarity/match/",
+  "id_format": [
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id",
+   "sim.task_id -> format_identifier"
+  ]
+ },
+ "materials.similarity.resources:similarity_resource": {
+  "sub_path": "/similarity/",
+  "id_format": [
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id",
+   "sim.task_id -> format_identifier"
+  ]
+ },
+ "materials.substrates.resources:substrates_resource": {
+  "sub_path": "/substrates/",
+  "id_format": [
+   "film_id -> format_identifier",
+   "sub_id -> format_identifier"
+  ]
+ },
+ "materials.summary.resources:summary_resource": {
+  "sub_path": "/summary/",
+  "id_format": [
+   "bandstructure.hinuma.task_id -> format_task_id",
+   "bandstructure.latimer_munro.task_id -> format_task_id",
+   "bandstructure.setyawan_curtarolo.task_id -> format_task_id",
+   "decomposes_to.material_id -> format_identifier",
+   "dos.task_id -> format_task_id",
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id",
+   "phonon_IDs.* -> format_task_id",
+   "prop_origins.task_id -> format_task_id",
+   "task_ids -> format_task_id",
+   "xas.prop_origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.surface_properties.resources:surface_props_resource": {
+  "sub_path": "/surface_properties/",
+  "id_format": [
+   "material_id -> format_identifier"
+  ]
+ },
+ "materials.synthesis.resources:synth_resource": {
+  "sub_path": "/synthesis/",
+  "id_format": []
+ },
+ "materials.tasks.resources:entries_resource": {
+  "sub_path": "/tasks/entries/",
+  "id_format": [
+   "entry.data.material_id -> format_identifier",
+   "entry.data.task_id -> format_task_id",
+   "entry.entry_id -> format_task_id",
+   "task_id -> format_task_id"
+  ]
+ },
+ "materials.tasks.resources:task_resource": {
+  "sub_path": "/tasks/",
+  "id_format": [
+   "task_id -> format_task_id"
+  ]
+ },
+ "materials.thermo.resources:thermo_resource": {
+  "sub_path": "/thermo/",
+  "id_format": [
+   "decomposes_to.material_id -> format_identifier",
+   "decomposition_enthalpy_decomposes_to.material_id -> format_identifier",
+   "entries.*.data.material_id -> format_identifier",
+   "entries.*.data.task_id -> format_task_id",
+   "entries.*.entry_id -> format_entry_id",
+   "material_id -> format_identifier",
+   "origins.task_id -> format_task_id"
+  ]
+ },
+ "materials.xas.resources:xas_resource": {
+  "sub_path": "/xas/",
+  "id_format": [
+   "spectrum_id -> format_spectrum_id",
+   "task_id -> format_task_id"
+  ]
+ },
+ "molecules.summary.resources:summary_resource": {
+  "sub_path": "/summary/",
+  "id_format": []
+ },
+ "molecules.vibrations.resources:vibration_resource": {
+  "sub_path": "/vibrations/",
+  "id_format": null
+ }
+}

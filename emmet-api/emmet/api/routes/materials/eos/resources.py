@@ -8,7 +8,6 @@ from emmet.api.query_operator import (
 )
 from emmet.api.resource import ReadOnlyResource
 from emmet.core.eos import EOSDoc
-from emmet.core.types.typing import format_task_id
 
 
 def eos_resource(eos_store):
@@ -19,7 +18,7 @@ def eos_resource(eos_store):
             MultiTaskIDQuery(),
             PaginationQuery(),
             SparseFieldsQuery(EOSDoc, default_fields=["task_id"]),
-            IdFormatQuery([("task_id", format_task_id)]),
+            IdFormatQuery(model=EOSDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials EOS"],

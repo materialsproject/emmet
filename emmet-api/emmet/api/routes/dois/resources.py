@@ -1,6 +1,7 @@
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
+    IdFormatQuery,
     MultiMaterialIDQuery,
     PaginationQuery,
     SparseFieldsQuery,
@@ -17,6 +18,7 @@ def dois_resource(dois_store):
             MultiMaterialIDQuery(),
             PaginationQuery(),
             SparseFieldsQuery(DOIDoc, default_fields=["material_id", "doi"]),
+            IdFormatQuery(model=DOIDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["DOIs"],

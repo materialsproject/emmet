@@ -9,7 +9,6 @@ from emmet.api.query_operator import (
 from emmet.api.resource import ReadOnlyResource
 from emmet.api.routes.materials.piezo.query_operators import PiezoelectricQuery
 from emmet.core.polar import PiezoelectricDoc
-from emmet.core.types.typing import format_identifier
 
 
 def piezo_resource(piezo_store):
@@ -23,7 +22,7 @@ def piezo_resource(piezo_store):
             SparseFieldsQuery(
                 PiezoelectricDoc, default_fields=["material_id", "last_updated"]
             ),
-            IdFormatQuery([("material_id", format_identifier)]),
+            IdFormatQuery(model=PiezoelectricDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Piezoelectric"],

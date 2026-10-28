@@ -36,7 +36,7 @@ def task_resource(task_store):
                 CoreTaskDoc,
                 default_fields=["task_id", "formula_pretty", "last_updated"],
             ),
-            IdFormatQuery([("task_id", format_task_id)]),
+            IdFormatQuery(model=CoreTaskDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Tasks"],
@@ -52,7 +52,16 @@ def entries_resource(task_store):
     resource = ReadOnlyResource(
         task_store,
         EntryDoc,
-        query_operators=[EntryQuery(), PaginationQuery()],
+        query_operators=[
+            EntryQuery(),
+            PaginationQuery(),
+            IdFormatQuery(
+                model=EntryDoc,
+                # Entries are generated on request by `task_to_entry`, which
+                # uses the task id, and not an `EntryID`, as the `entry_id`
+                id_fields=[("entry.entry_id", format_task_id)],
+            ),
+        ],
         key_fields=[
             "task_id",
             "input",

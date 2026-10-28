@@ -388,8 +388,9 @@ class FindStructureQuery(QueryOperator):
                 matches.append(
                     {
                         "material_id": doc["material_id"],
-                        "normalized_rms_displacement": rms[0],
-                        "max_distance_paired_sites": rms[1],
+                        # StructureMatcher returns numpy floats
+                        "normalized_rms_displacement": float(rms[0]),
+                        "max_distance_paired_sites": float(rms[1]),
                     }
                 )
 

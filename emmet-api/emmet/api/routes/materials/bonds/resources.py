@@ -12,7 +12,6 @@ from emmet.api.routes.materials.bonds.query_operators import (
     CoordinationEnvsQuery,
 )
 from emmet.core.bonds import BondingDoc
-from emmet.core.types.typing import format_identifier
 
 
 def bonds_resource(bonds_store):
@@ -28,7 +27,7 @@ def bonds_resource(bonds_store):
                 BondingDoc,
                 default_fields=["material_id", "last_updated"],
             ),
-            IdFormatQuery([("material_id", format_identifier)]),
+            IdFormatQuery(model=BondingDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Bonds"],

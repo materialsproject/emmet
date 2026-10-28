@@ -17,7 +17,13 @@ from emmet.core.types.pymatgen_types.structure_adapter import (
     StructureType,
     pop_empty_structure_keys,
 )
-from emmet.core.types.typing import IdentifierType, MaterialIdentifierType
+from emmet.core.types.typing import (
+    IdDisplayFormat,
+    MaterialIdentifierType,
+    TaskIdentifierType,
+    format_compound_identifier,
+    format_identifier,
+)
 from emmet.core.utils import type_override
 from emmet.core.vasp.calc_types.enums import RunType
 from emmet.core.vasp.calculation import PotcarSpec
@@ -93,6 +99,37 @@ class EntryID(BaseModel):
 #     },
 # )
 
+
+def format_entry_id(value: Any, *, legacy: bool) -> Any:
+    """Render the identifier of an entry id in either the legacy or AlphaID form.
+
+    Entry ids are stored as the dumped `EntryID` model,
+    `{"identifier": "mp-aaaaaaft", "suffix": "GGA", "separator": "-"}`, but may
+    also be held as a string, `"mp-aaaaaaft-GGA"`, e.g. by entries which were
+    built in memory. Only the identifier is reformatted, the suffix and
+    separator are kept as they are.
+
+    Args:
+        value: The entry id, in either of its forms.
+        legacy: See `emmet.core.types.typing.format_identifier`.
+
+    Returns:
+        The same kind of value as `value`. A dict is copied, not modified.
+        Values of any other kind are returned unchanged.
+    """
+    if isinstance(value, dict):
+        if not value.get("identifier"):
+            return value
+        return {**value, "identifier": format_identifier(value["identifier"], legacy)}
+    if isinstance(value, str):
+        return format_compound_identifier(value, legacy)
+    return value
+
+
+EntryIDType = Annotated[EntryID, IdDisplayFormat(format_entry_id)]
+"""An `EntryID`, which documents hold as `{identifier, suffix, separator}`."""
+
+
 # TypedTemperatureEnergyAdjustmentDict = TypedDict(
 #     "TypedTemperatureEnergyAdjustmentDict",
 #     {
@@ -114,7 +151,7 @@ class TypedCEDataDict(TypedDict):
     oxide_type: NotRequired[str | None]
     aspherical: NotRequired[bool | None]
     last_updated: NotRequired[str | None]
-    task_id: NotRequired[IdentifierType | None]
+    task_id: NotRequired[TaskIdentifierType | None]
     material_id: NotRequired[MaterialIdentifierType | None]
     oxidation_states: NotRequired[dict[ElementType, float] | None]
     license: NotRequired[str | None]
@@ -137,7 +174,7 @@ _TypedComputedEntryDict = TypedDict(  # type: ignore[name-match]
         "@class": str,
         "energy": float,
         "composition": dict[ElementType, float],
-        "entry_id": NotRequired[EntryID | None],
+        "entry_id": NotRequired[EntryIDType | None],
         "correction": NotRequired[float | None],
         "parameters": NotRequired[TypedCEParameterDict | None],
         "data": NotRequired[TypedCEDataDict | None],

@@ -1,6 +1,7 @@
 from emmet.core.molecules.summary import MoleculeSummaryDoc
 
 from emmet.api.query_operator import (
+    IdFormatQuery,
     PaginationQuery,
     NumericQuery,
     SortQuery,
@@ -52,6 +53,8 @@ def summary_resource(summary_store):
             ),
             SortQuery(fields=MOLECULES_SUMMARY_SORT_FIELDS, max_num=1),
             SparseFieldsQuery(MoleculeSummaryDoc, default_fields=["molecule_id"]),
+            # Molecule ids have no legacy form: accepted, but nothing is converted
+            IdFormatQuery(model=MoleculeSummaryDoc),
         ],
         hint_scheme=SummaryHintScheme(),
         header_processor=GlobalHeaderProcessor(),

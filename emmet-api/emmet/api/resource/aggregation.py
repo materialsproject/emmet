@@ -20,13 +20,19 @@ class AggregationResource(CollectionResource):
         self,
         *args,
         pipeline_query_operator: QueryOperator,
+        query_operators: list[QueryOperator] | None = None,
         **kwargs,
     ):
         """
         Args:
             pipeline_query_operator: Operator for the aggregation pipeline
+            query_operators: Optional additional operators, e.g. `IdFormatQuery`,
+                which do not shape the pipeline. Their `query` is exposed as
+                query parameters, and their `post_process` runs on the
+                aggregation results after that of `pipeline_query_operator`.
         """
         self.pipeline_query_operator = pipeline_query_operator
+        self.query_operators = query_operators or []
 
         super().__init__(*args, **kwargs)
 
@@ -65,6 +71,9 @@ class AggregationResource(CollectionResource):
             count = len(data)
             data = self.pipeline_query_operator.post_process(data, query)
             operator_meta = self.pipeline_query_operator.meta()
+            for operator in self.query_operators:
+                data = operator.post_process(data, query)
+                operator_meta.update(operator.meta())
 
             meta = Meta(total_doc=count)
             response_payload = {
@@ -88,4 +97,8 @@ class AggregationResource(CollectionResource):
             response_model=None,
             response_description=f"Get {model_name} data",
             response_model_exclude_unset=True,
-        )(attach_query_ops(search, [self.pipeline_query_operator]))
+        )(
+            attach_query_ops(
+                search, [self.pipeline_query_operator, *self.query_operators]
+            )
+        )

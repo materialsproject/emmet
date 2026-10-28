@@ -14,7 +14,6 @@ from emmet.api.routes.materials.materials.query_operators import (
     LicenseQuery,
 )
 from emmet.core.chemenv import ChemEnvDoc
-from emmet.core.types.typing import format_identifier
 
 
 def chemenv_resource(chemenv_store):
@@ -32,7 +31,7 @@ def chemenv_resource(chemenv_store):
                 default_fields=["material_id", "formula_pretty", "last_updated"],
             ),
             LicenseQuery(),
-            IdFormatQuery([("material_id", format_identifier)]),
+            IdFormatQuery(model=ChemEnvDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         query_to_configure_on_request=LicenseQuery(),

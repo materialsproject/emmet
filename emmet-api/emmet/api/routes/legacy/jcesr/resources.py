@@ -1,6 +1,7 @@
 from emmet.api.core.global_header import GlobalHeaderProcessor
 from emmet.api.core.settings import MAPISettings
 from emmet.api.query_operator import (
+    IdFormatQuery,
     MultiTaskIDQuery,
     PaginationQuery,
     SortQuery,
@@ -35,6 +36,8 @@ def jcesr_resource(molecules_store):
             PaginationQuery(),
             SortQuery(fields=JCESR_SORT_FIELDS, max_num=1),
             SparseFieldsQuery(MoleculesDoc, default_fields=["task_id"]),
+            # Molecule ids have no legacy form: accepted, but nothing is converted
+            IdFormatQuery(model=MoleculesDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["JCESR Electrolyte Genome"],

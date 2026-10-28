@@ -18,7 +18,6 @@ from emmet.api.routes.materials.phonon.query_operators import (
     PhononMethodQuery,
 )
 from emmet.core.phonon import PhononBSDOSDoc
-from emmet.core.types.typing import format_task_id
 
 
 def phonon_bsdos_resource(phonon_bs_store):
@@ -37,7 +36,7 @@ def phonon_bsdos_resource(phonon_bs_store):
             SparseFieldsQuery(
                 PhononBSDOSDoc, default_fields=["identifier", "last_updated"]
             ),
-            IdFormatQuery([("identifier", format_task_id)]),
+            IdFormatQuery(model=PhononBSDOSDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Phonon"],

@@ -15,7 +15,6 @@ from emmet.api.routes.materials.thermo.query_operators import (
     MultiThermoTypeQuery,
 )
 from emmet.core.thermo import ThermoDoc
-from emmet.core.types.typing import format_identifier
 
 
 def thermo_resource(thermo_store):
@@ -35,7 +34,7 @@ def thermo_resource(thermo_store):
                 ThermoDoc, default_fields=["thermo_id", "material_id", "last_updated"]
             ),
             LicenseQuery(),
-            IdFormatQuery([("material_id", format_identifier)]),
+            IdFormatQuery(model=ThermoDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         query_to_configure_on_request=LicenseQuery(),

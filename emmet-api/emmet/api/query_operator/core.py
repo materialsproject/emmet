@@ -6,8 +6,15 @@ from functools import partial
 from typing import Any, Protocol
 
 from fastapi import HTTPException, Query
+from pydantic import BaseModel
 
 from emmet.api.utils import STORE_PARAMS, process_identifiers, split_csv
+from emmet.core.types.id_paths import (
+    IdPath,
+    apply_to_path,
+    find_identifier_paths,
+    parse_id_path,
+)
 
 
 class QueryOperator(ABC):
@@ -214,44 +221,67 @@ class IdFormatQuery(QueryOperator):
       identifier fields exactly as the database stores them; no rewriting
       is attempted.
 
+    Identifiers are rewritten at any depth of the document, e.g.
+    ``decomposes_to[].material_id``.
+
     This is purely a serialization concern: ``query()`` returns an empty
     criteria dict so this operator never affects which documents the
     database returns. It only mutates the response payload.
 
-    Constructor takes a list of ``(field_name, formatter)`` tuples. Each
-    formatter must be a callable with signature ``formatter(value, legacy: bool) -> str``
-    and must be fault-tolerant (i.e. return the input unchanged on parse
-    failure, never raise). The canonical formatters live in
-    :mod:`emmet.core.types.typing` (``format_identifier``,
-    ``format_compound_identifier``, ``format_task_id``) and
-    :mod:`emmet.core.xas` (``format_spectrum_id``).
+    Which fields are rewritten is determined once, when the operator is
+    constructed (i.e. at server start-up), from two sources:
+
+    - ``model``: a pydantic model. Every field annotated as an identifier
+      type (``IdentifierType``, ``MaterialIdentifierType``,
+      ``TaskIdentifierType``) is discovered automatically, see
+      :func:`emmet.core.types.id_paths.find_identifier_paths`.
+    - ``id_fields``: explicit ``(path, formatter)`` tuples, for fields that
+      cannot be discovered (e.g. ``cached_property`` values, composite ids).
+      A path is a dotted string, e.g. ``"adj_pairs.id_charge"``, ``"x.*"``
+      for the values of a dict, or ``"x.*key"`` for its keys, see
+      :mod:`emmet.core.types.id_paths`. They take precedence over discovered
+      fields.
+
+    Formatters must be callables with signature
+    ``formatter(value, legacy: bool) -> str`` and must be fault-tolerant
+    (i.e. return the input unchanged on parse failure, never raise). The
+    canonical formatters live in :mod:`emmet.core.types.typing`
+    (``format_identifier``, ``format_compound_identifier``,
+    ``format_task_id``) and :mod:`emmet.core.xas` (``format_spectrum_id``).
 
     Example registration:
 
     .. code-block:: python
 
-        from emmet.core.types.typing import format_identifier, format_task_id
         from emmet.core.xas import format_spectrum_id
 
         # /materials/summary/
-        IdFormatQuery(id_fields=[("material_id", format_identifier)])
+        IdFormatQuery(model=SummaryDoc)
 
         # /materials/xas/
         IdFormatQuery(
-            id_fields=[
-                ("task_id", format_task_id),
-                ("spectrum_id", format_spectrum_id),
-            ]
+            model=XASDoc,
+            id_fields=[("spectrum_id", format_spectrum_id)],
         )
 
     Attributes:
-        id_fields: A list of ``(field_name, formatter)`` tuples describing
-            which fields on each returned document to rewrite and how.
+        id_fields: A list of ``(path, formatter)`` tuples describing which
+            fields on each returned document to rewrite and how.
             Fields that are absent from a given document (e.g. due to
             sparse-fields projection) are silently skipped.
+        model: Optional pydantic model to discover identifier fields from.
     """
 
-    id_fields: list[tuple[str, IdFormatter]] = field(default_factory=list)
+    id_fields: list[tuple[str | IdPath, IdFormatter]] = field(default_factory=list)
+    model: type[BaseModel] | None = None
+
+    def __post_init__(self):
+        paths: dict[IdPath, IdFormatter] = {}
+        if self.model is not None:
+            paths.update(find_identifier_paths(self.model))
+        for path, formatter in self.id_fields:
+            paths[parse_id_path(path)] = formatter
+        self.id_paths: dict[IdPath, IdFormatter] = paths
 
     def query(
         self,
@@ -259,12 +289,12 @@ class IdFormatQuery(QueryOperator):
             None,
             description=(
                 "Optional. If set to 'legacy', MP identifier fields in the "
-                "response are returned in the form 'mp-149'. If set to "
-                "'alpha', they are returned in the padded AlphaID form "
-                "'mp-aaaaaaft'. If omitted (or set to any other value), "
-                "identifiers are returned in their stored form. This is a "
-                "purely cosmetic transform; query inputs accept either "
-                "shape regardless."
+                "response, including those nested inside other fields, are "
+                "returned in the form 'mp-149'. If set to 'alpha', they are "
+                "returned in the padded AlphaID form 'mp-aaaaaaft'. If "
+                "omitted (or set to any other value), identifiers are "
+                "returned in their stored form. This is a purely cosmetic "
+                "transform; query inputs accept either shape regardless."
             ),
         ),
     ) -> STORE_PARAMS:
@@ -285,8 +315,6 @@ class IdFormatQuery(QueryOperator):
         for doc in docs:
             if not isinstance(doc, dict):
                 continue
-            for field_name, formatter in self.id_fields:
-                value = doc.get(field_name)
-                if value:
-                    doc[field_name] = formatter(value, legacy=legacy)
+            for path, formatter in self.id_paths.items():
+                apply_to_path(doc, path, formatter, legacy=legacy)
         return docs
