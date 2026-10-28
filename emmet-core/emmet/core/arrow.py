@@ -5,6 +5,12 @@ from pathlib import Path
 import pyarrow as pa
 from pydantic.types import ImportString
 
+from emmet.core.types.arrow_annotations import (  # noqa: F401
+    ArrowType,
+    Float32Grid,
+    Float32List,
+    Float32Matrix,
+)
 from emmet.core.types.introspection import Kind, TypeShape, classify
 
 RED = "\033[31m"
@@ -168,6 +174,9 @@ def _arrowize(shape: TypeShape) -> pa.DataType:
             )
 
         case Kind.ANNOTATED:
+            for meta in shape.metadata:
+                if isinstance(meta, ArrowType):
+                    return meta.dtype
             return _arrowize(shape.child(shape.args[0]))
 
         case Kind.MSONABLE:
