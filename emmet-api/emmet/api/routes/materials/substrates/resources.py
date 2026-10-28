@@ -1,4 +1,5 @@
 from emmet.api.query_operator import (
+    IdFormatQuery,
     NumericQuery,
     PaginationQuery,
     SparseFieldsQuery,
@@ -26,6 +27,7 @@ def substrates_resource(substrates_store):
             ),
             PaginationQuery(),
             SparseFieldsQuery(SubstratesDoc, default_fields=["film_id", "sub_id"]),
+            IdFormatQuery(model=SubstratesDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Substrates"],

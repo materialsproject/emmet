@@ -1,6 +1,6 @@
 from emmet.api.resource import ReadOnlyResource
 
-from emmet.api.query_operator import PaginationQuery, SparseFieldsQuery
+from emmet.api.query_operator import IdFormatQuery, PaginationQuery, SparseFieldsQuery
 
 from emmet.core.alloys import AlloyPairDoc
 
@@ -23,6 +23,7 @@ def alloy_pairs_resource(alloy_pairs_store):
                 AlloyPairDoc,
                 default_fields=["pair_id"],
             ),
+            IdFormatQuery(model=AlloyPairDoc),
         ],
         tags=["Materials Alloys"],
         sub_path="/alloys/",

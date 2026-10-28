@@ -1,7 +1,8 @@
 from inspect import signature
 from typing import Any
 
-from fastapi import HTTPException, Request
+import orjson
+from fastapi import HTTPException, Request, Response
 from pymongo.errors import NetworkTimeout, PyMongoError
 
 from emmet.api.models import Meta
@@ -10,7 +11,7 @@ from emmet.api.resource.utils import (
     attach_query_ops,
     generate_query_pipeline,
 )
-from emmet.api.utils import STORE_PARAMS, merge_queries
+from emmet.api.utils import STORE_PARAMS, merge_queries, serialization_helper
 
 
 class PostOnlyResource(CollectionResource):
@@ -22,12 +23,18 @@ class PostOnlyResource(CollectionResource):
         self,
         *args,
         query: dict | None = None,
+        disable_validation: bool = False,
         **kwargs,
     ):
         """
         Args:
+            query: Additional criteria to apply to every request
+            disable_validation: Whether to use ORJSON and provide a direct FastAPI response.
+                Note this will disable auto JSON serialization and response validation with the
+                provided model.
         """
         self.query = query or {}
+        self.disable_validation = disable_validation
 
         super().__init__(*args, **kwargs)
 
@@ -47,7 +54,7 @@ class PostOnlyResource(CollectionResource):
     def build_dynamic_model_search(self):
         model_name = self.model.__name__
 
-        async def search(**queries: dict[str, STORE_PARAMS]) -> dict:
+        async def search(**queries: dict[str, STORE_PARAMS]) -> dict | Response:
             request: Request = queries.pop("request")  # type: ignore
             queries.pop("temp_response")  # type: ignore
 
@@ -100,7 +107,18 @@ class PostOnlyResource(CollectionResource):
                 operator_meta.update(operator.meta())
 
             meta = Meta(total_doc=count)
-            return {"data": data, "meta": {**meta.dict(), **operator_meta}}
+            response_payload = {"data": data, "meta": {**meta.dict(), **operator_meta}}
+
+            if self.disable_validation:
+                response = Response(
+                    orjson.dumps(response_payload, default=serialization_helper),
+                    media_type="application/json",
+                )
+                if self.header_processor is not None:
+                    self.header_processor.process_header(response, request)
+                return response
+
+            return response_payload
 
         self.router.post(
             self.sub_path,

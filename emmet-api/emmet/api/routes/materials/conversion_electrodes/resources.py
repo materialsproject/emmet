@@ -8,7 +8,6 @@ from emmet.api.routes.materials.insertion_electrodes.query_operators import (
     WorkingIonQuery,
 )
 from emmet.core.electrode import ConversionElectrodeDoc
-from emmet.core.types.typing import format_identifier
 
 
 def conversion_electrodes_resource(conversion_electrodes_store):
@@ -24,7 +23,7 @@ def conversion_electrodes_resource(conversion_electrodes_store):
                 ConversionElectrodeDoc,
                 default_fields=["battery_id", "last_updated"],
             ),
-            IdFormatQuery([("material_ids", format_identifier)]),
+            IdFormatQuery(model=ConversionElectrodeDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Electrodes"],

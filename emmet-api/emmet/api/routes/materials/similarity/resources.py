@@ -12,7 +12,6 @@ from emmet.api.routes.materials.similarity.query_operators import (
     SimilarityFeatureVectorQuery,
 )
 from emmet.core.similarity import SimilarityDoc
-from emmet.core.types.typing import format_identifier
 
 timeout = MAPISettings().TIMEOUT
 
@@ -25,7 +24,7 @@ def similarity_resource(similarity_store):
             MultiMaterialIDQuery(),
             PaginationQuery(),
             SparseFieldsQuery(SimilarityDoc, default_fields=["material_id"]),
-            IdFormatQuery([("material_id", format_identifier)]),
+            IdFormatQuery(model=SimilarityDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Similarity"],
@@ -43,6 +42,7 @@ def similarity_feature_vector_resource(similarity_store):
         similarity_store,
         SimilarityDoc,
         pipeline_query_operator=SimilarityFeatureVectorQuery(),
+        query_operators=[IdFormatQuery(model=SimilarityDoc)],
         sub_path="/similarity/match/",
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Similarity"],

@@ -62,6 +62,9 @@ class AsyncMongomockCollection:
         }
         return self.collection.count_documents(filter or {}, **filtered_kwargs)
 
+    async def estimated_document_count(self, **kwargs):
+        return self.collection.count_documents({})
+
     async def find_one_and_update(
         self,
         filter,

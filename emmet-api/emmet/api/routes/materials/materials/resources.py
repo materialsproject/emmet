@@ -25,7 +25,6 @@ from emmet.api.routes.materials.materials.query_operators import (
 )
 from emmet.core.find_structure import FindStructure
 from emmet.core.formula_autocomplete import FormulaAutocomplete
-from emmet.core.types.typing import format_identifier, format_task_id
 from emmet.core.vasp.material import MaterialsDoc
 
 timeout = MAPISettings().TIMEOUT  # type: ignore
@@ -36,10 +35,13 @@ def find_structure_resource(materials_store):
         materials_store,
         FindStructure,
         key_fields=["structure", "task_id"],
-        query_operators=[FindStructureQuery()],
+        query_operators=[FindStructureQuery(), IdFormatQuery(model=FindStructure)],
         tags=["Materials"],
         sub_path="/core/find_structure/",
         timeout=timeout,
+        # Response validation would convert `material_id` back to the AlphaID
+        # form, undoing `id_format`
+        disable_validation=True,
     )
 
     return resource
@@ -50,6 +52,9 @@ def formula_autocomplete_resource(formula_autocomplete_store):
         formula_autocomplete_store,
         FormulaAutocomplete,
         pipeline_query_operator=FormulaAutoCompleteQuery(),
+        # Accepted for consistency across endpoints: no MP identifiers are
+        # returned, so nothing is converted (yet)
+        query_operators=[IdFormatQuery(model=FormulaAutocomplete)],
         tags=["Materials"],
         sub_path="/core/formula_autocomplete/",
         header_processor=GlobalHeaderProcessor(),
@@ -78,6 +83,7 @@ def blessed_tasks_resource(materials_store):
                 MaterialsDoc,
                 default_fields=["material_id", "last_updated", "entries"],
             ),
+            IdFormatQuery(model=MaterialsDoc),
         ],
         key_fields=[
             "material_id",
@@ -116,12 +122,7 @@ def materials_resource(materials_store):
             ),
             LicenseQuery(),
             BatchIdQuery(),
-            IdFormatQuery(
-                [
-                    ("material_id", format_identifier),
-                    ("task_ids", format_task_id),
-                ]
-            ),
+            IdFormatQuery(model=MaterialsDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         query_to_configure_on_request=LicenseQuery(),

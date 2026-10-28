@@ -18,7 +18,6 @@ from emmet.api.routes.materials.xas.query_operators import (
     XASIDQuery,
     XASQuery,
 )
-from emmet.core.types.typing import format_task_id
 from emmet.core.xas import XASDoc, format_spectrum_id
 
 XAS_SORT_FIELDS = [
@@ -66,10 +65,8 @@ def xas_resource(xas_store):
             # after SpectrumIdSynthesisQuery so the synthesized spectrum_id
             # is reformatted along with task_id.
             IdFormatQuery(
-                id_fields=[
-                    ("task_id", format_task_id),
-                    ("spectrum_id", format_spectrum_id),
-                ]
+                model=XASDoc,
+                id_fields=[("spectrum_id", format_spectrum_id)],
             ),
         ],
         header_processor=GlobalHeaderProcessor(),

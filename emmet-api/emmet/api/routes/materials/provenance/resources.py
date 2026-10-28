@@ -9,7 +9,6 @@ from emmet.api.query_operator import (
 )
 from emmet.api.resource import ReadOnlyResource
 from emmet.core.provenance import ProvenanceDoc
-from emmet.core.types.typing import format_identifier
 
 
 def provenance_resource(provenance_store):
@@ -23,7 +22,7 @@ def provenance_resource(provenance_store):
             SparseFieldsQuery(
                 ProvenanceDoc, default_fields=["material_id", "last_updated"]
             ),
-            IdFormatQuery([("material_id", format_identifier)]),
+            IdFormatQuery(model=ProvenanceDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Provenance"],

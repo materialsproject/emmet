@@ -15,7 +15,7 @@ from emmet.core.tasks import ValidationTaskDoc
 from emmet.core.types.pymatgen_types.computed_entries_adapter import (
     ComputedStructureEntryType,
 )
-from emmet.core.types.typing import IdentifierType
+from emmet.core.types.typing import TaskIdentifierType
 from emmet.core.utils import utcnow
 from emmet.core.vasp.calc_types import CalcType, RunType, TaskType
 
@@ -32,15 +32,15 @@ class BlessedCalcs(BaseModel, populate_by_name=True):
 
 
 class MaterialsDoc(CoreMaterialsDoc):
-    calc_types: Mapping[IdentifierType, CalcType] | None = Field(  # type: ignore
+    calc_types: Mapping[TaskIdentifierType, CalcType] | None = Field(  # type: ignore
         None,
         description="Calculation types for all the calculations that make up this material",
     )
-    task_types: Mapping[IdentifierType, TaskType] | None = Field(
+    task_types: Mapping[TaskIdentifierType, TaskType] | None = Field(
         None,
         description="Task types for all the calculations that make up this material",
     )
-    run_types: Mapping[IdentifierType, RunType] | None = Field(
+    run_types: Mapping[TaskIdentifierType, RunType] | None = Field(
         None,
         description="Run types for all the calculations that make up this material",
     )

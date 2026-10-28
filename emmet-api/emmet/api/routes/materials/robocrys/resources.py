@@ -10,7 +10,6 @@ from emmet.api.resource import ReadOnlyResource
 from emmet.api.resource.aggregation import AggregationResource
 from emmet.api.routes.materials.robocrys.query_operators import RoboTextSearchQuery
 from emmet.core.robocrys import RobocrystallogapherDoc
-from emmet.core.types.typing import format_identifier
 
 timeout = MAPISettings().TIMEOUT
 
@@ -25,7 +24,7 @@ def robo_resource(robo_store):
             SparseFieldsQuery(
                 RobocrystallogapherDoc, default_fields=["material_id", "last_updated"]
             ),
-            IdFormatQuery([("material_id", format_identifier)]),
+            IdFormatQuery(model=RobocrystallogapherDoc),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Robocrystallographer"],
@@ -42,6 +41,7 @@ def robo_search_resource(robo_store):
         robo_store,
         RobocrystallogapherDoc,
         pipeline_query_operator=RoboTextSearchQuery(),
+        query_operators=[IdFormatQuery(model=RobocrystallogapherDoc)],
         sub_path="/robocrys/text_search/",
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Robocrystallographer"],
