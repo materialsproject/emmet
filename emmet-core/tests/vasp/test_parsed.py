@@ -6,11 +6,12 @@ import textwrap
 from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.io.pymatgen import Chgcar, Elfcar, Locpot, Vasprun
 from emmet.core.testing_utils import DataArchive, assert_nested_close
+from emmet.core.types.typing import IdentifierType
 from emmet.core.vasp.calc_types.enums import RunType, TaskType
 from emmet.core.vasp.models import VOLUMETRIC_PARSERS
 from emmet.core.vasp.parsed import (
@@ -204,7 +205,10 @@ def test_table_registry():
     assert all(spec.zorder_by == ("identifier",) for spec in PARSED_TABLES.values())
 
     assert PARSED_TABLES["dos"].partition_by == ("run_type",)
-    assert PARSED_TABLES["bandstructure"].partition_by == ("run_type", "path_convention")
+    assert PARSED_TABLES["bandstructure"].partition_by == (
+        "run_type",
+        "path_convention",
+    )
     assert PARSED_TABLES["validation"].partition_by == ()
     for name in volumetric:
         assert PARSED_TABLES[name].row_model is VolumetricRow
@@ -369,7 +373,11 @@ class TestArrow:
         # partition value, which is escaped in the directory name
         restored = pq.read_table(tmp_path / "chgcar", partitioning="hive")
         assert restored.num_rows == 3
-        assert sorted(restored["identifier"].to_pylist()) == ["mp-0", "mp-1", "mp-2"]
+        # identifiers are normalized to the padded AlphaID form by the row header
+        expected_ids = [
+            TypeAdapter(IdentifierType).validate_python(f"mp-{i}") for i in range(3)
+        ]
+        assert sorted(restored["identifier"].to_pylist()) == sorted(expected_ids)
         assert {str(r) for r in restored["run_type"].to_pylist()} == {
             str(RunType.GGA),
             str(RunType.GGA_U),

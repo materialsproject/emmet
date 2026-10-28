@@ -64,7 +64,11 @@ from emmet.core.vasp.calculation import (
     RunStatistics,
     get_trajectories_from_calculations,
 )
-from emmet.core.vasp.utils import TASK_NAMES, discover_and_sort_vasp_files
+from emmet.core.vasp.utils import (
+    DEFAULT_CALC_SUFFIXES,
+    STANDARD_CALC_SUFFIX,
+    discover_calculations,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -1157,20 +1161,23 @@ def _find_vasp_files(
     """
     Find VASP files in a directory.
 
-    Only files in folders with names matching a task name (or alternatively files
-    with the task name as an extension, e.g., vasprun.relax1.xml) will be returned.
+    A thin wrapper of :obj:`emmet.core.vasp.utils.discover_calculations` which
+    returns the files of each calculation as keyword arguments of
+    :obj:`.Calculation.from_vasp_files`. See that function for the layouts of
+    directories which are supported, and how files are shared.
 
-    VASP files in the current directory will be given the task name "standard".
+    VASP files in the current directory without a calculation suffix are
+    given the task name "standard".
 
     Parameters
     ----------
     path
         Path to a directory to search.
-    volumetric_files : sequence of str, defaults to _VOLUMETRIC_FILES
-        Volumetric files to search for.
-    task_names : sequence of str, defaults to
-        task_names = ["precondition","standard","relax0","relax1",..."relax8"]
-
+    volumetric_files : sequence of str
+        Not used. Maintained for backwards compatibility.
+    task_names : sequence of str, defaults to DEFAULT_CALC_SUFFIXES
+        The suffixes of the calculations, in the order they were run.
+        Defaults to ["precondition", "relax1",..."relax9", "static"].
 
     Returns
     -------
@@ -1190,40 +1197,10 @@ def _find_vasp_files(
                 ...
             }
     """
-    base_path = Path(path)
-    volumetric_files = volumetric_files or _VOLUMETRIC_FILES
-    task_names = list(task_names or TASK_NAMES)
-
-    task_files: dict[str, dict[str, Path | list[Path]]] = discover_and_sort_vasp_files(
-        base_path
+    calculations = discover_calculations(
+        path, suffixes=tuple(task_names) if task_names else DEFAULT_CALC_SUFFIXES
     )
-    # TODO: TaskDoc permits matching sub directories if they use one of
-    # `task_names` as a directory name.
-    # Not sure this is behavior we want to keep in the long term,
-    # but is maintained here for backwards compatibility.
-    for task_name in set(task_names).difference(task_files):
-        if (subdir := base_path / task_name).exists():
-            for task_name, calcs in discover_and_sort_vasp_files(subdir).items():
-                task_files[task_name].update(calcs)
-
-    # For old double-relax style jobs, there will only be one POTCAR/.spec/.orig file
-    # even though there will be an INCAR.relax1, INCAR.relax2, etc.
-    # Undo that mapping here
-    if any(k.startswith("relax") for k in task_files) and task_files.get(
-        "standard", {}
-    ).get("potcar_spec_file"):
-        psf = task_files["standard"].pop("potcar_spec_file")
-        for task_name in {k for k in task_files if k.startswith("relax")}:
-            task_files[task_name]["potcar_spec_file"] = psf
-
-        if not all(
-            task_files.get("standard", {}).get(k)
-            for k in (
-                "vasprun_file",
-                "outcar_file",
-                "contcar_file",
-            )
-        ):
-            _ = task_files.pop("standard")
-
-    return task_files
+    return {
+        locator.modifier or STANDARD_CALC_SUFFIX: calc_files.to_calculation_kwargs()
+        for locator, calc_files in calculations.items()
+    }

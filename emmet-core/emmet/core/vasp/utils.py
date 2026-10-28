@@ -6,13 +6,15 @@ import logging
 import os
 from collections import defaultdict
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from pydantic import BaseModel, Field, model_validator
 
 from emmet.core.utils import get_hash_blocked
+from emmet.core.vasp.models import volumetric_file_type
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from typing import Any
 
     from emmet.core.types.typing import FSPathType
@@ -20,6 +22,24 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 TASK_NAMES = {"precondition"} | {f"relax{i+1}" for i in range(9)}
+
+DEFAULT_CALC_SUFFIXES: tuple[str, ...] = (
+    "precondition",
+    *(f"relax{i + 1}" for i in range(9)),
+    "static",
+)
+"""The suffixes of the calculations in a legacy multi-calculation directory.
+
+The order matters: it is the order in which the calculations were run. The
+first calculation is the one which `.orig` input files describe, and the last
+calculation is the one which unsuffixed output files belong to.
+"""
+
+COMPRESSION_EXTENSIONS: tuple[str, ...] = (".gz", ".bz2", ".xz", ".zst", ".lzma", ".Z")
+"""Extensions of compressed files, which are ignored when identifying VASP files."""
+
+STANDARD_CALC_SUFFIX = "standard"
+"""The suffix of a calculation whose files have no calculation suffix."""
 
 
 class FileMetadata(BaseModel):
@@ -129,6 +149,7 @@ VASP_VOLUMETRIC_FILES = (
     + [
         "ELFCAR",
         "LOCPOT",
+        "PARCHG",
         "POT",
     ]
 )
@@ -162,11 +183,119 @@ for v in VASP_RAW_DATA_ORG.values():
 VASP_RAW_DATA_ORG["input"].extend([f"{f}.orig" for f in VASP_INPUT_FILES])
 
 
+_FILE_TYPE_CATEGORIES: dict[str, str] = {
+    file_type: category
+    for category, file_types in (
+        ("input", VASP_INPUT_FILES),
+        ("output", VASP_OUTPUT_FILES),
+        ("electronic_structure", VASP_ELECTRONIC_STRUCTURE),
+        ("workflow", ["FW.json", "custodian.json", "transformations.json"]),
+    )
+    for file_type in file_types
+}
+"""Category of each known (non-volumetric) VASP file type, by its canonical name."""
+
+
+class VaspFileName(NamedTuple):
+    """The parts of the name of a VASP file, see `parse_vasp_file_name`."""
+
+    file_type: str
+    """Canonical name of the type of file, e.g., INCAR, POTCAR.spec, vasprun.xml,
+    CHGCAR. Electron-phonon POSCARs (POSCAR.T=300) are of type POSCAR.T"""
+
+    category: str
+    """One of the keys of `VASP_RAW_DATA_ORG` that is not a suffix:
+    input, output, volumetric, electronic_structure, workflow."""
+
+    calc_suffix: str | None
+    """The calculation suffix, if the name has one of the suffixes searched for."""
+
+    is_orig: bool
+    """Whether the file is an original, pre-correction copy, e.g., INCAR.orig."""
+
+    unrecognized: tuple[str, ...] = ()
+    """Parts of the name which were not understood, e.g., an unknown calculation suffix."""
+
+
+def parse_vasp_file_name(
+    file_name: str | os.PathLike,
+    suffixes: Sequence[str] = DEFAULT_CALC_SUFFIXES,
+) -> VaspFileName | None:
+    """Identify a VASP file from its name.
+
+    The name must start with the exact name of a VASP file, followed
+    by any of: a calculation suffix, `orig`, and a compression extension.
+    For example: `INCAR`, `INCAR.orig.relax1`, `vasprun.xml.relax1.gz`,
+    `POTCAR.spec`, `CHGCAR.relax2.gz`, `POSCAR.T=300.gz`.
+
+    Because the name of the file has to match exactly, `PARCHG` is not mistaken
+    for `CHG`, `POTCAR` for `POT`, or `my_vasprun.xml` for a vasprun.xml.
+
+    Other dot-separated parts of the name which are not recognized, such as an
+    unknown calculation suffix, do not stop the file from being identified,
+    but are returned in `unrecognized`. The indices of PARCHG files, e.g.,
+    `PARCHG.0001.0002`, are understood.
+
+    Parameters
+    -----------
+    file_name : str or PathLike
+        The name of the file. Any parent directories are ignored.
+    suffixes : sequence of str
+        The calculation suffixes to look for.
+
+    Returns
+    -----------
+    VaspFileName or None
+        None if the file is not a VASP file.
+    """
+    name = Path(file_name).name
+    while name.endswith(COMPRESSION_EXTENSIONS):
+        name = name.rsplit(".", 1)[0]
+    parts = name.split(".")
+
+    file_type: str | None = None
+    rest = parts[1:]
+    if len(parts) > 1 and f"{parts[0]}.{parts[1]}" in _FILE_TYPE_CATEGORIES:
+        # e.g., vasprun.xml, POTCAR.spec
+        file_type = f"{parts[0]}.{parts[1]}"
+        rest = parts[2:]
+        category = _FILE_TYPE_CATEGORIES[file_type]
+    elif parts[0] in _FILE_TYPE_CATEGORIES:
+        file_type = parts[0]
+        category = _FILE_TYPE_CATEGORIES[file_type]
+    elif vol_type := volumetric_file_type(parts[0]):
+        file_type = vol_type
+        category = "volumetric"
+    else:
+        return None
+
+    calc_suffix = None
+    is_orig = False
+    unrecognized = []
+    for part in rest:
+        if part == "orig":
+            is_orig = True
+        elif part in suffixes:
+            calc_suffix = part
+        elif file_type == "POSCAR" and part.startswith("T="):
+            # POSCARs displaced for electron-phonon coupling
+            file_type = "POSCAR.T"
+        elif file_type == "PARCHG" and part.isdigit():
+            # band and k-point indices of partial charge densities
+            continue
+        else:
+            unrecognized.append(part)
+
+    return VaspFileName(file_type, category, calc_suffix, is_orig, tuple(unrecognized))
+
+
 def discover_vasp_files(
     target_dir: FSPathType,
 ) -> dict[str, list[FileMetadata]]:
     """
     Scan a target directory and identify VASP files.
+
+    Files are identified by name, see `parse_vasp_file_name`.
 
     Parameters
     -----------
@@ -181,8 +310,7 @@ def discover_vasp_files(
     vasp_files: list[FileMetadata] = []
     with os.scandir(head_dir) as scan_dir:
         for p in scan_dir:
-            # Check that at least one VASP file matches the file name
-            if p.is_file() and any(f for f in _vasp_files if f in p.name):
+            if p.is_file() and parse_vasp_file_name(p.name) is not None:
                 vasp_files.append(FileMetadata(name=p.name, path=Path(p.path)))
     by_suffix = defaultdict(list)
     for file_meta in vasp_files:
@@ -196,6 +324,10 @@ def discover_and_sort_vasp_files(
     """
     Find and sort VASP files from a directory for TaskDoc.
 
+    This only looks at the files in `target_dir` itself, and does not
+    share files between calculations. To discover the calculations in
+    a directory in any of its layouts, use `discover_calculations`.
+
     Parameters
     -----------
     target_dir : FSPathType
@@ -205,34 +337,292 @@ def discover_and_sort_vasp_files(
     dict of str (categories) to list of FileMetadata (list of VASP files in
         that category)
     """
+    role_keys = {
+        "vasprun.xml": "vasprun_file",
+        "CONTCAR": "contcar_file",
+        "OUTCAR": "outcar_file",
+        "POTCAR.spec": "potcar_spec_file",
+        "OSZICAR": "oszicar_file",
+    }
     by_type: defaultdict[str, dict[str, Path | list[Path]]] = defaultdict(dict)
     for calc_suffix, files in discover_vasp_files(target_dir).items():
         for _f in files:
-            f = _f.name.lower()
+            parsed = parse_vasp_file_name(_f.name)
+            if parsed is None or parsed.is_orig:
+                continue
             file_path = _f.path.resolve()
 
-            for k in ("vasprun", "contcar", "outcar", "potcar.spec", "oszicar"):
-                if k in f:
-                    by_type[calc_suffix][f"{k.replace('.','_')}_file"] = file_path
-                    break
-            else:
-                # NB: the POT file needs the extra `"potcar" not in f` check to ensure that
-                # POTCARs are not classed as volumetric files.
-                if any(
-                    vf.lower() in f and "potcar" not in f
-                    for vf in VASP_VOLUMETRIC_FILES
-                ):
-                    if "volumetric_files" not in by_type[_f.calc_suffix]:
-                        by_type[calc_suffix]["volumetric_files"] = []
-                    by_type[calc_suffix]["volumetric_files"].append(file_path)  # type: ignore[union-attr]
-
-                elif "poscar.t=" in f:
-                    if "elph_poscars" not in by_type[calc_suffix]:
-                        by_type[_f.calc_suffix]["elph_poscars"] = []
-
-                    by_type[calc_suffix]["elph_poscars"].append(file_path)  # type: ignore[union-attr]
+            if parsed.file_type in role_keys:
+                by_type[calc_suffix][role_keys[parsed.file_type]] = file_path
+            elif parsed.category == "volumetric":
+                by_type[calc_suffix].setdefault("volumetric_files", []).append(  # type: ignore[union-attr]
+                    file_path
+                )
+            elif parsed.file_type == "POSCAR.T":
+                by_type[calc_suffix].setdefault("elph_poscars", []).append(  # type: ignore[union-attr]
+                    file_path
+                )
 
     return dict(by_type)
+
+
+class CalculationFiles(BaseModel):
+    """The files of a single VASP calculation.
+
+    Files are keyed by their canonical type (see `parse_vasp_file_name`), and
+    a calculation has at most one file of each type.
+    """
+
+    calc_suffix: str = Field(
+        STANDARD_CALC_SUFFIX,
+        description="The suffix of the calculation, e.g., relax1, or "
+        "standard if the files have no suffix.",
+    )
+    directory: Path = Field(description="The directory the calculation's files are in.")
+    is_first: bool = Field(
+        True,
+        description="Whether this is the first calculation of its directory.",
+    )
+    is_last: bool = Field(
+        True,
+        description="Whether this is the last calculation of its directory.",
+    )
+    inputs: dict[str, Path] = Field(
+        {}, description="Input files: INCAR, KPOINTS, POSCAR, POTCAR, POTCAR.spec."
+    )
+    orig_inputs: dict[str, Path] = Field(
+        {},
+        description="Original (pre-correction) input files, e.g., INCAR.orig. A "
+        "directory with multiple calculations has one set of these, which are "
+        "given to the first calculation, as they are the inputs of the first "
+        "calculation. Explicitly suffixed ones (INCAR.orig.relax2) are an "
+        "exception, and are given to the calculation they are suffixed with.",
+    )
+    outputs: dict[str, Path] = Field(
+        {}, description="Output files: vasprun.xml, OUTCAR, CONTCAR, OSZICAR, etc."
+    )
+    volumetric: dict[str, Path] = Field(
+        {}, description="Volumetric files: CHGCAR, LOCPOT, AECCAR0, etc."
+    )
+    electronic_structure: dict[str, Path] = Field(
+        {}, description="Electronic structure files: DOSCAR, EIGENVAL."
+    )
+    elph_poscars: list[Path] = Field(
+        [], description="Electron-phonon coupling displaced POSCARs."
+    )
+    workflow: dict[str, Path] = Field(
+        {},
+        description="Workflow files: custodian.json, transformations.json, FW.json. "
+        "These describe the whole directory, and are given to every calculation in it.",
+    )
+
+    @property
+    def vasprun(self) -> Path | None:
+        return self.outputs.get("vasprun.xml")
+
+    @property
+    def outcar(self) -> Path | None:
+        return self.outputs.get("OUTCAR")
+
+    @property
+    def contcar(self) -> Path | None:
+        return self.outputs.get("CONTCAR")
+
+    @property
+    def oszicar(self) -> Path | None:
+        return self.outputs.get("OSZICAR")
+
+    @property
+    def potcar_spec(self) -> Path | None:
+        return self.inputs.get("POTCAR.spec")
+
+    def to_calculation_kwargs(
+        self, resolve: bool = True
+    ) -> dict[str, Path | list[Path]]:
+        """Get the file arguments of `Calculation.from_vasp_files`.
+
+        Only the files which are present are included.
+
+        Parameters
+        -----------
+        resolve : bool = True
+            Whether to resolve symlinks in the file paths.
+        """
+
+        def _path(p: Path) -> Path:
+            return p.resolve() if resolve else p
+
+        kwargs: dict[str, Path | list[Path]] = {}
+        for key, path in (
+            ("vasprun_file", self.vasprun),
+            ("outcar_file", self.outcar),
+            ("contcar_file", self.contcar),
+            ("oszicar_file", self.oszicar),
+            ("potcar_spec_file", self.potcar_spec),
+        ):
+            if path is not None:
+                kwargs[key] = _path(path)
+        if self.volumetric:
+            kwargs["volumetric_files"] = [_path(p) for p in self.volumetric.values()]
+        if self.elph_poscars:
+            kwargs["elph_poscars"] = [_path(p) for p in self.elph_poscars]
+        return kwargs
+
+    def _add(self, path: Path, parsed: VaspFileName) -> None:
+        """Add a file of this calculation."""
+        if parsed.is_orig:
+            if parsed.category == "input":
+                self.orig_inputs[parsed.file_type] = path
+        elif parsed.file_type == "POSCAR.T":
+            self.elph_poscars.append(path)
+        elif parsed.category == "input":
+            self.inputs[parsed.file_type] = path
+        elif parsed.category == "output":
+            self.outputs[parsed.file_type] = path
+        elif parsed.category == "volumetric":
+            self.volumetric[parsed.file_type] = path
+        elif parsed.category == "electronic_structure":
+            self.electronic_structure[parsed.file_type] = path
+        elif parsed.category == "workflow":
+            self.workflow[parsed.file_type] = path
+
+
+def _scan_vasp_files(
+    directory: Path, suffixes: Sequence[str]
+) -> list[tuple[Path, VaspFileName]]:
+    """Find the VASP files in a directory, sorted by name.
+
+    Files with parts of their name which are not understood, e.g., a suffix which
+    is not in `suffixes`, are skipped: it is unknown which calculation they are for.
+    """
+    found = []
+    with os.scandir(directory) as scan_dir:
+        for p in scan_dir:
+            if not p.is_file() or not (
+                parsed := parse_vasp_file_name(p.name, suffixes)
+            ):
+                continue
+            if parsed.unrecognized:
+                logger.warning(
+                    f"Ignoring {p.path}: unrecognized parts of file name "
+                    f"{parsed.unrecognized}, calculation suffixes are {tuple(suffixes)}"
+                )
+                continue
+            found.append((Path(p.path), parsed))
+    return sorted(found, key=lambda x: x[0].name)
+
+
+def discover_calculations(
+    target_dir: FSPathType,
+    suffixes: Sequence[str] = DEFAULT_CALC_SUFFIXES,
+) -> dict[CalculationLocator, CalculationFiles]:
+    """Find the calculations in a directory, and the files of each.
+
+    A directory can have any of the following layouts:
+
+    - One calculation, whose files have no suffix: `INCAR`, `vasprun.xml.gz`
+    - Several calculations, whose files are distinguished by suffixes:
+        `vasprun.xml.relax1.gz`, `vasprun.xml.relax2.gz`
+    - Several calculations, each in a subdirectory named after its suffix:
+        `relax1/vasprun.xml.gz`, `relax2/vasprun.xml.gz`
+
+    A suffix is only searched for as a subdirectory if there are no
+    files with that suffix in `target_dir`.
+
+    Files with parts of their name which are not understood, such as an unknown
+    suffix, are ignored, instead of being taken to have no suffix.
+
+    Only calculations with a vasprun.xml are returned. A calculation is located by
+    its directory, and a modifier: its suffix, or `standard` if it has none.
+    Calculations in subdirectories are located by `target_dir`, and not the
+    subdirectory, so that the calculations of a directory share a location.
+
+    Files which are not specific to a calculation are shared:
+
+    - Files with no suffix: POTCAR and POTCAR.spec are given to every
+        calculation which has none of its own. Other unsuffixed files are
+        given to the last calculation, if it has none of its own.
+    - Original inputs with no suffix, e.g., INCAR.orig, are given to the first
+        calculation.
+    - Workflow files, e.g., custodian.json, are given to every calculation.
+
+    Parameters
+    -----------
+    target_dir : FSPathType
+        The directory.
+    suffixes : sequence of str
+        The suffixes of the calculations, in the order that the calculations
+        were run, not in alphabetical order. The default is the known suffixes
+        used by MP, `DEFAULT_CALC_SUFFIXES`.
+
+    Returns
+    -----------
+    dict of CalculationLocator to CalculationFiles
+        The calculations, in the order in which they were run, with
+        calculations without a suffix last.
+    """
+    base_dir = Path(target_dir).resolve()
+    suffixes = tuple(s for s in dict.fromkeys(suffixes) if s != STANDARD_CALC_SUFFIX)
+
+    files: dict[str, CalculationFiles] = {}
+    for path, parsed in _scan_vasp_files(base_dir, suffixes):
+        suffix = parsed.calc_suffix or STANDARD_CALC_SUFFIX
+        if suffix not in files:
+            files[suffix] = CalculationFiles(calc_suffix=suffix, directory=base_dir)
+        files[suffix]._add(path, parsed)
+
+    for suffix in suffixes:
+        if suffix not in files and (sub_dir := base_dir / suffix).is_dir():
+            sub_files = CalculationFiles(calc_suffix=suffix, directory=sub_dir)
+            for path, parsed in _scan_vasp_files(sub_dir, suffixes):
+                sub_files._add(path, parsed)
+            if sub_files.vasprun:
+                files[suffix] = sub_files
+
+    order = [s for s in suffixes if s in files and files[s].vasprun]
+    unsuffixed = files.get(STANDARD_CALC_SUFFIX)
+    unsuffixed_is_calc = unsuffixed is not None and unsuffixed.vasprun is not None
+    if unsuffixed_is_calc:
+        order.append(STANDARD_CALC_SUFFIX)
+    if not order:
+        return {}
+
+    first, last = order[0], order[-1]
+    if unsuffixed is not None:
+        for file_type, path in unsuffixed.orig_inputs.items():
+            files[first].orig_inputs.setdefault(file_type, path)
+        if unsuffixed_is_calc and first != STANDARD_CALC_SUFFIX:
+            unsuffixed.orig_inputs = {}
+
+        for file_type in ("POTCAR", "POTCAR.spec"):
+            if file_type in unsuffixed.inputs:
+                for suffix in order:
+                    files[suffix].inputs.setdefault(
+                        file_type, unsuffixed.inputs[file_type]
+                    )
+
+        for suffix in order:
+            for file_type, path in unsuffixed.workflow.items():
+                files[suffix].workflow.setdefault(file_type, path)
+
+        if not unsuffixed_is_calc:
+            last_files = files[last]
+            for group in ("inputs", "outputs", "volumetric", "electronic_structure"):
+                for file_type, path in getattr(unsuffixed, group).items():
+                    if group == "inputs" and file_type in ("POTCAR", "POTCAR.spec"):
+                        continue
+                    getattr(last_files, group).setdefault(file_type, path)
+            if not last_files.elph_poscars:
+                last_files.elph_poscars = list(unsuffixed.elph_poscars)
+
+    for i, suffix in enumerate(order):
+        files[suffix].is_first = i == 0
+        files[suffix].is_last = i == len(order) - 1
+
+    return {
+        CalculationLocator(path=base_dir, modifier=suffix): files[suffix]
+        for suffix in order
+    }
 
 
 def recursive_discover_vasp_files(
