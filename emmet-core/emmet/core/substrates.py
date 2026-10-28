@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from emmet.core.types.typing import IdentifierType
+
 
 class SubstratesDoc(BaseModel):
     """
@@ -11,7 +13,7 @@ class SubstratesDoc(BaseModel):
         description="Reduced formula of the substrate.",
     )
 
-    sub_id: str | None = Field(
+    sub_id: IdentifierType | None = Field(
         None,
         description="Materials Project ID of the substrate material. This comes in the form: mp-******.",
     )
@@ -31,7 +33,7 @@ class SubstratesDoc(BaseModel):
         description="Elastic energy in meV.",
     )
 
-    film_id: str | None = Field(
+    film_id: IdentifierType | None = Field(
         None,
         description="The Materials Project ID of the film material. This comes in the form: mp-******.",
     )

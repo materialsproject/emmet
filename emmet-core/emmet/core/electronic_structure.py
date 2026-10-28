@@ -28,7 +28,7 @@ from emmet.core.types.pymatgen_types.bandstructure_symm_line_adapter import (
     TypedBandDict,
 )
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
-from emmet.core.types.typing import IdentifierType
+from emmet.core.types.typing import IdentifierType, TaskIdentifierType
 
 if TYPE_CHECKING:
     from typing import Any, Self
@@ -83,7 +83,7 @@ def _deser_cbm_vbm(band: Any) -> TypedBandDict:
 class BandStructureSummaryData(ElectronicStructureSummary):
     """Schematize high-level band structure data for the API."""
 
-    task_id: IdentifierType | None = Field(
+    task_id: TaskIdentifierType | None = Field(
         None,
         description="The source calculation (task) ID that this band structure comes from.",
     )
@@ -163,7 +163,7 @@ def _deser_orbital(orbital):
 
 
 class DosData(BaseModel):
-    task_id: IdentifierType | None = Field(
+    task_id: TaskIdentifierType | None = Field(
         None,
         description="The source calculation (task) ID that this density of states comes from.",
     )

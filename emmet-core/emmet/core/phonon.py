@@ -28,7 +28,11 @@ from emmet.core.polar import BornEffectiveCharges, DielectricDoc, IRDielectric
 from emmet.core.structure import StructureMetadata
 from emmet.core.types.enums import DocEnum, ValueEnum
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.types.typing import DateTimeType, FSPathType, IdentifierType
+from emmet.core.types.typing import (
+    DateTimeType,
+    FSPathType,
+    TaskIdentifierType,
+)
 from emmet.core.utils import get_num_formula_units, type_override
 
 if TYPE_CHECKING:
@@ -551,7 +555,7 @@ class ThermalDisplacementData(BaseModel):
 class PhononBSDOSTask(StructureMetadata):
     """Phonon band structures and density of states data."""
 
-    identifier: IdentifierType | None = Field(
+    identifier: TaskIdentifierType | None = Field(
         None, description="The identifier of this phonon analysis task."
     )
 

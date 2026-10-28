@@ -14,7 +14,7 @@ from emmet.core.thermo import DecompositionProduct
 from emmet.core.types.enums import ValueEnum, XasEdge, XasType
 from emmet.core.types.pymatgen_types.element_adapter import ElementType
 from emmet.core.types.pymatgen_types.structure_adapter import StructureType
-from emmet.core.types.typing import IdentifierType
+from emmet.core.types.typing import TaskIdentifierType
 
 if TYPE_CHECKING:
     from typing import Self
@@ -73,7 +73,7 @@ class PropModel(BaseModel):
 class MaterialsSummary(PropertyDoc, PropModel):
     property_name: str = "summary"
 
-    task_ids: list[IdentifierType] = Field(
+    task_ids: list[TaskIdentifierType] = Field(
         [],
         title="Calculation IDs",
         description="List of Calculations IDs associated with this material.",
@@ -286,7 +286,7 @@ class ProvenanceSummary(PropModel):
 
 class PhononSummary(PropModel):
     _prop: str = PrivateAttr("phonon")
-    phonon_IDs: dict[str, list[IdentifierType]] | None = Field(
+    phonon_IDs: dict[str, list[TaskIdentifierType]] | None = Field(
         None,
         description="Identfiers for phonon documents associated with this material.",
     )

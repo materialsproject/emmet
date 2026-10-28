@@ -10,6 +10,8 @@ one module, can and should remain in that module.
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from functools import partial
@@ -347,7 +349,28 @@ def format_task_id(
     return str(AlphaID(value, padlen=padlen, prefix=None))
 
 
-def _make_id_type(render_order, **kwargs) -> Any:
+@dataclass(frozen=True)
+class IdDisplayFormat:
+    """`Annotated` metadata marking a field as holding an MP identifier.
+
+    Pydantic ignores unknown `Annotated` metadata, so this has no effect on
+    validation or serialization. It lets consumers (e.g. the API's `id_format`
+    query parameter) discover which fields of a model hold identifiers, and
+    how to render them, by inspecting the model's type annotations.
+
+    Attributes:
+        formatter: Callable `formatter(value, legacy=<bool>)` which renders the
+            identifier in either the legacy or AlphaID display form.
+    """
+
+    formatter: Callable[..., Any]
+
+
+def _make_id_type(
+    render_order,
+    display_formatter: Callable[..., Any] = format_identifier,
+    **kwargs,
+) -> Any:
     _order: Any
     match render_order:
         case 0:
@@ -363,14 +386,22 @@ def _make_id_type(render_order, **kwargs) -> Any:
         _order,
         BeforeValidator(partial(_fault_tolerant_id_serde, **kwargs)),
         PlainSerializer(partial(_fault_tolerant_id_serde, serialize=True, **kwargs)),
+        IdDisplayFormat(display_formatter),
     ]
 
 
-IdentifierType = _make_id_type(0, padlen=ID_PADLEN)
+IdentifierType = _make_id_type(0, format_identifier, padlen=ID_PADLEN)
 MaterialIdentifierType = _make_id_type(
-    1, legacy=True, prefix=ID_PREFIX, padlen=ID_PADLEN
+    1, format_identifier, legacy=True, prefix=ID_PREFIX, padlen=ID_PADLEN
 )
 """MPID / AlphaID serde."""
+
+TaskIdentifierType = _make_id_type(0, format_task_id, padlen=ID_PADLEN)
+"""Same serde as `IdentifierType`, but displayed as a calculation task id.
+
+Task ids are displayed differently from material ids (legacy: `mp-149`,
+alpha: bare `aaaaaaft` with no prefix), see `format_task_id`.
+"""
 
 
 class CompoundIDType(TypedDict):

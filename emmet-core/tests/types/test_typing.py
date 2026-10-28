@@ -1,11 +1,14 @@
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 
 from emmet.core.mpid import MPID, AlphaID
 from emmet.core.types.typing import (
     ID_PADLEN,
     ID_PREFIX,
+    IdDisplayFormat,
+    IdentifierType,
     MaterialIdentifierType,
+    TaskIdentifierType,
     format_compound_identifier,
     format_identifier,
     format_task_id,
@@ -232,3 +235,39 @@ def test_format_compound_identifier_accepts_MPID_instance():
 def test_format_task_id_accepts_MPID_instance():
     assert format_task_id(MPID("mp-149"), legacy=True) == "mp-149"
     assert format_task_id(MPID("mp-149"), legacy=False) == "aaaaaaft"
+
+
+# ---------------------------------------------------------------------------
+# Identifier type markers (used by the API to discover id fields in models)
+# ---------------------------------------------------------------------------
+
+
+def _marker(annotated_type) -> IdDisplayFormat:
+    (marker,) = [
+        m for m in annotated_type.__metadata__ if isinstance(m, IdDisplayFormat)
+    ]
+    return marker
+
+
+def test_identifier_types_carry_their_display_formatter():
+    assert _marker(IdentifierType).formatter is format_identifier
+    assert _marker(MaterialIdentifierType).formatter is format_identifier
+    assert _marker(TaskIdentifierType).formatter is format_task_id
+
+
+@pytest.mark.parametrize("value", ["mp-149", "mp-aaaaaaft", 149, AlphaID(149)])
+def test_task_identifier_type_serde_matches_identifier_type(value):
+    task_adapter = TypeAdapter(TaskIdentifierType)
+    id_adapter = TypeAdapter(IdentifierType)
+
+    validated = task_adapter.validate_python(value)
+    assert validated == id_adapter.validate_python(value)
+    assert type(validated) is type(id_adapter.validate_python(value))
+    assert task_adapter.dump_python(validated) == id_adapter.dump_python(validated)
+
+
+def test_marker_does_not_change_json_schema():
+    assert (
+        TypeAdapter(TaskIdentifierType).json_schema()
+        == TypeAdapter(IdentifierType).json_schema()
+    )
