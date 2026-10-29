@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import re
 import warnings
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, cast
 
@@ -71,7 +72,7 @@ from emmet.core.vasp.utils import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Mapping, Sequence
 
     from typing import Self
 
@@ -295,8 +296,8 @@ class AnalysisDoc(BaseModel):
 
 
 @type_override({"transformations": str, "vasp_objects": str})
-class CoreTaskDoc(StructureMetadata):
-    """Calculation-level details about VASP calculations that power the Materials Project."""
+class BaseTaskDoc(StructureMetadata):
+    """Fields shared by the models of VASP tasks: CoreTaskDoc and TaskDoc."""
 
     batch_id: str | None = Field(
         None,
@@ -372,6 +373,100 @@ class CoreTaskDoc(StructureMetadata):
                 )
         return batch_id
 
+
+class CoreTaskDoc(BaseTaskDoc):
+    """Calculation-level details about VASP calculations that power the Materials Project.
+
+    A document describes a single calculation. A directory with several
+    calculations, such as the legacy double relaxations, has one document
+    for each, which share a `dir_name` and are told apart by `calc_suffix`.
+    """
+
+    calc_suffix: str | None = Field(
+        STANDARD_CALC_SUFFIX,
+        description="The suffix of the calculation in its directory, e.g., relax1, "
+        "or standard if the calculation's files have no suffix. Together with "
+        "`dir_name` it identifies the calculation.",
+    )
+
+    @classmethod
+    def from_calculation(
+        cls,
+        calc_doc: Calculation,
+        vasp_objects: dict[VaspObject, Any] | None = None,
+        *,
+        dir_name: str,
+        calc_suffix: str = STANDARD_CALC_SUFFIX,
+        completed_at: datetime | str | None = None,
+        orig_inputs: CalculationInput | None = None,
+        transformations: dict[str, Any] | None = None,
+        icsd_id: int | None = None,
+        task_id: str | None = None,
+        batch_id: str | None = None,
+        tags: Sequence[str | None] = (),
+    ) -> Self:
+        """Create a CoreTaskDoc from the document of a single calculation.
+
+        Parameters
+        ----------
+        calc_doc
+            The calculation, with its input and output.
+        vasp_objects
+            VASP objects parsed with the calculation, if any.
+        dir_name
+            The directory the calculation was parsed from, as a URI like
+            the output of :obj:`get_uri`.
+        calc_suffix
+            The suffix of the calculation in its directory.
+        completed_at
+            When the calculation was completed. Defaults to the time recorded
+            in `calc_doc`, which is the modification time of its vasprun.xml.
+        orig_inputs
+            The original inputs of the calculation, if known.
+        transformations
+            The contents of a transformations file, with the author and tags
+            removed, see :obj:`_parse_transformations`.
+        icsd_id
+            The ICSD id, if known.
+        task_id
+            The identifier of the calculation.
+        batch_id
+            Calculation batch identifier
+        tags
+            Metadata tags.
+
+        Returns
+        -------
+        CoreTaskDoc
+            A slim task document for the calculation.
+        """
+        assert calc_doc.input is not None and calc_doc.output is not None
+        assert calc_doc.output.structure is not None
+        return cls.from_structure(
+            batch_id=batch_id,
+            calc_suffix=calc_suffix,
+            calc_type=calc_doc.calc_type,
+            completed_at=completed_at or calc_doc.completed_at,
+            dir_name=dir_name,
+            icsd_id=icsd_id,
+            input=calc_doc.input,
+            meta_structure=calc_doc.output.structure,
+            orig_inputs=orig_inputs,
+            output=CoreCalculationOutput(
+                **calc_doc.output.model_dump(
+                    include=set(CoreCalculationOutput.model_fields)
+                )
+            ),
+            run_type=calc_doc.run_type,
+            structure=calc_doc.output.structure,
+            tags=list(tags),
+            task_id=task_id,
+            task_type=calc_doc.task_type,
+            transformations=transformations,
+            vasp_objects=vasp_objects,
+            vasp_version=calc_doc.vasp_version,
+        )
+
     @classmethod
     def from_directory(
         cls,
@@ -379,6 +474,7 @@ class CoreTaskDoc(StructureMetadata):
         volumetric_files: tuple[str, ...] = _VOLUMETRIC_FILES,
         batch_id: str | None = None,
         tags: list[str | None] = [],
+        calc_suffix: str | None = None,
         **vasp_calculation_kwargs,
     ) -> tuple[Self, RelaxTrajectory]:
         """
@@ -386,19 +482,25 @@ class CoreTaskDoc(StructureMetadata):
         directory containing VASP files.
 
         Only parses a single calculation. Use TaskDoc.from_directory(...)
-        to parse multiple calculations.
+        to parse multiple calculations into one document, or
+        :obj:`emmet.core.vasp.parse.parse_calculation` to parse every
+        calculation of a directory.
 
         Parameters
         ----------
         dir_name
             The path to the folder containing the calculation outputs.
         volumetric_files
-            Volumetric files to search for.
+            Not used. Maintained for backwards compatibility.
         batch_id
             Calculation identifier
         tags
             Additional metadata tags. Will be concatenated with tags
             parsed from transformations file (if present in ``dir_name``)
+        calc_suffix
+            The suffix of the calculation to parse, e.g., relax2. By default
+            this is the calculation whose files have no suffix or, if there is
+            no such calculation, the only calculation in the directory.
         **vasp_calculation_kwargs
             Additional parsing options that will be passed to the
             :obj:`.Calculation.from_vasp_files` function.
@@ -411,40 +513,41 @@ class CoreTaskDoc(StructureMetadata):
             A low memory document for the calculation's trajectory.
         """
         dir_name = Path(dir_name)
-        task_files = _find_vasp_files(dir_name, volumetric_files=volumetric_files)
+        calculations = {
+            locator.modifier or STANDARD_CALC_SUFFIX: files
+            for locator, files in discover_calculations(dir_name).items()
+        }
+        if calc_suffix is None:
+            if STANDARD_CALC_SUFFIX in calculations:
+                calc_suffix = STANDARD_CALC_SUFFIX
+            elif len(calculations) == 1:
+                calc_suffix = next(iter(calculations))
+        if calc_suffix not in calculations:
+            raise ValueError(
+                f"Cannot choose a calculation to parse in {dir_name}: found "
+                f"{list(calculations) or 'none'}. Specify one with `calc_suffix`."
+            )
+        files = calculations[calc_suffix]
 
         calc_doc, vasp_objects = Calculation.from_vasp_files(
-            dir_name,
-            "standard",
-            **cast(dict[str, Any], task_files["standard"]),
+            files.directory,
+            calc_suffix,
+            **files.to_calculation_kwargs(resolve=False),  # type: ignore[arg-type]
             **vasp_calculation_kwargs,
         )
-        assert calc_doc.input is not None and calc_doc.output is not None
-        assert calc_doc.output.structure is not None
-        transformations, icsd_id, transformation_tags, author = _parse_transformations(
-            dir_name
+        transformations, icsd_id, transformation_tags, author = (
+            _parse_transformations_file(files.workflow.get("transformations.json"))
         )
-        task_doc = cls.from_structure(
-            batch_id=batch_id,
-            calc_type=calc_doc.calc_type,
-            completed_at=calc_doc.completed_at,
+        task_doc = cls.from_calculation(
+            calc_doc,
+            vasp_objects,
             dir_name=get_uri(dir_name),
-            icsd_id=icsd_id,
-            input=calc_doc.input,
-            meta_structure=calc_doc.output.structure,
-            orig_inputs=_parse_orig_inputs(dir_name),
-            output=CoreCalculationOutput(
-                **calc_doc.output.model_dump(
-                    include=set(CoreCalculationOutput.model_fields)
-                )
-            ),
-            run_type=calc_doc.run_type,
-            structure=calc_doc.output.structure,
-            tags=tags + transformation_tags,
-            task_type=calc_doc.task_type,
+            calc_suffix=calc_suffix,
+            orig_inputs=_parse_orig_input_files(files.orig_inputs),
             transformations=transformations,
-            vasp_objects=vasp_objects,
-            vasp_version=calc_doc.vasp_version,
+            icsd_id=icsd_id,
+            batch_id=batch_id,
+            tags=[*tags, *transformation_tags],
         )
 
         trajectory = get_trajectories_from_calculations([calc_doc])[0]
@@ -452,7 +555,7 @@ class CoreTaskDoc(StructureMetadata):
         return (task_doc, trajectory)
 
 
-class ValidationTaskDoc(CoreTaskDoc):
+class ValidationTaskDoc(BaseTaskDoc):
     """
     Wrapper for TaskDoc to ensure compatiblity with validation checks
     in MaterialsDoc.from_tasks(...) if validation builder is skipped
@@ -462,7 +565,7 @@ class ValidationTaskDoc(CoreTaskDoc):
 
 
 @type_override({"additional_json": str})
-class TaskDoc(CoreTaskDoc, extra="allow"):
+class TaskDoc(BaseTaskDoc, extra="allow"):
     """Flexible wrapper around CoreTaskDoc"""
 
     additional_json: JsonDictType = Field(
@@ -957,11 +1060,18 @@ def _parse_transformations(
     dir_name: Path,
 ) -> tuple[dict, int | None, list[str | None], str | None]:
     """Parse transformations.json file."""
-    transformations = {}
     filenames = tuple(dir_name.glob("transformations.json*"))
+    return _parse_transformations_file(filenames[0] if filenames else None)
+
+
+def _parse_transformations_file(
+    filename: Path | None,
+) -> tuple[dict, int | None, list[str | None], str | None]:
+    """Parse a transformations.json file, if there is one."""
+    transformations = {}
     icsd_id = None
-    if len(filenames) >= 1:
-        transformations = loadfn(filenames[0], cls=None)
+    if filename is not None:
+        transformations = loadfn(filename, cls=None)
         try:
             match = re.match(r"(\d+)-ICSD", transformations["history"][0]["source"])
             if match:
@@ -1058,6 +1168,41 @@ def _parse_orig_inputs(
                 orig_inputs[_key] = _assign
 
     return CalculationInput(**orig_inputs)
+
+
+def _parse_orig_input_files(orig_files: Mapping[str, Path]) -> CalculationInput | None:
+    """
+    Parse the original input files of a single calculation.
+
+    Parameters
+    ----------
+    orig_files
+        The original input files by type, e.g., INCAR, KPOINTS, POSCAR,
+        POTCAR or POTCAR.spec, as found by :obj:`discover_calculations`.
+
+    Returns
+    -------
+    CalculationInput or None
+        The original input Structure, Kpoints, PotcarSpec, and Incar data.
+        None if there are no original inputs: they are not guessed from the
+        inputs that ran, because those may have been corrected.
+    """
+    orig_inputs: dict[str, Any] = {}
+    if "INCAR" in orig_files:
+        orig_inputs["incar"] = Incar.from_file(orig_files["INCAR"])
+    if "KPOINTS" in orig_files:
+        orig_inputs["kpoints"] = Kpoints.from_file(orig_files["KPOINTS"])
+    if "POSCAR" in orig_files:
+        orig_inputs["structure"] = Poscar.from_file(orig_files["POSCAR"]).structure
+    for key in ("POTCAR.spec", "POTCAR"):
+        if key in orig_files:
+            try:
+                orig_inputs["potcar_spec"] = PotcarSpec.from_file(orig_files[key])
+                break
+            except Exception:
+                # Can't parse non emmet-core style POTCAR.spec files
+                continue
+    return CalculationInput(**orig_inputs) if orig_inputs else None
 
 
 def _parse_additional_json(dir_name: Path) -> dict[str, Any]:

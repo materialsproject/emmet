@@ -11,6 +11,14 @@ float32 columns, are declared on the fields of the models themselves.
 Importing this module does not require pyarrow. Table construction and I/O
 is the responsibility of whatever writes the tables.
 
+Projections are stored apart from the DOS and band structure they belong to,
+because they are far larger than the rest of the data and are rarely needed
+together with it. A DOS or band structure therefore has two tables, which
+are joined on `identifier`: one with the rows of `DosRow` / `BandStructureRow`
+(no projections), and one with the rows of `DosProjectionsRow` /
+`BandStructureProjectionsRow`. Use `dos_from_rows` / `band_structure_from_rows`
+to put them back together.
+
 Because the models validate their input, rows should be constructed directly
 from pymatgen objects, which avoids copying very large arrays:
 
@@ -36,11 +44,18 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
-from emmet.core.band_theory import ElectronicBS, ElectronicDos
-from emmet.core.utils import convert_datetime
+from emmet.core.band_theory import (
+    BSPathType,
+    ElectronicBS,
+    ElectronicDos,
+    ProjectedBS,
+    ProjectedDos,
+)
+from emmet.core.types.enums import ValueEnum
+from emmet.core.types.typing import TaskIdentifierType
+from emmet.core.utils import convert_datetime, utcnow
 from emmet.core.vasp.calc_types.enums import RunType, TaskType
 from emmet.core.vasp.models import VOLUMETRIC_PARSERS, ChgcarLike, volumetric_file_type
-from emmet.core.types.typing import IdentifierType
 
 if TYPE_CHECKING:
     from typing import Any, Self
@@ -55,6 +70,11 @@ def _require_datetime(v: Any) -> datetime:
     return convert_datetime(v)
 
 
+def _optional_datetime(v: Any) -> datetime | None:
+    """Convert to a timezone-aware datetime, or None if there is no value."""
+    return convert_datetime(v) if v else None
+
+
 class ParsedRowHeader(BaseModel):
     """Top-level columns shared by the rows of every table of large VASP objects.
 
@@ -64,7 +84,7 @@ class ParsedRowHeader(BaseModel):
     stored once in the tasks table, which can be joined on `identifier`.
     """
 
-    identifier: IdentifierType = Field(
+    identifier: TaskIdentifierType = Field(
         description="The identifier of the calculation. Joins to the task_id "
         "of the tasks table."
     )
@@ -98,11 +118,46 @@ class ParsedRowHeader(BaseModel):
 
 
 class DosRow(ParsedRowHeader, ElectronicDos):
-    """A row of the density of states table."""
+    """A row of the total density of states table.
+
+    The projections are not a column of the table. They are kept on the
+    row for the convenience of building the row of the projections table from it.
+    """
+
+    projected_densities: ProjectedDos | None = Field(
+        None,
+        exclude=True,
+        description="The orbital- and site-projected DOS. Not stored in this "
+        "table, see DosProjectionsRow.",
+    )
+
+
+class DosProjectionsRow(ParsedRowHeader, ProjectedDos):
+    """A row of the projected density of states table."""
 
 
 class BandStructureRow(ParsedRowHeader, ElectronicBS):
-    """A row of the band structure table."""
+    """A row of the band structure table.
+
+    The projections are not a column of the table. They are kept on the
+    row for the convenience of building the row of the projections table from it.
+    """
+
+    projections: ProjectedBS | None = Field(
+        None,
+        exclude=True,
+        description="The site- and spin-orbital-projected band structure. Not "
+        "stored in this table, see BandStructureProjectionsRow.",
+    )
+
+
+class BandStructureProjectionsRow(ParsedRowHeader, ProjectedBS):
+    """A row of the projected band structure table."""
+
+    path_convention: BSPathType = Field(
+        description="High symmetry path convention of the band structure. "
+        "A copy of the column of the band structure table, which partitions both tables."
+    )
 
 
 class VolumetricRow(ParsedRowHeader, ChgcarLike):
@@ -120,6 +175,133 @@ class VolumetricRow(ParsedRowHeader, ChgcarLike):
     )
 
 
+def _assemble_row(
+    row_cls: type[BaseModel], header: ParsedRowHeader, part: BaseModel, **extra: Any
+) -> Any:
+    """Make a row from an already validated header and part of another model.
+
+    The values are not validated again, so their (potentially very large)
+    arrays are shared with `part`, not copied.
+    """
+    values = {name: getattr(header, name) for name in ParsedRowHeader.model_fields}
+    values.update({name: getattr(part, name) for name in type(part).model_fields})
+    values.update(extra)
+    return row_cls.model_construct(**values)
+
+
+def split_dos_row(row: DosRow) -> tuple[DosRow, DosProjectionsRow | None]:
+    """Split the projections of a DOS into their own row.
+
+    The projections are removed from the DOS row so they are not held twice.
+
+    Returns
+    -----------
+    DosRow
+        The row (the same object as the input) with no projections.
+    DosProjectionsRow or None
+        None if the DOS has no projections.
+    """
+    projections = row.projected_densities
+    row.projected_densities = None
+    if projections is None:
+        return row, None
+    return row, _assemble_row(DosProjectionsRow, row, projections)
+
+
+def split_band_structure_row(
+    row: BandStructureRow,
+) -> tuple[BandStructureRow, BandStructureProjectionsRow | None]:
+    """Split the projections of a band structure into their own row.
+
+    The projections are removed from the band structure row so they are
+    not held twice.
+
+    Returns
+    -----------
+    BandStructureRow
+        The row (the same object as the input) with no projections.
+    BandStructureProjectionsRow or None
+        None if the band structure has no projections.
+    """
+    projections = row.projections
+    row.projections = None
+    if projections is None:
+        return row, None
+    return row, _assemble_row(
+        BandStructureProjectionsRow,
+        row,
+        projections,
+        path_convention=row.path_convention,
+    )
+
+
+def dos_from_rows(
+    dos: DosRow | ElectronicDos, projections: DosProjectionsRow | None = None
+) -> ElectronicDos:
+    """Rebuild a DOS from its row and, optionally, the row of its projections.
+
+    Parameters
+    -----------
+    dos : DosRow
+        The row of the total DOS table.
+    projections : DosProjectionsRow or None
+        The row of the projected DOS table with the same identifier, if the
+        projections are wanted.
+
+    Returns
+    -----------
+    ElectronicDos
+        Which can be converted to a pymatgen object with `.to_pmg()`.
+    """
+    if projections is not None and projections.identifier != getattr(
+        dos, "identifier", None
+    ):
+        raise ValueError(
+            f"The projections of {projections.identifier} do not belong to the "
+            f"DOS of {getattr(dos, 'identifier', None)}."
+        )
+    config = {name: getattr(dos, name) for name in ElectronicDos.model_fields}
+    if projections is not None:
+        config["projected_densities"] = ProjectedDos(
+            **{name: getattr(projections, name) for name in ProjectedDos.model_fields}
+        )
+    return ElectronicDos(**config)
+
+
+def band_structure_from_rows(
+    band_structure: BandStructureRow | ElectronicBS,
+    projections: BandStructureProjectionsRow | None = None,
+) -> ElectronicBS:
+    """Rebuild a band structure from its row and, optionally, its projections row.
+
+    Parameters
+    -----------
+    band_structure : BandStructureRow
+        The row of the band structure table.
+    projections : BandStructureProjectionsRow or None
+        The row of the projected band structure table with the same
+        identifier, if the projections are wanted.
+
+    Returns
+    -----------
+    ElectronicBS
+        Which can be converted to a pymatgen object with `.to_pmg()`.
+    """
+    if projections is not None and projections.identifier != getattr(
+        band_structure, "identifier", None
+    ):
+        raise ValueError(
+            f"The projections of {projections.identifier} do not belong to the "
+            f"band structure of {getattr(band_structure, 'identifier', None)}."
+        )
+    config = {name: getattr(band_structure, name) for name in ElectronicBS.model_fields}
+    if projections is not None:
+        config["projections"] = ProjectedBS(
+            **{name: getattr(projections, name) for name in ProjectedBS.model_fields}
+        )
+    return ElectronicBS(**config)
+
+
 class ValidationRow(ParsedRowHeader):
     """A row of the validation table, which has the results of validating a task."""
 
@@ -129,6 +311,58 @@ class ValidationRow(ParsedRowHeader):
     )
     warnings: list[str] = Field(
         [], description="Warnings raised during validation, if any."
+    )
+
+
+class ParseOutcome(ValueEnum):
+    """What came of parsing a calculation."""
+
+    PARSED = "parsed"
+    SKIPPED_FAILED = "skipped_failed"
+    SKIPPED_UNRECOGNIZED = "skipped_unrecognized"
+    ERROR = "error"
+
+
+class ManifestRow(BaseModel):
+    """A row of the manifest table, which records the parsing of every calculation.
+
+    A calculation gets a row whatever came of parsing it, even if it
+    could not be read at all, so that nothing disappears silently. It can also
+    be used to find out which calculations have been parsed already, by
+    their `dir_name` and `calc_suffix`.
+
+    The manifest does not have the header of the other tables, because the
+    properties of a calculation which could not be read are not known.
+    """
+
+    identifier: TaskIdentifierType = Field(
+        description="The identifier assigned to the calculation."
+    )
+    dir_name: str = Field(
+        description="The directory the calculation was parsed from. Together with "
+        "the calc_suffix it identifies the calculation."
+    )
+    calc_suffix: str = Field(
+        description="The suffix of the calculation in the directory, or standard."
+    )
+    completed_at: Annotated[datetime | None, BeforeValidator(_optional_datetime)] = (
+        Field(None, description="When the calculation was completed, if known.")
+    )
+    parsed_at: datetime = Field(
+        default_factory=utcnow, description="When the calculation was parsed."
+    )
+    outcome: ParseOutcome = Field(description="What came of parsing the calculation.")
+    run_type: RunType | None = Field(
+        None, description="The functional used in the calculation, if known."
+    )
+    task_type: TaskType | None = Field(
+        None, description="The type of calculation, if known."
+    )
+    tables: list[str] = Field(
+        [], description="The tables which received a row for this calculation."
+    )
+    errors: list[str] = Field(
+        [], description="The problems which occurred while parsing the calculation."
     )
 
 
@@ -164,11 +398,20 @@ class TableSpec:
 _VOLUMETRIC_PARTITION = ("year", "month", "day", "run_type")
 
 PARSED_TABLES: dict[str, TableSpec] = {
-    "dos": TableSpec("dos", DosRow, partition_by=("run_type",)),
-    "bandstructure": TableSpec(
-        "bandstructure", BandStructureRow, partition_by=("run_type", "path_convention")
+    "total-dos": TableSpec("total-dos", DosRow, partition_by=("run_type",)),
+    "projected-dos": TableSpec(
+        "projected-dos", DosProjectionsRow, partition_by=("run_type",)
+    ),
+    "bandstructures": TableSpec(
+        "bandstructures", BandStructureRow, partition_by=("run_type", "path_convention")
+    ),
+    "projected-bandstructures": TableSpec(
+        "projected-bandstructures",
+        BandStructureProjectionsRow,
+        partition_by=("run_type", "path_convention"),
     ),
     "validation": TableSpec("validation", ValidationRow),
+    "manifest": TableSpec("manifest", ManifestRow),
     **{
         file_type.lower(): TableSpec(
             file_type.lower(), VolumetricRow, partition_by=_VOLUMETRIC_PARTITION
@@ -177,6 +420,9 @@ PARSED_TABLES: dict[str, TableSpec] = {
     },
 }
 """The tables of the parsed tier of large objects, by name.
+
+The names of the DOS and band structure tables, and the order of their
+partitions, are those of the tables already in production.
 
 There is one table for each type of volumetric file, named after the file
 in lowercase (`chgcar`, `aeccar0`, `locpot`, ...). These all use `VolumetricRow`.

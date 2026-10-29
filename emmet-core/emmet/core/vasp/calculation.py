@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 from copy import deepcopy
-from datetime import datetime
+from datetime import UTC, datetime
 from functools import cached_property
 from hashlib import md5
 from pathlib import Path
@@ -55,11 +55,17 @@ from emmet.core.vasp.calc_types import (
     run_type,
     task_type,
 )
-from emmet.core.vasp.models import ChgcarLike, ElectronicStep
+from emmet.core.vasp.models import (
+    VOLUMETRIC_PARSERS,
+    ChgcarLike,
+    ElectronicStep,
+    volumetric_file_type,
+)
 
 SETTINGS = EmmetSettings()
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from typing import Self
 
     from emmet.core.io.pymatgen import BandStructure, CompleteDos
@@ -1105,6 +1111,63 @@ class Calculation(CalculationBaseModel):
         Calculation
             A VASP calculation document.
         """
+        calc, vasp_objects, _ = cls._from_vasp_files(
+            dir_name=dir_name,
+            task_name=task_name,
+            vasprun_file=vasprun_file,
+            outcar_file=outcar_file,
+            contcar_file=contcar_file,
+            volumetric_files=volumetric_files,
+            elph_poscars=elph_poscars,
+            oszicar_file=oszicar_file,
+            potcar_spec_file=potcar_spec_file,
+            parse_dos=parse_dos,
+            parse_bandstructure=parse_bandstructure,
+            average_locpot=average_locpot,
+            run_bader=run_bader,
+            run_ddec6=run_ddec6,
+            strip_bandstructure_projections=strip_bandstructure_projections,
+            strip_dos_projections=strip_dos_projections,
+            store_volumetric_data=store_volumetric_data,
+            store_trajectory=store_trajectory,
+            vasprun_kwargs=vasprun_kwargs,
+            use_emmet_models=use_emmet_models,
+        )
+        return calc, vasp_objects
+
+    @classmethod
+    def _from_vasp_files(
+        cls,
+        dir_name: Path | str,
+        task_name: str,
+        vasprun_file: Path | str,
+        outcar_file: Path | str,
+        contcar_file: Path | str,
+        volumetric_files: list[Path] | None = None,
+        elph_poscars: list[Path] | None = None,
+        oszicar_file: Path | str | None = None,
+        potcar_spec_file: Path | str | None = None,
+        parse_dos: str | bool = False,
+        parse_bandstructure: str | bool = False,
+        average_locpot: bool = True,
+        run_bader: bool = False,
+        run_ddec6: bool | str = False,
+        strip_bandstructure_projections: bool = False,
+        strip_dos_projections: bool = False,
+        store_volumetric_data: tuple[str] | None = None,
+        store_trajectory: StoreTrajectoryOption | str = StoreTrajectoryOption.NO,
+        vasprun_kwargs: dict | None = None,
+        use_emmet_models: bool = SETTINGS.USE_EMMET_MODELS,
+    ) -> tuple[
+        "Calculation",
+        dict[VaspObject, ChgcarLike] | dict[VaspObject, VolumetricData],
+        Vasprun,
+    ]:
+        """Implementation of `from_vasp_files`, which also returns the parsed Vasprun.
+
+        Returning the Vasprun lets callers which need more from it, like the
+        density of states, avoid reading the file again.
+        """
         dir_name = Path(dir_name)
 
         vasprun_file = dir_name / vasprun_file
@@ -1122,7 +1185,7 @@ class Calculation(CalculationBaseModel):
             contcar = Poscar(vasprun.final_structure)
         else:
             contcar = Poscar.from_file(contcar_file)
-        completed_at = str(datetime.fromtimestamp(Path(vasprun_file).stat().st_mtime))
+        completed_at = _file_completion_time(vasprun_file)
 
         output_file_paths = _get_output_file_paths(volumetric_files)
         vasp_objects = _get_volumetric_data(
@@ -1243,6 +1306,7 @@ class Calculation(CalculationBaseModel):
                 calc_type=calc_type(input_doc.model_dump(), input_doc.parameters or {}),
             ),
             vasp_objects,
+            vasprun,
         )
 
     @classmethod
@@ -1273,7 +1337,7 @@ class Calculation(CalculationBaseModel):
         vasprun_kwargs = vasprun_kwargs if vasprun_kwargs else {}
         vasprun = Vasprun(path, **vasprun_kwargs)
 
-        completed_at = str(datetime.fromtimestamp(path.stat().st_mtime))
+        completed_at = _file_completion_time(path)
 
         input_doc = CalculationInput.from_vasprun(vasprun)
 
@@ -1310,6 +1374,17 @@ class Calculation(CalculationBaseModel):
         )
 
 
+def _file_completion_time(path: Path | str) -> str:
+    """The time a file was last modified, as an ISO 8601 string in UTC.
+
+    The modification time of the vasprun.xml is the best estimate of when
+    a calculation was completed. The time zone is explicit because this time
+    determines the date partition of parsed data, which should not depend
+    on the time zone of the machine which parsed it.
+    """
+    return datetime.fromtimestamp(Path(path).stat().st_mtime, tz=UTC).isoformat()
+
+
 def _get_output_file_paths(volumetric_files: list[Path]) -> dict[VaspObject, str]:
     """
     Get the output file paths for VASP output files from the list of volumetric files.
@@ -1328,7 +1403,7 @@ def _get_output_file_paths(volumetric_files: list[Path]) -> dict[VaspObject, str
         vasp_object: str(volumetric_file)
         for vasp_object in VaspObject
         for volumetric_file in volumetric_files
-        if vasp_object.name in str(volumetric_file)
+        if volumetric_file_type(volumetric_file.name) == vasp_object.name
     }
 
 
@@ -1374,8 +1449,8 @@ def _get_volumetric_data(
             continue
 
         try:
-            # assume volumetric data is all in CHGCAR format
-            pmg_cls = Locpot if file_type == VaspObject.LOCPOT else Chgcar
+            # LOCPOT and ELFCAR have their own parsers, the rest are CHGCAR-formatted
+            pmg_cls = VOLUMETRIC_PARSERS.get(file_type.name, Chgcar)
             vobj = pmg_cls.from_file(str(file))
             volumetric_data[file_type] = (
                 ChgcarLike.from_pmg(vobj) if use_emmet_models else vobj
@@ -1405,12 +1480,26 @@ def _parse_bandstructure(
     use_emmet_models: bool,
 ) -> ElectronicBS | BandStructure | None:
     """Parse band structure. See Calculation.from_vasp_files for supported arguments."""
-    vasprun_file = vasprun.filename
+    return _parse_bandstructure_file(
+        parse_mode, vasprun.filename, vasprun.incar, use_emmet_models
+    )
 
+
+def _parse_bandstructure_file(
+    parse_mode: str | bool,
+    vasprun_file: Path | str,
+    incar: Mapping[str, Any],
+    use_emmet_models: bool,
+) -> ElectronicBS | BandStructure | None:
+    """Parse band structure from a vasprun.xml file and its INCAR parameters.
+
+    Needing only the file name and INCAR, and not a parsed Vasprun, lets callers
+    free a Vasprun, which can be large, before reading the band structure.
+    """
     bs: ElectronicBS | BandStructure | None = None
     # only save the bandstructure if not moving ions
-    if parse_mode == "auto" and vasprun.incar.get("NSW", 0) <= 1:
-        if vasprun.incar.get("ICHARG", 0) > 10:
+    if parse_mode == "auto" and incar.get("NSW", 0) <= 1:
+        if incar.get("ICHARG", 0) > 10:
             # NSCF calculation
             bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=True)
             try:
