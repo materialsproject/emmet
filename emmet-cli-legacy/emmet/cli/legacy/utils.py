@@ -1,10 +1,9 @@
 import itertools
 import logging
-import multiprocessing
 import os
 import shutil
 import stat
-from collections import abc, defaultdict
+from collections import defaultdict
 from enum import Enum
 from fnmatch import fnmatch
 from glob import glob
@@ -12,19 +11,12 @@ from pathlib import Path
 
 import click
 import mgzip
-from botocore.exceptions import EndpointConnectionError
-from dotty_dict import dotty
 from fireworks.fw_config import FW_BLOCK_FORMAT
 from pymatgen.core import Structure
-from pymatgen.entries.compatibility import MaterialsProject2020Compatibility
-from pymatgen.util.provenance import StructureNL
-from pymongo.errors import DocumentTooLarge
 
 from emmet.cli.legacy import SETTINGS
-from emmet.cli.legacy.db import StorageGateway
-from emmet.core.tasks import TaskDoc
-from emmet.core.utils import group_structures, jsanitize, utcnow
-from emmet.core.vasp.validation import ValidationDoc
+from emmet.cli.legacy.db import StorageGateway  # noqa: F401  (used by other modules)
+from emmet.core.utils import group_structures, utcnow
 
 logger = logging.getLogger("emmet")
 perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
@@ -32,35 +24,6 @@ perms = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP
 
 class EmmetCliError(Exception):
     pass
-
-
-def recurse_list(seq):
-    for item in seq:
-        if isinstance(item, abc.Mapping):
-            recurse_dict(item)
-        elif isinstance(item, list):
-            recurse_list(item)
-
-
-def recurse_dict(nested):
-    for key, value in nested.items():
-        if isinstance(value, abc.Mapping):
-            if not value:
-                nested[key] = None
-            else:
-                recurse_dict(value)
-        elif isinstance(value, str):
-            if value == "None" or value == "":
-                nested[key] = None
-        elif isinstance(value, list):
-            if len(value) == 0:
-                nested[key] = None
-            else:
-                recurse_list(value)
-
-
-def scrub_dict(entry):
-    recurse_dict(entry)
 
 
 class ReturnCodes(Enum):
@@ -223,21 +186,6 @@ def rename_dir(root, launch_dir):
     os.rename(root, launch_dir)
 
 
-def create_orig_inputs(vaspdir):
-    ctx = click.get_current_context()
-    run = ctx.parent.parent.params["run"]
-    for inp in ["INCAR", "KPOINTS", "POTCAR", "POSCAR"]:
-        input_path = os.path.join(vaspdir, inp)
-        if not glob(input_path + ".orig*"):
-            matches = glob(input_path + "*")
-            if matches:
-                input_path = matches[0]
-                orig_path = input_path.replace(inp, inp + ".orig")
-                if run:
-                    shutil.copyfile(input_path, orig_path)
-                logger.debug(f"{input_path} -> {orig_path}")
-
-
 # https://stackoverflow.com/a/34073559
 class VaspDirsGenerator:
     def __init__(self):
@@ -327,8 +275,6 @@ def get_vasp_dirs():
 
             # NOTE skip symlink'ing on MP calculations from the early days
             vasp_dir = get_symlinked_path(root, base_path_index) if reorg else root
-            if dir_type == "vasp":
-                create_orig_inputs(vasp_dir)
 
             dirs[:] = []  # don't descend further (i.e. ignore relax1/2)
             logger.log(logging.INFO if gzipped else logging.DEBUG, vasp_dir)
@@ -368,207 +314,6 @@ def reconstruct_command(sbatch=False):
                     command.append("\\\n")
 
     return " ".join(command).strip().strip("\\")
-
-
-def parse_vasp_dirs(vaspdirs, tag, task_ids, snl_metas):  # noqa: C901
-    process = multiprocessing.current_process()
-    name = process.name
-    chunk_idx = int(name.rsplit("-")[1]) - 1
-    logger.info(f"{name} starting.")
-    tags = [tag, SETTINGS.year_tags[-1]]
-
-    ctx = click.get_current_context()
-    run = ctx.parent.parent.params["run"]
-    spec_or_dbfile = ctx.parent.parent.params["spec_or_dbfile"]
-    no_dupe_check = ctx.parent.parent.params["no_dupe_check"]
-
-    storage_gateway = StorageGateway.from_db_file(spec_or_dbfile)
-    snl_collection = storage_gateway.db.snls_user
-    projection = {"tags": 1, "task_id": 1}
-    count = 0
-
-    for vaspdir in vaspdirs:
-        logger.info(f"{name} VaspDir: {vaspdir}")
-        launcher = get_subdir(vaspdir)
-        query = {"dir_name": {"$regex": launcher}}
-        manual_taskid = isinstance(task_ids, dict)
-        docs = list(
-            storage_gateway._coll.find(query, projection).sort([("_id", -1)]).limit(1)
-        )
-
-        if docs:
-            if no_dupe_check:
-                logger.warning(f"FORCING re-parse of {launcher}!")
-                if not manual_taskid:
-                    raise ValueError("need --task-ids when re-parsing!")
-            else:
-                if run:
-                    shutil.rmtree(vaspdir)
-                    logger.warning(f"{name} {launcher} already parsed -> removed.")
-                else:
-                    logger.warning(f"{name} {launcher} already parsed -> would remove.")
-                continue
-
-        snl_metas_avail = isinstance(snl_metas, dict)
-        task_id = (
-            task_ids.get(launcher) if manual_taskid else task_ids[chunk_idx][count]
-        )
-
-        if not task_id:
-            logger.error(f"Unable to determine task_id for {launcher}")
-            continue
-
-        logger.info(f"Using {task_id} for {launcher}.")
-
-        if docs:
-            if docs[0]["tags"]:
-                existing_tags = list(set(docs[0]["tags"]))
-                tags += existing_tags
-                logger.info(f"Adding existing tags {existing_tags} to {tags}.")
-
-        try:
-            task_doc = TaskDoc.from_directory(
-                dir_name=vaspdir,
-                volumetric_files=ctx.params["store_volumetric_data"],
-                task_names=ctx.params["runs"],
-                store_additional_json=False,
-            )
-
-            task_doc.task_id = task_id
-            task_doc.tags = tags
-            task_doc.batch_id = tag
-
-        except Exception as ex:
-            logger.error(f"Failed to build a TaskDoc from {vaspdir}: {ex}")
-            continue
-
-        try:
-            validation_doc = ValidationDoc.from_task_doc(task_doc)
-        except Exception as exc:
-            logger.error(f"Unable to construct a valid ValidationDoc: {exc}")
-            continue
-
-        if not validation_doc.valid:
-            logger.error(f"Not valid: {validation_doc.reasons}")
-            continue
-
-        if validation_doc.warnings:
-            logger.warn(validation_doc.warnings)
-
-        try:
-            entry = MaterialsProject2020Compatibility().process_entry(
-                task_doc.structure_entry
-            )
-        except Exception as exc:
-            logger.error(f"Unable to apply corrections: {exc}")
-            continue
-
-        snl_dct = None
-        if snl_metas_avail:
-            snl_meta = snl_metas.get(launcher)
-            if snl_meta:
-                references = snl_meta.get("references")
-                authors = snl_meta.get(
-                    "authors", ["Materials Project <feedback@materialsproject.org>"]
-                )
-                kwargs = {"projects": [tag]}
-                if references:
-                    kwargs["references"] = references
-
-                struct = task_doc.input.structure
-                snl = StructureNL(struct, authors, **kwargs)
-                snl_dct = snl.as_dict()
-                snl_dct.update(get_meta_from_structure(struct))
-                snl_id = snl_meta["snl_id"]
-                snl_dct["snl_id"] = snl_id
-                logger.info(f"Created SNL object for {snl_id}.")
-
-        if run:
-            if task_doc.state == "successful":
-                if docs and no_dupe_check:
-                    storage_gateway._coll.delete_one({"task_id": task_id})
-                    logger.warning(f"Removed previously parsed task {task_id}!")
-
-                try:
-                    td = jsanitize(
-                        task_doc.model_dump(
-                            include=set(TaskDoc.model_fields),
-                            exclude={
-                                "additional_json",
-                                "author",
-                                "builder_meta",
-                                "custodian",
-                                "entry",
-                                "included_objects",
-                                "run_stats",
-                                "state",
-                                "task_label",
-                            },
-                        )
-                    )
-                    scrub_dict(td)
-                    storage_gateway.insert(td)
-
-                except EndpointConnectionError as exc:
-                    logger.error(f"Connection failed for {task_id}: {exc}")
-                    continue
-                except DocumentTooLarge:
-                    output = dotty(task_doc.calcs_reversed[0].output.as_dict())
-                    pop_keys = [
-                        "normalmode_eigenvecs",
-                        "force_constants",
-                        "outcar.onsite_density_matrices",
-                    ]
-
-                    for k in pop_keys:
-                        if k not in output:
-                            continue
-
-                        logger.warning(f"{name} Remove {k} and retry ...")
-                        output.pop(k)
-                        try:
-                            td = jsanitize(
-                                task_doc.model_dump(
-                                    include=set(TaskDoc.model_fields),
-                                    exclude={
-                                        "additional_json",
-                                        "author",
-                                        "builder_meta",
-                                        "custodian",
-                                        "entry",
-                                        "included_objects",
-                                        "run_stats",
-                                        "state",
-                                        "task_label",
-                                    },
-                                )
-                            )
-                            scrub_dict(td)
-                            storage_gateway.insert(td)
-                            break
-                        except DocumentTooLarge:
-                            continue
-                    else:
-                        logger.warning(f"{name} failed to reduce document size")
-                        continue
-                except Exception as ex:
-                    logger.error(f"{name} failed to insert: {ex}")
-                    continue
-
-                if storage_gateway._coll.count_documents(query):
-                    if snl_dct:
-                        result = snl_collection.insert_one(snl_dct)
-                        logger.info(
-                            f"SNL {result.inserted_id} inserted into {snl_collection.full_name}."
-                        )
-
-                    shutil.rmtree(vaspdir)
-                    logger.info(f"{name} Successfully parsed and removed {launcher}.")
-                    count += 1
-        else:
-            count += 1
-
-    return count
 
 
 def find_leaf_launchers(block_path):

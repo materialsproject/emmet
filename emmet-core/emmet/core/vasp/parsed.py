@@ -51,6 +51,8 @@ from emmet.core.band_theory import (
     ProjectedBS,
     ProjectedDos,
 )
+from emmet.core.tasks import CoreTaskDoc
+from emmet.core.trajectory import RelaxTrajectory
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.typing import TaskIdentifierType
 from emmet.core.utils import convert_datetime, utcnow
@@ -314,6 +316,49 @@ class ValidationRow(ParsedRowHeader):
     )
 
 
+class TrajectoryRow(RelaxTrajectory):
+    """A row of the trajectory table: a trajectory with its convergence data.
+
+    The convergence data of a trajectory is computed from it, and computed
+    properties are not columns of a table, so they are stored here. They are
+    columns of the trajectories already in production, which are partitioned
+    by run type.
+    """
+
+    has_full_output: bool = Field(
+        description="Whether the trajectory has all structures and SCF convergence data."
+    )
+    energy_convergence: list[float] | None = Field(
+        None, description="Convergence of the energy, see `convergence_data`."
+    )
+    e_fr_energy_convergence: list[float] | None = Field(
+        None, description="Convergence of the free energy, see `convergence_data`."
+    )
+    e_wo_entrp_convergence: list[float] | None = Field(
+        None,
+        description="Convergence of the energy without entropy, see `convergence_data`.",
+    )
+    forces_convergence: list[float] | None = Field(
+        None, description="Convergence of the forces, see `convergence_data`."
+    )
+
+    @classmethod
+    def from_trajectory(cls, trajectory: RelaxTrajectory) -> TrajectoryRow:
+        """Make a row from a trajectory, computing its convergence data."""
+        values = {
+            name: getattr(trajectory, name) for name in RelaxTrajectory.model_fields
+        }
+        convergence = trajectory.convergence_data
+        return cls(
+            **values,
+            has_full_output=trajectory.has_full_output,
+            **{
+                f"{name}_convergence": convergence.get(name)
+                for name in ("energy", "e_fr_energy", "e_wo_entrp", "forces")
+            },
+        )
+
+
 class ParseOutcome(ValueEnum):
     """What came of parsing a calculation."""
 
@@ -388,14 +433,46 @@ class TableSpec:
     row_model: type[BaseModel]
     partition_by: tuple[str, ...] = ()
     zorder_by: tuple[str, ...] = ("identifier",)
+    column_order: tuple[str, ...] | None = None
 
     @property
     def columns(self) -> set[str]:
         """The top-level columns of the table."""
-        return set(self.row_model.model_fields)
+        return {
+            name
+            for name, field in self.row_model.model_fields.items()
+            if not field.exclude
+        }
+
+    @property
+    def ordered_columns(self) -> list[str]:
+        """The columns of the table, in the order they are stored in.
+
+        This is `column_order` if there is one, and otherwise the order
+        of the fields of the row model.
+        """
+        if self.column_order is not None:
+            return list(self.column_order)
+        return [
+            name
+            for name, field in self.row_model.model_fields.items()
+            if not field.exclude
+        ]
 
 
 _VOLUMETRIC_PARTITION = ("year", "month", "day", "run_type")
+
+# the order of the columns of the trajectories in production: the columns they are
+# found by first, then the rest alphabetically
+_TRAJECTORY_PRIORITY = ("has_full_output", "identifier", "run_type", "task_type")
+_TRAJECTORY_COLUMNS = (
+    *_TRAJECTORY_PRIORITY,
+    *sorted(
+        name
+        for name, field in TrajectoryRow.model_fields.items()
+        if name not in _TRAJECTORY_PRIORITY and not field.exclude
+    ),
+)
 
 PARSED_TABLES: dict[str, TableSpec] = {
     "total-dos": TableSpec("total-dos", DosRow, partition_by=("run_type",)),
@@ -412,6 +489,13 @@ PARSED_TABLES: dict[str, TableSpec] = {
     ),
     "validation": TableSpec("validation", ValidationRow),
     "manifest": TableSpec("manifest", ManifestRow),
+    "tasks": TableSpec("tasks", CoreTaskDoc, zorder_by=("task_id",)),
+    "trajectories": TableSpec(
+        "trajectories",
+        TrajectoryRow,
+        partition_by=("run_type",),
+        column_order=_TRAJECTORY_COLUMNS,
+    ),
     **{
         file_type.lower(): TableSpec(
             file_type.lower(), VolumetricRow, partition_by=_VOLUMETRIC_PARTITION
@@ -427,8 +511,8 @@ partitions, are those of the tables already in production.
 There is one table for each type of volumetric file, named after the file
 in lowercase (`chgcar`, `aeccar0`, `locpot`, ...). These all use `VolumetricRow`.
 
-The tasks table (not partitioned) and the trajectory table (partitioned by
-run_type) are not listed here.
+The tasks table is not partitioned, and the trajectories table is partitioned
+by run_type.
 """
 
 

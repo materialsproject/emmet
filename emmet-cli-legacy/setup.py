@@ -26,7 +26,13 @@ setup(
         "multiprocessing-logging",
         "dotty-dict",
         "emmet-core",
+        "pyarrow",
+        "dask[distributed]",
     ],
+    extras_require={
+        # to read the identifiers of a Delta table of tasks when parsing
+        "delta": ["deltalake"],
+    },
     license="modified BSD",
     zip_safe=False,
     entry_points="""

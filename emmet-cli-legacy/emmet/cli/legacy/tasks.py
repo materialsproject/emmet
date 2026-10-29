@@ -1,14 +1,12 @@
 import json
 import logging
-import math
-import multiprocessing
 import os
 import shlex
 import shutil
 import subprocess
 import sys
 import time
-from collections import defaultdict, deque
+from collections import defaultdict
 from datetime import datetime
 from fnmatch import fnmatch
 from pathlib import Path
@@ -19,17 +17,24 @@ from hpsspy.os.path import isfile
 
 from emmet.cli.legacy import SETTINGS
 from emmet.cli.legacy.decorators import sbatch
+from emmet.cli.legacy.parse_driver import (
+    ParseDriverError,
+    discover_launchers,
+    make_client,
+    plan_parse,
+    run_parse,
+)
 from emmet.cli.legacy.utils import (
     EmmetCliError,
     ReturnCodes,
     VaspDirsGenerator,
-    chunks,
-    ensure_indexes,
     get_symlinked_path,
-    iterator_slice,
-    parse_vasp_dirs,
     reorganize_blocks,
 )
+from emmet.core.vasp.models import VOLUMETRIC_PARSERS
+from emmet.core.vasp.parse import ParsePolicy
+from emmet.core.vasp.parsed import ParseOutcome
+from emmet.core.vasp.utils import DEFAULT_CALC_SUFFIXES
 
 logger = logging.getLogger("emmet")
 GARDEN = "/home/m/matcomp/garden"
@@ -543,7 +548,13 @@ def group_strings_by_prefix(strings, prefix_length):
 )
 @click.pass_context
 def parsers(ctx, task_ids):
-    """Scan root directory and submit separate parser jobs"""
+    """Scan root directory and submit separate parser jobs (DISABLED)"""
+    raise EmmetCliError(
+        "parsers is disabled: parse now gives identifiers which continue from the "
+        "highest one already used, so several parse jobs started at once would give "
+        "the same identifiers to different calculations. Run `tasks parse` for one "
+        "directory at a time until the identifiers of the jobs can be split."
+    )
     ctx.parent.params["nmax"] = (
         sys.maxsize
     )  # disable maximum launchers to determine parser jobs
@@ -583,7 +594,7 @@ def parsers(ctx, task_ids):
         if run:
             ctx.parent.params["pattern"] = pattern
             ctx.parent.params["nmax"] = nlaunchers
-            ret = ctx.parent.invoke(parse, nproc=20, task_ids=task_ids)
+            ret = ctx.parent.invoke(parse, task_ids=task_ids)
             msg += f" -> {ret.value}"
             comment_txt.append(msg)
             time.sleep(90)  # give jobs time to start (cf insertion of separator task)
@@ -596,170 +607,231 @@ def parsers(ctx, task_ids):
     return ReturnCodes.SUCCESS
 
 
+def _parse_options(func):
+    """The options of the parse command."""
+    options = [
+        click.option(
+            "--output-dir",
+            type=click.Path(file_okay=False),
+            help="Directory for the Parquet tables. Required with --run. Identifiers "
+            "continue from those already in its tasks table.",
+        ),
+        click.option(
+            "--task-ids",
+            type=click.Path(exists=True),
+            help="JSON file mapping launcher/calc_suffix to task ID, e.g., "
+            '"launcher_2020-03-11/relax1". A launcher with a single calculation '
+            "can be given without the suffix.",
+        ),
+        click.option(
+            "--delta-tasks-uri",
+            help="Delta table of tasks whose identifiers are not to be used again, "
+            "e.g., s3://bucket/core/tasks/. Needs deltalake.",
+        ),
+        click.option(
+            "--delta-option",
+            "delta_options",
+            multiple=True,
+            metavar="KEY=VALUE",
+            help="Storage option to read the Delta table with, e.g., "
+            "AWS_REGION=us-east-1. Can be repeated.",
+        ),
+        click.option(
+            "--scheduler-address", help="Address of a running Dask scheduler."
+        ),
+        click.option(
+            "--scheduler-file",
+            help="File a running Dask scheduler wrote its address to.",
+        ),
+        click.option(
+            "--nworkers",
+            type=int,
+            help="Number of workers of the Dask cluster started on this machine, "
+            "if there is no scheduler.",
+        ),
+        click.option(
+            "--chunk-size",
+            type=int,
+            default=20,
+            show_default=True,
+            help="Number of calculations a worker parses at a time.",
+        ),
+        click.option(
+            "-s",
+            "--store-volumetric-data",
+            multiple=True,
+            help="Store only these volumetric files, e.g., CHGCAR or LOCPOT: any of "
+            f"{', '.join(VOLUMETRIC_PARSERS)}. All of them by default.",
+        ),
+        click.option(
+            "-r",
+            "--runs",
+            multiple=True,
+            default=DEFAULT_CALC_SUFFIXES,
+            show_default=True,
+            help="Suffixes of the calculations in a directory, in the order they "
+            "were run. Subfolders with these names are also searched.",
+        ),
+        click.option(
+            "--no-dos", is_flag=True, help="Do not store densities of states."
+        ),
+        click.option(
+            "--no-bandstructure", is_flag=True, help="Do not store band structures."
+        ),
+        click.option(
+            "--no-projections",
+            is_flag=True,
+            help="Do not store the projections of densities of states and band structures.",
+        ),
+        click.option(
+            "--include-failed",
+            is_flag=True,
+            help="Also store the large objects of calculations VASP did not complete.",
+        ),
+        click.option(
+            "--batch-id",
+            help="Batch identifier of the tasks. Default is the name of the directory.",
+        ),
+    ]
+    for option in reversed(options):
+        func = option(func)
+    return func
+
+
+def _make_policy(
+    store_volumetric_data, no_dos, no_bandstructure, no_projections, include_failed
+) -> ParsePolicy:
+    config = {
+        "volumetric_types": tuple(store_volumetric_data) or None,
+        "dos_projections": not no_projections,
+        "bandstructure_projections": not no_projections,
+        "include_failed": include_failed,
+    }
+    if no_dos:
+        config["dos_task_types"] = ()
+    if no_bandstructure:
+        config["bandstructure_task_types"] = ()
+    try:
+        return ParsePolicy(**config)
+    except ValueError as exc:
+        raise EmmetCliError(str(exc)) from exc
+
+
 @tasks.command()
 @sbatch
-@click.option(
-    "--task-ids",
-    type=click.Path(exists=True),
-    help="JSON file mapping launcher name to task ID.",
-)
-@click.option(
-    "--snl-metas",
-    type=click.Path(exists=True),
-    help="JSON file mapping launcher name to SNL metadata.",
-)
-@click.option(
-    "--nproc",
-    type=int,
-    default=1,
-    show_default=True,
-    help="Number of processes for parallel parsing.",
-)
-@click.option(
-    "-s",
-    "--store-volumetric-data",
-    multiple=True,
-    default=STORE_VOLUMETRIC_DATA,
-    help="Store any of CHGCAR, LOCPOT, AECCAR0, AECCAR1, AECCAR2, ELFCAR.",
-)
-@click.option(
-    "-r",
-    "--runs",
-    multiple=True,
-    default=["precondition", "relax1", "relax2", "static"],
-    help="Naming scheme for multiple calculations in one folder - subfolder or extension.",
-)
-def parse(task_ids, snl_metas, nproc, store_volumetric_data, runs):  # noqa: C901
-    """Parse VASP launchers into tasks"""
-    ctx = click.get_current_context()
-    if "GATEWAY" not in ctx.obj:
-        raise EmmetCliError("Use --spec to set storage_gateway DB for tasks!")
+@_parse_options
+def parse(  # noqa: C901
+    output_dir,
+    task_ids,
+    delta_tasks_uri,
+    delta_options,
+    scheduler_address,
+    scheduler_file,
+    nworkers,
+    chunk_size,
+    store_volumetric_data,
+    runs,
+    no_dos,
+    no_bandstructure,
+    no_projections,
+    include_failed,
+    batch_id,
+):
+    """Parse VASP launchers into Parquet tables (EXPERIMENTAL).
 
+    Every calculation of a launcher is a row of the tasks table, and its
+    trajectory, density of states, band structure and volumetric data are rows of
+    their own tables. The launchers are not changed.
+
+    Without --run the launchers are only searched, and the calculations and the
+    identifiers they would be given are reported.
+    """
+    ctx = click.get_current_context()
     run = ctx.parent.parent.params["run"]
     nmax = ctx.parent.params["nmax"]
+    pattern = ctx.parent.params["pattern"]
     directory = ctx.parent.params["directory"].rstrip(os.sep)
     tag = os.path.basename(directory)
-    storage_gateway = ctx.obj["GATEWAY"]
+    batch_id = batch_id or tag
 
-    snl_collection = storage_gateway.db.snls_user
-    collection_count = storage_gateway._coll.estimated_document_count()
-
-    logger.info(
-        f"Connected to {storage_gateway._coll.full_name} with {collection_count} tasks."
-    )
-    ensure_indexes(
-        ["task_id", "tags", "dir_name", "batch_id"],
-        [storage_gateway._coll],
-    )
-
-    chunk_size = math.ceil(nmax / nproc)
-    if nproc > 1 and nmax <= chunk_size:
-        nproc = 1
-        logger.warning(
-            f"nmax = {nmax} but chunk size = {chunk_size} -> sequential parsing."
+    if invalid := {c for c in batch_id if not (c.isalnum() or c in "-_")}:
+        raise EmmetCliError(
+            f"Invalid characters in the batch id {batch_id!r}: {' '.join(sorted(invalid))}. "
+            "Use --batch-id."
         )
+    if run and not output_dir:
+        raise EmmetCliError("Need --output-dir to write the parsed tables!")
 
-    from multiprocessing_logging import install_mp_handler
+    storage_options = {}
+    for option in delta_options:
+        key, sep, value = option.partition("=")
+        if not sep:
+            raise EmmetCliError(
+                f"Expected KEY=VALUE for --delta-option, got {option!r}."
+            )
+        storage_options[key] = value
 
-    install_mp_handler(logger=logger)
-
-    pool = multiprocessing.Pool(processes=nproc)
-    gen = VaspDirsGenerator()
-    iterator = iterator_slice(gen, chunk_size)  # process in chunks
-    queue = deque()
-    count = 0
-
-    sep_tid = None
+    policy = _make_policy(
+        store_volumetric_data, no_dos, no_bandstructure, no_projections, include_failed
+    )
+    identifiers = None
     if task_ids:
-        with open(task_ids, "r") as f:
-            task_ids = json.load(f)
-    else:
-        # reserve list of task_ids to avoid collisions during multiprocessing
-        # insert empty doc with max ID + 1 into storage_gateway._coll for parallel SLURM jobs
-        pipeline = [
-            {"$match": {"task_id": {"$regex": r"^mp-\d{7,}$"}}},
-            {"$project": {"task_id": 1, "prefix_num": {"$split": ["$task_id", "-"]}}},
-            {"$project": {"num": {"$arrayElemAt": ["$prefix_num", -1]}}},
-            {"$addFields": {"num_int": {"$toInt": "$num"}}},
-            {"$group": {"_id": None, "num_max": {"$max": "$num_int"}}},
-        ]
-        result = list(storage_gateway._coll.aggregate(pipeline))
-        # Manually set next_tid when parsing into an empty task collection for testing
-        next_tid = result[0]["num_max"] + 1 if result else 1000001
-        lst = [f"mp-{next_tid + n}" for n in range(nmax)]
-        task_ids = chunks(lst, chunk_size)
+        with open(task_ids) as f:
+            identifiers = json.load(f)
 
-        if run:
-            sep_tid = f"mp-{next_tid + nmax}"
-            storage_gateway._coll.insert_one({"task_id": sep_tid})
-            logger.info(f"Inserted separator task with task_id {sep_tid}.")
-            logger.info(f"Reserved {len(lst)} task ID(s).")
-        else:
-            logger.info(f"Would reserve {len(lst)} task ID(s).")
-
-    sep_snlid = None
-    if snl_metas:
-        with open(snl_metas, "r") as f:
-            snl_metas = json.load(f)
-
-        # reserve list of snl_ids to avoid collisions during multiprocessing
-        # insert empty doc with max ID + 1 into storage_gateway._coll for parallel SLURM jobs
-        all_snl_ids = snl_collection.distinct("snl_id")
-        prefixes = set()
-        next_snlid = -1
-
-        for snlid in all_snl_ids:
-            prefix, index = snlid.split("-", 1)
-            index = int(index)
-            prefixes.add(prefix)
-            if index > next_snlid:
-                next_snlid = index
-
-        next_snlid += 1
-        prefix = prefixes.pop()  # NOTE use the first prefix found
-        nsnls = len(snl_metas)
-
-        for n, launcher in enumerate(snl_metas):
-            snl_id = f"{prefix}-{next_snlid + n}"
-            snl_metas[launcher]["snl_id"] = snl_id
-
-        if run:
-            sep_snlid = f"{prefix}-{next_snlid + nsnls}"
-            snl_collection.insert({"snl_id": sep_snlid})
-            logger.info(f"Inserted separator SNL with snl_id {sep_snlid}.")
-            logger.info(f"Reserved {nsnls} SNL ID(s).")
-        else:
-            logger.info(f"Would reserve {nsnls} SNL ID(s).")
-
-    while iterator or queue:
-        try:
-            args = [next(iterator), tag, task_ids, snl_metas]
-            queue.append(pool.apply_async(parse_vasp_dirs, args))
-        except (StopIteration, TypeError):
-            iterator = None
-
-        while queue and (len(queue) >= pool._processes or not iterator):
-            process = queue.pop()
-            process.wait(1)
-            if not process.ready():
-                queue.append(process)
-            else:
-                count += process.get()
-
-    pool.close()
-    if run:
-        logger.info(
-            f"Successfully parsed and inserted {count}/{gen.value} tasks in {directory}."
+    try:
+        plan = plan_parse(
+            discover_launchers(directory, pattern, nmax),
+            suffixes=tuple(runs),
+            output_dir=output_dir,
+            delta_uri=delta_tasks_uri,
+            delta_storage_options=storage_options,
+            task_ids=identifiers,
         )
-        if sep_tid:
-            storage_gateway._coll.delete_one({"task_id": sep_tid})
-            logger.info(f"Removed separator task {sep_tid}.")
-        if sep_snlid:
-            snl_collection.remove({"snl_id": sep_snlid})
-            logger.info(f"Removed separator SNL {sep_snlid}.")
-    else:
-        logger.info(f"Would parse and insert {count}/{gen.value} tasks in {directory}.")
-    return ReturnCodes.SUCCESS if count and gen.value else ReturnCodes.WARNING
+    except ParseDriverError as exc:
+        raise EmmetCliError(str(exc)) from exc
+
+    for line in plan.report():
+        logger.info(line)
+
+    if not run:
+        logger.info(
+            f"Would parse {plan.calculations} calculation(s) in {directory}. "
+            "Nothing was written."
+        )
+        return ReturnCodes.SUCCESS if plan.calculations else ReturnCodes.WARNING
+
+    if not plan.calculations:
+        logger.warning("No calculations to parse.")
+        return ReturnCodes.WARNING
+
+    try:
+        client = make_client(scheduler_address, scheduler_file, nworkers)
+    except Exception as exc:
+        raise EmmetCliError(f"Could not start or connect to Dask: {exc}") from exc
+    try:
+        result = run_parse(
+            plan.items,
+            output_dir,
+            policy,
+            client=client,
+            chunk_size=chunk_size,
+            batch_id=batch_id,
+            tags=[tag, SETTINGS.year_tags[-1]],
+            suffixes=tuple(runs),
+        )
+    finally:
+        cluster = getattr(client, "cluster", None)
+        client.close()
+        if cluster is not None and not (scheduler_address or scheduler_file):
+            cluster.close()
+
+    for line in result.summary():
+        logger.info(line)
+    parsed = sum(m.outcome == ParseOutcome.PARSED for m in result.manifests)
+    if parsed and not result.failed_chunks:
+        return ReturnCodes.SUCCESS
+    return ReturnCodes.WARNING
 
 
 @tasks.command()

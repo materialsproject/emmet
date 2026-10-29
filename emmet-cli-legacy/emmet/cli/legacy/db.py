@@ -4,22 +4,10 @@ import logging
 import pymongo
 from pymongo import ReturnDocument
 
-from emmet.core.tasks import TaskDoc
 from emmet.core.utils import jsanitize, utcnow
 
 
 class StorageGateway:
-    _object_names: list[str] = [
-        "dos",
-        "bandstructure",
-        "chgcar",
-        "locpot",
-        "aeccar0",
-        "aeccar1",
-        "aeccar2",
-        "elfcar",
-    ]
-
     def __init__(
         self,
         host: str,
@@ -86,41 +74,3 @@ class StorageGateway:
 
         else:
             self.logger.info(f"Skipping duplicate {dct['dir_name']}")
-
-    def insert_task(self, task_doc: TaskDoc) -> int:
-        big_data_to_store = {}
-
-        def extract_from_calcs_reversed(obj_key: str):
-            calcs_r_data = task_doc["calcs_reversed"][0][obj_key]
-            for i_calcs in range(len(task_doc["calcs_reversed"])):
-                if obj_key in task_doc["calcs_reversed"][i_calcs]:
-                    del task_doc["calcs_reversed"][i_calcs][obj_key]
-            return calcs_r_data
-
-        for data_key in self._object_names:
-            if data_key in task_doc["calcs_reversed"][0]:
-                big_data_to_store[data_key] = extract_from_calcs_reversed(data_key)
-
-        task_id = self.insert(task_doc)
-
-        for data_key, data_val in big_data_to_store.items():
-            fs_di_, compression_type_ = self.insert_object(
-                dct=data_val,
-                collection=f"{data_key}_fs",
-                task_id=task_id,
-            )
-
-            self._coll.update_one(
-                {"task_id": task_id},
-                {
-                    "$set": {
-                        f"calcs_reversed.0.{data_key}_compression": compression_type_,
-                        f"calcs_reversed.0.{data_key}_fs_id": fs_di_,
-                    }
-                },
-            )
-
-        return task_id
-
-    def insert_object(**kwargs):
-        pass

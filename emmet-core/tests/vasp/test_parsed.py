@@ -16,6 +16,7 @@ from emmet.core.types.typing import IdentifierType
 from emmet.core.vasp.calc_types.enums import RunType, TaskType
 from emmet.core.vasp.models import VOLUMETRIC_PARSERS
 from emmet.core.band_theory import BSPathType
+from emmet.core.tasks import CoreTaskDoc
 from emmet.core.vasp.parsed import (
     PARSED_TABLES,
     BandStructureProjectionsRow,
@@ -25,6 +26,7 @@ from emmet.core.vasp.parsed import (
     ManifestRow,
     ParseOutcome,
     ParsedRowHeader,
+    TrajectoryRow,
     ValidationRow,
     VolumetricRow,
     band_structure_from_rows,
@@ -224,12 +226,23 @@ def test_table_registry():
             "projected-bandstructures",
             "validation",
             "manifest",
+            "tasks",
+            "trajectories",
         }
         | volumetric
     )
 
     assert all(name == spec.name for name, spec in PARSED_TABLES.items())
-    assert all(spec.zorder_by == ("identifier",) for spec in PARSED_TABLES.values())
+    assert PARSED_TABLES["tasks"].row_model is CoreTaskDoc
+    assert PARSED_TABLES["tasks"].partition_by == ()
+    assert PARSED_TABLES["tasks"].zorder_by == ("task_id",)
+    assert PARSED_TABLES["trajectories"].row_model is TrajectoryRow
+    assert PARSED_TABLES["trajectories"].partition_by == ("run_type",)
+    assert all(
+        spec.zorder_by == ("identifier",)
+        for name, spec in PARSED_TABLES.items()
+        if name != "tasks"
+    )
 
     assert PARSED_TABLES["total-dos"].row_model is DosRow
     assert PARSED_TABLES["projected-dos"].row_model is DosProjectionsRow
@@ -285,10 +298,13 @@ class TestArrow:
         for name, schema in schemas.items():
             spec = PARSED_TABLES[name]
             assert set(spec.partition_by) | set(spec.zorder_by) <= set(schema.names)
-            assert schema.field("identifier").type == pa.string()
-            assert schema.field("completed_at").type == pa.timestamp("us", tz="UTC")
+            if name != "tasks":
+                assert schema.field("identifier").type == pa.string()
+            if name != "trajectories":
+                assert schema.field("completed_at").type == pa.timestamp("us", tz="UTC")
 
-            if name == "manifest":
+            if name in ("manifest", "tasks", "trajectories"):
+                # these do not have the header of the tables of large objects
                 continue
             for col in ("year", "month", "day"):
                 assert schema.field(col).type == pa.int64()
@@ -634,3 +650,84 @@ class TestManifest:
         ]
         assert restored[0].tables == ["chgcar", "locpot"]
         assert restored[1].completed_at is None
+
+
+class TestTrajectoryRow:
+    @pytest.fixture(scope="class")
+    def trajectory(self, test_dir):
+        from emmet.core.vasp.parse import DirectorySource, parse_calculation
+
+        with DataArchive.extract(
+            test_dir / "vasp" / "Si_old_double_relax.json.gz"
+        ) as d:
+            source = DirectorySource.from_directory(d)[0]
+            parsed = parse_calculation(source, "aaaaaaab")
+        return parsed.trajectory
+
+    def test_from_trajectory(self, trajectory):
+        row = TrajectoryRow.from_trajectory(trajectory)
+        assert row.identifier == "aaaaaaab"
+        assert row.run_type == trajectory.run_type
+        assert row.has_full_output == trajectory.has_full_output
+        convergence = trajectory.convergence_data
+        for name in ("energy", "e_fr_energy", "e_wo_entrp", "forces"):
+            assert getattr(row, f"{name}_convergence") == convergence.get(name)
+        assert row.energy == trajectory.energy
+        assert row.num_ionic_steps == trajectory.num_ionic_steps
+
+    def test_columns(self):
+        spec = PARSED_TABLES["trajectories"]
+        columns = spec.ordered_columns
+        # the order of the trajectories already in production
+        assert columns[:4] == ["has_full_output", "identifier", "run_type", "task_type"]
+        assert columns[4:] == sorted(columns[4:])
+        assert set(columns) == spec.columns
+        assert {
+            "energy_convergence",
+            "e_fr_energy_convergence",
+            "e_wo_entrp_convergence",
+            "forces_convergence",
+            "has_full_output",
+        } <= set(columns)
+        # the properties which are not stored are not columns
+        assert "ionic_step_properties" not in columns
+
+    @pytest.mark.skipif(
+        not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+    )
+    def test_arrow_roundtrip(self, trajectory):
+        spec = PARSED_TABLES["trajectories"]
+        schema = pa.schema(arrowize(TrajectoryRow))
+        row = TrajectoryRow.from_trajectory(trajectory)
+        table = pa.Table.from_pylist([row.model_dump()], schema=schema).select(
+            spec.ordered_columns
+        )
+        assert table.column_names == spec.ordered_columns
+        assert table["has_full_output"].type == pa.bool_()
+        assert table["energy_convergence"].type == pa.list_(pa.float64())
+        # trajectories are not downcast to float32
+        assert table["energy"].type == pa.list_(pa.float64())
+
+        restored = TrajectoryRow(**table.to_pylist(maps_as_pydicts="strict")[0])
+        assert_nested_close(restored, row)
+
+
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
+def test_tasks_table(test_dir):
+    from emmet.core.vasp.parse import DirectorySource, parse_calculation
+
+    with DataArchive.extract(test_dir / "vasp" / "Si_uniform.json.gz") as d:
+        parsed = parse_calculation(DirectorySource.from_directory(d)[0], "aaaaaaab")
+    schema = pa.schema(arrowize(CoreTaskDoc))
+    assert schema.field("calc_suffix").type == pa.string()
+    assert schema.field("task_id").type == pa.string()
+
+    table = pa.Table.from_pylist(
+        [parsed.task.model_dump(context={"format": "arrow"})], schema=schema
+    )
+    restored = CoreTaskDoc(**table.to_pylist(maps_as_pydicts="strict")[0])
+    assert restored.task_id == "aaaaaaab"
+    assert restored.calc_suffix == "standard"
+    assert restored.completed_at == parsed.task.completed_at
