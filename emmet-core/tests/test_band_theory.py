@@ -3,7 +3,16 @@ import json
 import numpy as np
 import pytest
 
-from emmet.core.io.pymatgen import Spin, CompleteDos, Dos, Vasprun
+from emmet.core.io.pymatgen import (
+    Lattice,
+    Orbital,
+    PeriodicSite,
+    Spin,
+    CompleteDos,
+    Dos,
+    Structure,
+    Vasprun,
+)
 
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.band_theory import (
@@ -229,6 +238,101 @@ def test_arrow_float32_types(bs_fixture, dos_fixture):
     assert table["projected_densities"].type.field("spin_up_densities").type == (
         pa.list_(pa.list_(f32))
     )
+
+
+def _make_pdos(num_sites: int, num_orbitals: int = 3, num_energies: int = 5):
+    """A structure of identical elements, and projected DOS of each of its sites."""
+    rng = np.random.default_rng(seed=num_sites)
+    side = round(num_sites ** (1 / 3)) + 1
+    coords = [
+        [i / side, j / side, k / side]
+        for i in range(side)
+        for j in range(side)
+        for k in range(side)
+    ][:num_sites]
+    structure = Structure(Lattice.cubic(4.0 * side), ["Si"] * num_sites, coords)
+    orbitals = [Orbital.s, Orbital.py, Orbital.pz, Orbital.px][:num_orbitals]
+    pdos = {
+        structure[i]: {
+            orbital: {Spin.up: rng.random(num_energies)} for orbital in orbitals
+        }
+        for i in range(num_sites)
+    }
+    return pdos, structure
+
+
+class _CountSiteComparisons:
+    """Count the comparisons of sites, which is how sites are slow to find."""
+
+    def __init__(self, monkeypatch):
+        self.count = 0
+        original = PeriodicSite.__eq__
+
+        def counting_eq(site, other):
+            self.count += 1
+            return original(site, other)
+
+        monkeypatch.setattr(PeriodicSite, "__eq__", counting_eq)
+
+
+@pytest.mark.parametrize("num_sites, num_orbitals", [(8, 3), (27, 4)])
+def test_projected_dos_site_indices(monkeypatch, num_sites, num_orbitals):
+    pdos, structure = _make_pdos(num_sites, num_orbitals)
+    comparisons = _CountSiteComparisons(monkeypatch)
+
+    projected_dos = ProjectedDos.from_pmg_like(pdos, structure)
+
+    # the sites of the DOS are the sites of the structure, which are
+    # found by identity and are not compared with each other at all
+    assert comparisons.count == 0
+    assert projected_dos.site_index == [
+        i for i in range(num_sites) for _ in range(num_orbitals)
+    ]
+    assert projected_dos.orbital == ["s", "py", "pz", "px"][:num_orbitals] * num_sites
+
+    # and the DOS can be recovered
+    recovered = projected_dos.to_pmg_like(structure)
+    assert set(recovered) == set(pdos)
+    for site, orbitals in pdos.items():
+        for orbital, spin_dos in orbitals.items():
+            assert np.allclose(recovered[site][orbital][Spin.up], spin_dos[Spin.up])
+
+
+def test_projected_dos_site_indices_of_unlisted_sites(monkeypatch):
+    """Sites which are not the structure's objects are found by comparing them."""
+    num_sites, num_orbitals = 27, 4
+    pdos, structure = _make_pdos(num_sites, num_orbitals)
+
+    # equal sites which are different objects, in a different order
+    copied = structure.copy()
+    shuffled = {copied[i]: pdos[structure[i]] for i in reversed(range(num_sites))}
+    assert not any(site is ref for site in shuffled for ref in structure)
+    comparisons = _CountSiteComparisons(monkeypatch)
+
+    projected_dos = ProjectedDos.from_pmg_like(shuffled, structure)
+
+    assert projected_dos.site_index == [
+        i for i in reversed(range(num_sites)) for _ in range(num_orbitals)
+    ]
+    # each site is looked up once, and not once for each of its orbitals, which
+    # would be num_orbitals times as many comparisons
+    assert 0 < comparisons.count <= num_sites * (num_sites + 1) // 2
+
+
+def test_projected_dos_site_not_in_structure():
+    pdos, structure = _make_pdos(8)
+    moved = structure.copy()
+    moved.translate_sites([0], [0.01, 0.0, 0.0])
+    with pytest.raises(ValueError, match="not in the structure"):
+        ProjectedDos.from_pmg_like({moved[0]: pdos[structure[0]]}, structure)
+
+
+def test_projected_dos_from_vasprun_sites(dos_fixture):
+    """The sites of a real DOS are the objects of its structure."""
+    _, pmg_dos, edos = dos_fixture
+    assert all(any(site is ref for ref in pmg_dos.structure) for site in pmg_dos.pdos)
+    projected = edos.projected_densities
+    assert sorted(set(projected.site_index)) == list(range(len(pmg_dos.structure)))
 
 
 def test_obtain_path_type(fe_line_mode_bandstructure):

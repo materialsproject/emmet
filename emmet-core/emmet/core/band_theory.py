@@ -316,6 +316,7 @@ class ProjectedDos(BaseModel):
         structure: StructureType,
     ) -> Self:
         """Create a ProjectedDos from a pymatgen-like CompleteDos.pdos."""
+        site_indices = _get_site_indices(pdos, structure)
         projs = [
             {
                 **{
@@ -323,11 +324,9 @@ class ProjectedDos(BaseModel):
                     for spin, sr_dos in spin_dos.items()
                 },
                 "orbital": orbital.name,
-                "site_index": [
-                    idx for idx, ref_site in enumerate(structure) if ref_site == site
-                ][0],
+                "site_index": site_indices[i_site],
             }
-            for site, orb_spin_dos in pdos.items()
+            for i_site, orb_spin_dos in enumerate(pdos.values())
             for orbital, spin_dos in orb_spin_dos.items()
         ]
 
@@ -360,6 +359,49 @@ class ProjectedDos(BaseModel):
                 pdos[site][orb][Spin.down] = np.array(self.spin_down_densities[i])
 
         return dict(pdos)
+
+
+def _get_site_indices(
+    pdos: dict[PeriodicSite, Any], structure: Sequence[PeriodicSite]
+) -> list[int]:
+    """Find the index in a structure of each site of a projected DOS.
+
+    This is done once for each site, and not for each orbital of each site.
+
+    The sites of a pymatgen `CompleteDos.pdos` are the objects of the
+    structure itself, both when it is parsed from a vasprun.xml and when it
+    is deserialized, and these are found without comparing sites at all.
+    Comparing sites is slow, and a site's hash only depends on its elements,
+    so mapping sites to indices with a dict would not avoid that.
+    Sites which are not objects of the structure, such as those of a structure
+    that was copied after the DOS was made, are found by comparing them to
+    the structure's sites, and the first equal site is used.
+
+    Parameters
+    -----------
+    pdos : dict of PeriodicSite to anything
+        The sites of the projected DOS.
+    structure : sequence of PeriodicSite
+        The structure the sites belong to.
+
+    Returns
+    -----------
+    list of int
+        The index of each site of `pdos`, in the order of the sites of `pdos`.
+    """
+    index_by_id = {id(site): idx for idx, site in enumerate(structure)}
+    indices: list[int] = []
+    for site in pdos:
+        if (idx := index_by_id.get(id(site))) is None:
+            idx = next(
+                (i for i, ref_site in enumerate(structure) if ref_site == site), None
+            )
+            if idx is None:
+                raise ValueError(
+                    f"A site of the projected DOS is not in the structure: {site}"
+                )
+        indices.append(idx)
+    return indices
 
 
 class ElectronicDos(BandTheoryBase):
