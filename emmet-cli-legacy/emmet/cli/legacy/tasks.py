@@ -86,7 +86,6 @@ def tasks(directory, nmax, pattern):
 
 def make_comment(ctx, txt):
     gh = ctx.grand_parent.obj["GH"]
-    user = gh.me().login
     issue_number = ctx.grand_parent.params["issue"]
     issue = gh.issue(SETTINGS.tracker["org"], SETTINGS.tracker["repo"], issue_number)
     comment = issue.create_comment("\n".join(txt))
