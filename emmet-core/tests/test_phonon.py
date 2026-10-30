@@ -118,6 +118,20 @@ def test_legacy_migration(legacy_ph_task):
     assert ph_doc.phonon_bandstructure._to_pmg_es_bs.get_cbm()
 
 
+def test_thermal_displacement_data(legacy_ph_task):
+    structure = PhononBSDOSDoc.migrate_fields(**deepcopy(legacy_ph_task)).structure
+    ph_doc = PhononBSDOSDoc.migrate_fields(
+        **deepcopy(legacy_ph_task),
+        thermal_displacement_data={
+            "imaginary_modes": "absolute",
+            "structure": structure,
+        },
+    )
+    data = PhononBSDOSDoc(**ph_doc.model_dump()).thermal_displacement_data
+    assert data.imaginary_modes == "absolute"
+    assert data.structure == structure
+
+
 @pytest.mark.skipif(
     not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
 )
