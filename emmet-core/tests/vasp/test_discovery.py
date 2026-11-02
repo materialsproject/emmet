@@ -9,10 +9,12 @@ from emmet.core.vasp.utils import (
     DEFAULT_CALC_SUFFIXES,
     CalculationFiles,
     CalculationLocator,
+    check_vasp_file_name,
     discover_and_sort_vasp_files,
     discover_calculations,
     discover_vasp_files,
     parse_vasp_file_name,
+    recursive_discover_calculations,
     recursive_discover_vasp_files,
 )
 
@@ -630,3 +632,167 @@ class TestCompatibility:
             "PARCHG",
             "POTCAR",
         }
+
+
+class TestCheckVaspFileName:
+    @pytest.mark.parametrize(
+        "file_name, file_type, calc_suffix",
+        [
+            ("INCAR", "INCAR", None),
+            ("vasprun.xml.relax1.gz", "vasprun.xml", "relax1"),
+            ("/some/dir/INCAR.orig.static", "INCAR", "static"),
+            ("PARCHG.0001.0002", "PARCHG", None),
+        ],
+    )
+    def test_accepted(self, file_name, file_type, calc_suffix):
+        parsed = check_vasp_file_name(file_name)
+        assert parsed.file_type == file_type
+        assert parsed.calc_suffix == calc_suffix
+
+    @pytest.mark.parametrize(
+        "file_name, part",
+        [
+            ("vasprun.xml.relax10.gz", "relax10"),
+            ("CHGCAR.bak.gz", "bak"),
+            ("OUTCAR.old", "old"),
+        ],
+    )
+    def test_unrecognized_parts(self, file_name, part):
+        with pytest.raises(ValueError, match=f"'{part}'") as exc:
+            check_vasp_file_name(file_name)
+        # the message says what to do about it
+        assert file_name in str(exc.value)
+        assert "Rename the file, or leave it out" in str(exc.value)
+
+    def test_not_a_vasp_file(self):
+        with pytest.raises(ValueError, match="not a recognized VASP file"):
+            check_vasp_file_name("my_vasprun.xml")
+
+    def test_custom_suffixes(self):
+        with pytest.raises(ValueError, match="'nscf'"):
+            check_vasp_file_name("INCAR.nscf")
+        assert check_vasp_file_name("INCAR.nscf", ("nscf",)).calc_suffix == "nscf"
+        # the default suffixes are no longer allowed
+        with pytest.raises(ValueError, match="'relax1'"):
+            check_vasp_file_name("INCAR.relax1", ("nscf",))
+
+
+class TestFilePaths:
+    def test_all_files_of_a_calculation(self, tmp_path):
+        make_files(tmp_path, LEGACY_FILES)
+        relax1, relax2 = discover_calculations(tmp_path).values()
+        paths_1, paths_2 = relax1.file_paths(), relax2.file_paths()
+
+        for paths in (paths_1, paths_2):
+            assert len(paths) == len(set(paths))
+        # own files
+        assert (tmp_path / "vasprun.xml.relax1.gz").resolve() in paths_1
+        assert (tmp_path / "vasprun.xml.relax1.gz").resolve() not in paths_2
+        # shared files are in every calculation, orig inputs only in the first
+        shared = (tmp_path / "POTCAR.gz").resolve()
+        assert shared in paths_1 and shared in paths_2
+        orig = (tmp_path / "INCAR.orig.gz").resolve()
+        assert orig in paths_1 and orig not in paths_2
+        assert (tmp_path / "custodian.json.gz").resolve() in paths_1 + paths_2
+
+    def test_all_parchg_files_are_kept(self, tmp_path):
+        parchgs = ["PARCHG.0001.0002", "PARCHG.0001.0003", "PARCHG.0002.0001"]
+        make_files(tmp_path, ["vasprun.xml", "INCAR", *parchgs])
+        (calc,) = discover_calculations(tmp_path).values()
+        assert names(calc.file_paths()) >= set(parchgs)
+        assert len(calc.extra_parchg) == 2
+        # the parser still gets one
+        assert list(calc.volumetric) == ["PARCHG"]
+
+    def test_parchg_files_are_shared_with_the_last_calculation(self, tmp_path):
+        parchgs = ["PARCHG.0001.0002", "PARCHG.0001.0003"]
+        make_files(
+            tmp_path, ["vasprun.xml.relax1", "vasprun.xml.relax2", "INCAR.relax1"]
+        )
+        make_files(tmp_path, parchgs)
+        relax1, relax2 = discover_calculations(tmp_path).values()
+        assert names(relax2.file_paths()) >= set(parchgs)
+        assert not names(relax1.file_paths()) & set(parchgs)
+
+
+class TestRecursiveDiscoverCalculations:
+    def test_layouts(self, tmp_path):
+        make_files(tmp_path / "launcher_1", ["INCAR", "vasprun.xml", "POTCAR"])
+        make_files(tmp_path / "launcher_2", LEGACY_FILES)
+        make_files(tmp_path / "launcher_3" / "relax1", ["vasprun.xml.gz", "INCAR"])
+        make_files(tmp_path / "launcher_3" / "relax2", ["vasprun.xml.gz", "INCAR"])
+        calcs = recursive_discover_calculations(tmp_path)
+        assert {(loc.path.name, loc.modifier) for loc in calcs} == {
+            ("launcher_1", "standard"),
+            ("launcher_2", "relax1"),
+            ("launcher_2", "relax2"),
+            ("launcher_3", "relax1"),
+            ("launcher_3", "relax2"),
+        }
+
+    def test_suffix_subdirectories_are_not_launchers(self, tmp_path):
+        make_files(tmp_path / "launcher" / "relax1", ["vasprun.xml.gz", "INCAR"])
+        make_files(tmp_path / "launcher" / "relax2", ["vasprun.xml.gz", "INCAR"])
+        calcs = recursive_discover_calculations(tmp_path)
+        assert {loc.path for loc in calcs} == {(tmp_path / "launcher").resolve()}
+        assert len(calcs) == 2
+
+    def test_nested_directories_of_a_calculation_are_searched(self, tmp_path):
+        make_files(tmp_path / "neb", ["INCAR", "vasprun.xml"])
+        make_files(tmp_path / "neb" / "01", ["INCAR", "vasprun.xml"])
+        calcs = recursive_discover_calculations(tmp_path)
+        assert {
+            loc.path.relative_to(tmp_path.resolve()).as_posix() for loc in calcs
+        } == {
+            "neb",
+            "neb/01",
+        }
+
+    def test_max_depth(self, tmp_path):
+        make_files(tmp_path, ["INCAR", "vasprun.xml"])
+        make_files(tmp_path / "a", ["INCAR", "vasprun.xml"])
+        make_files(tmp_path / "a" / "b", ["INCAR", "vasprun.xml"])
+        assert len(recursive_discover_calculations(tmp_path, max_depth=0)) == 1
+        assert len(recursive_discover_calculations(tmp_path, max_depth=1)) == 2
+        assert len(recursive_discover_calculations(tmp_path)) == 3
+        with pytest.raises(ValueError, match="non-negative"):
+            recursive_discover_calculations(tmp_path, max_depth=-1)
+
+    def test_require_vasprun(self, tmp_path):
+        # not run yet: inputs only
+        make_files(tmp_path / "inputs_only", ["INCAR", "KPOINTS", "POSCAR", "POTCAR"])
+        # a double relax which only ran once
+        make_files(
+            tmp_path / "legacy",
+            ["INCAR.relax1", "vasprun.xml.relax1", "INCAR.relax2", "POTCAR"],
+        )
+        # only workflow files
+        make_files(tmp_path / "other", ["custodian.json", "FW.json"])
+
+        strict = recursive_discover_calculations(tmp_path)
+        assert {(loc.path.name, loc.modifier) for loc in strict} == {
+            ("legacy", "relax1")
+        }
+
+        lenient = recursive_discover_calculations(tmp_path, require_vasprun=False)
+        assert {(loc.path.name, loc.modifier) for loc in lenient} == {
+            ("inputs_only", "standard"),
+            ("legacy", "relax1"),
+            ("legacy", "relax2"),
+        }
+
+    def test_unsuffixed_files_are_shared_with_suffixed_calculations(self, tmp_path):
+        make_files(
+            tmp_path,
+            ["INCAR.relax1", "INCAR.relax2", "LOCPOT", "POTCAR", "CONTCAR.relax2"],
+        )
+        calcs = discover_calculations(tmp_path, require_vasprun=False)
+        assert [loc.modifier for loc in calcs] == ["relax1", "relax2"]
+        relax1, relax2 = calcs.values()
+        assert "LOCPOT" in relax2.volumetric and "LOCPOT" not in relax1.volumetric
+        assert "POTCAR" in relax1.inputs and "POTCAR" in relax2.inputs
+
+    def test_symlinked_directories_are_not_followed(self, tmp_path):
+        make_files(tmp_path / "real", ["INCAR", "vasprun.xml"])
+        (tmp_path / "link").symlink_to(tmp_path / "real", target_is_directory=True)
+        assert len(recursive_discover_calculations(tmp_path)) == 1

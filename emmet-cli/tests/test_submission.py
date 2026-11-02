@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from emmet.cli.submission import CalculationMetadata, CalculationLocator, Submission
 from emmet.cli.utils import EmmetCliError
@@ -82,13 +83,13 @@ def verify_submission_calculations_against_tmp_dir_data(calculations):
             assert locator.modifier == "standard"
             assert len(cm.files) == 4
         elif path.name == "launcher_2025_02_31_0001":
+            # the files without a suffix (AECCAR0, LOCPOT and the electron-phonon
+            # POSCARs) are the last calculation's, not a calculation of their own
             if locator.modifier == "relax1":
                 assert len(cm.files) == 9
-            elif locator.modifier == "relax2":
-                assert len(cm.files) == 6
             else:
-                assert locator.modifier == "standard"
-                assert len(cm.files) == 4
+                assert locator.modifier == "relax2"
+                assert len(cm.files) == 6 + 4
         else:
             assert path is None
 
@@ -96,7 +97,7 @@ def verify_submission_calculations_against_tmp_dir_data(calculations):
 def test_from_paths(tmp_dir):
     submission = Submission.from_paths(paths=[tmp_dir])
 
-    assert len(submission.calculations) == 7
+    assert len(submission.calculations) == 6
     verify_submission_calculations_against_tmp_dir_data(submission.calculations)
 
 
@@ -131,7 +132,7 @@ def test_add_to(sub_file, tmp_structure):
     assert len(to_add_path) == 4
     added = sub.add_to(to_add_path)
     assert len(added) == 4
-    assert len(sub.calculations) == 9
+    assert len(sub.calculations) == 8
 
 
 def test_remove_from(sub_file, tmp_structure):
@@ -294,3 +295,153 @@ def test_files_changed_after_staging_block_push(validation_sub_file):
     assert uploader.uploads == []
     assert sub.calc_history == []
     assert sub.pending_calculations is not None
+
+
+def make_files(directory: Path, names) -> Path:
+    directory.mkdir(parents=True, exist_ok=True)
+    for name in names:
+        (directory / name).write_text(f"contents of {name}")
+    return directory
+
+
+def calculation_files(submission: Submission) -> dict[str, set[str]]:
+    return {
+        locator.modifier: {file.path.name for file in cm.files}
+        for locator, cm in submission.calculations
+    }
+
+
+def test_static_calculations_are_found(tmp_path):
+    make_files(
+        tmp_path,
+        ["INCAR.relax2", "vasprun.xml.relax2", "INCAR.static", "vasprun.xml.static"],
+    )
+    submission = Submission.from_paths([tmp_path])
+    assert [loc.modifier for loc, _ in submission.calculations] == ["relax2", "static"]
+
+
+def test_shared_files_are_in_every_calculation(tmp_path):
+    make_files(
+        tmp_path,
+        [
+            "INCAR.relax1",
+            "INCAR.relax2",
+            "vasprun.xml.relax1",
+            "vasprun.xml.relax2",
+            "POTCAR",
+            "INCAR.orig",
+            "custodian.json",
+            "CHGCAR",
+        ],
+    )
+    files = calculation_files(Submission.from_paths([tmp_path]))
+    assert set(files) == {"relax1", "relax2"}
+    assert "POTCAR" in files["relax1"] and "POTCAR" in files["relax2"]
+    assert "custodian.json" in files["relax1"] and "custodian.json" in files["relax2"]
+    # the original inputs are the first calculation's, the outputs the last's
+    assert "INCAR.orig" in files["relax1"] and "INCAR.orig" not in files["relax2"]
+    assert "CHGCAR" in files["relax2"] and "CHGCAR" not in files["relax1"]
+
+
+def test_calculations_without_output_are_found(tmp_path):
+    make_files(tmp_path / "not_run", ["INCAR", "POSCAR", "KPOINTS", "POTCAR"])
+    make_files(
+        tmp_path / "legacy", ["INCAR.relax1", "vasprun.xml.relax1", "INCAR.relax2"]
+    )
+    submission = Submission.from_paths([tmp_path])
+    assert {
+        (locator.path.name, locator.modifier) for locator, _ in submission.calculations
+    } == {("not_run", "standard"), ("legacy", "relax1"), ("legacy", "relax2")}
+
+
+class TestAddingFiles:
+    def test_file_with_unrecognized_name_is_rejected(self, tmp_path):
+        make_files(tmp_path, ["INCAR", "vasprun.xml", "CHGCAR.bak.gz"])
+        with pytest.raises(
+            EmmetCliError, match="'bak'.*Rename the file, or leave it out"
+        ):
+            Submission.from_paths([tmp_path / "CHGCAR.bak.gz"])
+        with pytest.raises(EmmetCliError, match="not a recognized VASP file"):
+            Submission.from_paths([make_files(tmp_path, ["notes.txt"]) / "notes.txt"])
+
+    def test_nothing_is_added_if_a_file_is_rejected(self, tmp_path):
+        make_files(tmp_path / "first", ["INCAR", "vasprun.xml"])
+        make_files(tmp_path / "second", ["INCAR", "vasprun.xml", "OUTCAR.old"])
+        submission = Submission.from_paths([tmp_path / "first"])
+        before = submission.model_dump()
+
+        with pytest.raises(EmmetCliError, match="'old'"):
+            submission.add_to(
+                [tmp_path / "second" / "INCAR", tmp_path / "second" / "OUTCAR.old"]
+            )
+        assert submission.model_dump() == before
+
+    def test_unrecognized_files_in_directories_are_skipped(self, tmp_path):
+        make_files(tmp_path, ["INCAR", "vasprun.xml", "CHGCAR.bak.gz", "OUTCAR.old"])
+        files = calculation_files(Submission.from_paths([tmp_path]))
+        assert files == {"standard": {"INCAR", "vasprun.xml"}}
+
+    def test_a_file_is_added_to_the_calculations_it_belongs_to(self, tmp_path):
+        make_files(
+            tmp_path,
+            [
+                "INCAR.relax1",
+                "INCAR.relax2",
+                "vasprun.xml.relax1",
+                "vasprun.xml.relax2",
+                "POTCAR",
+                "KPOINTS.relax2",
+            ],
+        )
+        # a shared file is part of each calculation
+        files = calculation_files(Submission.from_paths([tmp_path / "POTCAR"]))
+        assert files == {"relax1": {"POTCAR"}, "relax2": {"POTCAR"}}
+
+        # a file with a suffix is part of its calculation, and only that file is added
+        files = calculation_files(Submission.from_paths([tmp_path / "KPOINTS.relax2"]))
+        assert files == {"relax2": {"KPOINTS.relax2"}}
+
+        # static is a calculation suffix
+        make_files(tmp_path, ["vasprun.xml.static"])
+        files = calculation_files(
+            Submission.from_paths([tmp_path / "vasprun.xml.static"])
+        )
+        assert files == {"static": {"vasprun.xml.static"}}
+
+
+class TestCalculationSuffixes:
+    def test_default_suffixes_are_saved(self, tmp_path):
+        make_files(tmp_path, ["INCAR", "vasprun.xml"])
+        submission = Submission.from_paths([tmp_path])
+        loaded = Submission.model_validate(json.loads(submission.model_dump_json()))
+        assert loaded.calc_suffixes == submission.calc_suffixes
+        assert "static" in loaded.calc_suffixes
+
+    def test_custom_suffixes_are_used_and_kept(self, tmp_path):
+        make_files(
+            tmp_path,
+            ["INCAR.nscf", "vasprun.xml.nscf", "INCAR.uniform", "vasprun.xml.uniform"],
+        )
+        submission = Submission.from_paths(
+            [tmp_path], calc_suffixes=("nscf", "uniform")
+        )
+        assert [loc.modifier for loc, _ in submission.calculations] == [
+            "nscf",
+            "uniform",
+        ]
+        loaded = Submission.model_validate(json.loads(submission.model_dump_json()))
+        assert loaded.calc_suffixes == ("nscf", "uniform")
+
+        # files are added with the same suffixes, and the default ones no longer apply
+        loaded.add_to([make_files(tmp_path, ["KPOINTS.nscf"]) / "KPOINTS.nscf"])
+        assert "KPOINTS.nscf" in calculation_files(loaded)["nscf"]
+        with pytest.raises(EmmetCliError, match="'relax1'"):
+            loaded.add_to([make_files(tmp_path, ["KPOINTS.relax1"]) / "KPOINTS.relax1"])
+
+    def test_staged_changes_have_the_suffixes(self, tmp_path):
+        make_files(tmp_path, ["INCAR.nscf", "vasprun.xml.nscf"])
+        submission = Submission.from_paths([tmp_path], calc_suffixes=("nscf",))
+        changes = submission.get_submission_changes(
+            None, submission.calculations, calc_suffixes=submission.calc_suffixes
+        )
+        assert changes.calc_suffixes == ("nscf",)

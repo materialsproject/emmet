@@ -24,15 +24,21 @@ from datetime import datetime, UTC
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from uuid import UUID
 
 import httpx2
 
-from emmet.archival.vasp.raw import RawArchive, raw_archive_hierarchy_from_files
+from emmet.archival.vasp.metadata import ArchiveMetadata
+from emmet.archival.vasp.raw import RawArchive
 from emmet.cli.state_manager import StateManager
 from emmet.cli.submission import CalculationMetadata, SubmissionChangeSet
 from emmet.cli.utils import EmmetCliError
+from emmet.core.vasp.utils import (
+    DEFAULT_CALC_SUFFIXES,
+    STANDARD_CALC_SUFFIX,
+    CalculationLocator,
+)
 
 DEFAULT_API_URL = "https://api.materialsproject.org"
 UPLOAD_STATE_KEY = "submission_uploads"
@@ -77,7 +83,8 @@ class _UploadContext:
     submission_id: UUID
     snapshot_id: str
     manifest: dict[str, Any]
-    calculations: dict[UUID, CalculationMetadata]
+    calculations: dict[UUID, tuple[CalculationLocator, CalculationMetadata]]
+    calc_suffixes: Sequence[str] = DEFAULT_CALC_SUFFIXES
 
 
 def _canonical_json(value: Any) -> bytes:
@@ -226,9 +233,10 @@ class HttpSubmissionUploader:
                 snapshot_id=snapshot_id,
                 manifest=manifest,
                 calculations={
-                    calculation.id: calculation
-                    for _, calculation in changes.current_calculations
+                    calculation.id: (locator, calculation)
+                    for locator, calculation in changes.current_calculations
                 },
+                calc_suffixes=changes.calc_suffixes,
             )
             session = self._get_or_prepare_session(
                 submission_id, snapshot_id, manifest, objects, context
@@ -542,16 +550,26 @@ class HttpSubmissionUploader:
         path = object_info.path
         if not path.exists():
             if object_info.calculation_id is not None:
-                calculation = context.calculations[object_info.calculation_id]
-                RawArchive(
-                    file_paths=raw_archive_hierarchy_from_files(calculation.files)
+                locator, calculation = context.calculations[object_info.calculation_id]
+                calc_suffix = locator.modifier or STANDARD_CALC_SUFFIX
+                calculation_id = object_info.calculation_id
+                RawArchive.from_files(
+                    calculation.files,
+                    root=locator.path,
+                    calc_suffix=calc_suffix,
+                    suffixes=context.calc_suffixes,
                 ).to_archive(
                     path,
-                    metadata={
-                        "submission_id": str(context.submission_id),
-                        "calculation_id": str(object_info.calculation_id),
-                        "snapshot_id": context.snapshot_id,
-                    },
+                    metadata=ArchiveMetadata(
+                        calculation_id=calculation_id,
+                        submission_id=context.submission_id,
+                        snapshot_id=context.snapshot_id,
+                        calc_suffix=calc_suffix,
+                        # the directories of users mean nothing outside of their machines
+                        source_dir_name=(
+                            f"submission://{context.submission_id}/{calculation_id}"
+                        ),
+                    ),
                 )
             else:
                 path.write_bytes(_canonical_json(context.manifest))

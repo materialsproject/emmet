@@ -289,6 +289,49 @@ def parse_vasp_file_name(
     return VaspFileName(file_type, category, calc_suffix, is_orig, tuple(unrecognized))
 
 
+def check_vasp_file_name(
+    file_name: str | os.PathLike,
+    suffixes: Sequence[str] = DEFAULT_CALC_SUFFIXES,
+) -> VaspFileName:
+    """Identify a VASP file from its name, raising if it cannot be assigned.
+
+    Unlike `parse_vasp_file_name`, this does not accept names with parts which
+    are not understood. Such a file is a VASP file, but it is unknown which
+    calculation it is for, or whether it is an output at all. For example,
+    `vasprun.xml.relax10.gz` (unknown suffix) or `CHGCAR.bak`.
+
+    Use this where a file was selected on purpose, e.g., when a user adds it
+    to a submission, instead of discovered, in which case it is skipped.
+
+    Parameters
+    -----------
+    file_name : str or PathLike
+        The name of the file. Any parent directories are ignored.
+    suffixes : sequence of str
+        The calculation suffixes which are allowed.
+
+    Returns
+    -----------
+    VaspFileName
+
+    Raises
+    -----------
+    ValueError
+        If the file is not a VASP file, or its name has unrecognized parts.
+    """
+    name = Path(file_name).name
+    if (parsed := parse_vasp_file_name(name, suffixes)) is None:
+        raise ValueError(f"{name} is not a recognized VASP file.")
+    if parsed.unrecognized:
+        raise ValueError(
+            f"{name}: unrecognized part(s) of the file name "
+            f"{', '.join(repr(p) for p in parsed.unrecognized)}. The file cannot be "
+            f"assigned to a calculation. The calculation suffixes are "
+            f"{', '.join(suffixes)}. Rename the file, or leave it out."
+        )
+    return parsed
+
+
 def discover_vasp_files(
     target_dir: FSPathType,
 ) -> dict[str, list[FileMetadata]]:
@@ -410,6 +453,13 @@ class CalculationFiles(BaseModel):
     elph_poscars: list[Path] = Field(
         [], description="Electron-phonon coupling displaced POSCARs."
     )
+    extra_parchg: list[Path] = Field(
+        [],
+        description="PARCHG files which share their type with another PARCHG of the "
+        "calculation, e.g., PARCHG.0001.0002 and PARCHG.0001.0003. `volumetric` "
+        "has one of them, so that every file of the calculation is accounted for "
+        "(see `file_paths`).",
+    )
     workflow: dict[str, Path] = Field(
         {},
         description="Workflow files: custodian.json, transformations.json, FW.json. "
@@ -468,6 +518,22 @@ class CalculationFiles(BaseModel):
             kwargs["elph_poscars"] = [_path(p) for p in self.elph_poscars]
         return kwargs
 
+    def file_paths(self) -> list[Path]:
+        """Every file of the calculation, including shared files, without duplicates."""
+        paths: dict[Path, None] = {}
+        for group in (
+            self.inputs,
+            self.orig_inputs,
+            self.outputs,
+            self.volumetric,
+            self.electronic_structure,
+            self.workflow,
+        ):
+            paths.update(dict.fromkeys(group.values()))
+        paths.update(dict.fromkeys(self.extra_parchg))
+        paths.update(dict.fromkeys(self.elph_poscars))
+        return list(paths)
+
     def _add(self, path: Path, parsed: VaspFileName) -> None:
         """Add a file of this calculation."""
         if parsed.is_orig:
@@ -480,6 +546,8 @@ class CalculationFiles(BaseModel):
         elif parsed.category == "output":
             self.outputs[parsed.file_type] = path
         elif parsed.category == "volumetric":
+            if parsed.file_type == "PARCHG" and "PARCHG" in self.volumetric:
+                self.extra_parchg.append(self.volumetric["PARCHG"])
             self.volumetric[parsed.file_type] = path
         elif parsed.category == "electronic_structure":
             self.electronic_structure[parsed.file_type] = path
@@ -515,6 +583,7 @@ def _scan_vasp_files(
 def discover_calculations(
     target_dir: FSPathType,
     suffixes: Sequence[str] = DEFAULT_CALC_SUFFIXES,
+    require_vasprun: bool = True,
 ) -> dict[CalculationLocator, CalculationFiles]:
     """Find the calculations in a directory, and the files of each.
 
@@ -554,6 +623,13 @@ def discover_calculations(
         The suffixes of the calculations, in the order that the calculations
         were run, not in alphabetical order. The default is the known suffixes
         used by MP, `DEFAULT_CALC_SUFFIXES`.
+    require_vasprun : bool = True
+        Whether a calculation needs a vasprun.xml to be returned. If False,
+        calculations which have not been run, or did not finish, are returned
+        too: any with input, output, volumetric or electronic structure files.
+        Files with no suffix are then a calculation of their own only if
+        there are no calculations with suffixes. Otherwise they are shared
+        as described above.
 
     Returns
     -----------
@@ -563,6 +639,16 @@ def discover_calculations(
     """
     base_dir = Path(target_dir).resolve()
     suffixes = tuple(s for s in dict.fromkeys(suffixes) if s != STANDARD_CALC_SUFFIX)
+
+    def is_calculation(calc_files: CalculationFiles) -> bool:
+        if require_vasprun:
+            return calc_files.vasprun is not None
+        return bool(
+            calc_files.inputs
+            or calc_files.outputs
+            or calc_files.volumetric
+            or calc_files.electronic_structure
+        )
 
     files: dict[str, CalculationFiles] = {}
     for path, parsed in _scan_vasp_files(base_dir, suffixes):
@@ -576,12 +662,16 @@ def discover_calculations(
             sub_files = CalculationFiles(calc_suffix=suffix, directory=sub_dir)
             for path, parsed in _scan_vasp_files(sub_dir, suffixes):
                 sub_files._add(path, parsed)
-            if sub_files.vasprun:
+            if is_calculation(sub_files):
                 files[suffix] = sub_files
 
-    order = [s for s in suffixes if s in files and files[s].vasprun]
+    order = [s for s in suffixes if s in files and is_calculation(files[s])]
     unsuffixed = files.get(STANDARD_CALC_SUFFIX)
-    unsuffixed_is_calc = unsuffixed is not None and unsuffixed.vasprun is not None
+    unsuffixed_is_calc = unsuffixed is not None and (
+        unsuffixed.vasprun is not None
+        if require_vasprun
+        else (not order and is_calculation(unsuffixed))
+    )
     if unsuffixed_is_calc:
         order.append(STANDARD_CALC_SUFFIX)
     if not order:
@@ -614,6 +704,13 @@ def discover_calculations(
                     getattr(last_files, group).setdefault(file_type, path)
             if not last_files.elph_poscars:
                 last_files.elph_poscars = list(unsuffixed.elph_poscars)
+            if (
+                not last_files.extra_parchg
+                and "PARCHG" in unsuffixed.volumetric
+                and last_files.volumetric.get("PARCHG")
+                == unsuffixed.volumetric["PARCHG"]
+            ):
+                last_files.extra_parchg = list(unsuffixed.extra_parchg)
 
     for i, suffix in enumerate(order):
         files[suffix].is_first = i == 0
@@ -693,3 +790,64 @@ def recursive_discover_vasp_files(
     vasp_files: dict[CalculationLocator, list[FileMetadata]] = {}
     _recursive_discover_vasp_files(target_dir, vasp_files)
     return vasp_files
+
+
+def recursive_discover_calculations(
+    target_dir: FSPathType,
+    suffixes: Sequence[str] = DEFAULT_CALC_SUFFIXES,
+    require_vasprun: bool = True,
+    max_depth: int | None = None,
+) -> dict[CalculationLocator, CalculationFiles]:
+    """Find the calculations in a directory and all of its subdirectories.
+
+    The calculations of every directory are found with `discover_calculations`.
+    A subdirectory which holds the files of a calculation, like `relax1/`
+    in a directory with the layout `relax1/vasprun.xml.gz`, is a part of its
+    parent's calculations, and not searched for others. Any other subdirectory
+    is searched, including those of directories which have calculations.
+
+    Parameters
+    -----------
+    target_dir : FSPathType
+        The directory to search in.
+    suffixes : sequence of str
+        The suffixes of the calculations, see `discover_calculations`.
+    require_vasprun : bool = True
+        Whether a calculation needs a vasprun.xml, see `discover_calculations`.
+    max_depth : non-negative int or None (default)
+        If an int, the maximum depth of the directories which are searched.
+        With 1, `target_dir` and its immediate subdirectories are searched.
+
+    Returns
+    -----------
+    dict of CalculationLocator to CalculationFiles
+    """
+    head_dir = Path(target_dir).resolve()
+    if max_depth is not None and (
+        not isinstance(max_depth, int) or isinstance(max_depth, bool) or max_depth < 0
+    ):
+        raise ValueError(
+            "The maximum path depth should be a non-negative integer, "
+            "with zero indicating that only the current directory should "
+            "be searched."
+        )
+
+    calculations: dict[CalculationLocator, CalculationFiles] = {}
+
+    def _search(directory: Path, depth: int) -> None:
+        found = discover_calculations(directory, suffixes, require_vasprun)
+        calculations.update(found)
+        if max_depth is not None and depth >= max_depth:
+            return
+        used = {calc_files.directory for calc_files in found.values()}
+        with os.scandir(directory) as scan_dir:
+            sub_dirs = sorted(
+                (Path(p.path) for p in scan_dir if p.is_dir(follow_symlinks=False)),
+                key=lambda p: p.name,
+            )
+        for sub_dir in sub_dirs:
+            if sub_dir not in used:
+                _search(sub_dir, depth + 1)
+
+    _search(head_dir, 0)
+    return calculations

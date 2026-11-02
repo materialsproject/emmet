@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 import shutil
 import tempfile
+from uuid import uuid4
 
 from emmet.core.tasks import TaskDoc
 from monty.serialization import loadfn
@@ -28,3 +29,12 @@ def tmp_dir():
 @pytest.fixture
 def sample_task(test_dir) -> TaskDoc:
     return TaskDoc(**loadfn(test_dir / "mp-1201400_task_doc.json.gz"))
+
+
+def archive_metadata(**kwargs) -> dict:
+    """The minimal metadata of an archive, which can be overridden."""
+    return {
+        "calculation_id": str(uuid4()),
+        "source_dir_name": "host:/some/launcher",
+        **kwargs,
+    }

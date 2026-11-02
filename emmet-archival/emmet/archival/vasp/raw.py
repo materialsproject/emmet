@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import orjson
+from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import TYPE_CHECKING
@@ -25,55 +27,134 @@ from emmet.core.io.pymatgen import (
 )
 
 from emmet.archival.core import walk_hierarchical_data, FileArchiveBase
+from emmet.archival.vasp.metadata import ArchiveMetadata
 from emmet.core.tasks import TaskDoc
 from emmet.core.vasp.calculation import PotcarSpec
-from emmet.core.vasp.utils import VASP_RAW_DATA_ORG, FileMetadata, discover_vasp_files
+from emmet.core.vasp.utils import (
+    COMPRESSION_EXTENSIONS,
+    DEFAULT_CALC_SUFFIXES,
+    STANDARD_CALC_SUFFIX,
+    VASP_RAW_DATA_ORG,
+    FileMetadata,
+    check_vasp_file_name,
+    discover_calculations,
+    parse_vasp_file_name,
+)
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping, Sequence
     from os import PathLike
     from typing import Any, Self
 
+    from emmet.core.types.typing import FSPathType
+
+
+def _archive_key(file_name: str, suffixes: Sequence[str]) -> str:
+    """The key of a VASP file in an archive: `{category}/{file name}`.
+
+    The file name is the type of the file, e.g., INCAR, vasprun.xml, CHGCAR,
+    with `.orig` for original inputs, and without the calculation suffix and
+    compression extension. Raw POTCARs are archived as their spec,
+    POTCAR.spec. The indices of PARCHG files and the temperature of
+    electron-phonon POSCARs are kept, so that these files do not overwrite
+    each other: PARCHG.0001.0002, POSCAR.T=300.
+
+    Raises a ValueError if the file is not a VASP file or has unrecognized parts.
+    """
+    parsed = check_vasp_file_name(file_name, suffixes)
+    name = parsed.file_type
+    if name == "POTCAR":
+        name = "POTCAR.spec"
+
+    base = Path(file_name).name
+    while base.endswith(COMPRESSION_EXTENSIONS):
+        base = base.rsplit(".", 1)[0]
+    extra = base.split(".")[1:]
+    if parsed.file_type == "PARCHG":
+        name += "".join(f".{p}" for p in extra if p.isdigit())
+    elif parsed.file_type == "POSCAR.T":
+        name = next(f"POSCAR.{p}" for p in extra if p.startswith("T="))
+
+    if parsed.is_orig:
+        name += ".orig"
+    return f"{parsed.category}/{name}"
+
 
 def raw_archive_hierarchy_from_files(
-    file_metas: list[FileMetadata],
+    file_metas: Sequence[FileMetadata],
+    calc_suffix: str | None = None,
+    suffixes: Sequence[str] = DEFAULT_CALC_SUFFIXES,
 ) -> dict[str, FileMetadata]:
-    """Arrange files into the hierarchical structure expected by RawArchive.
+    """Arrange the files of one calculation into the hierarchy of RawArchive.
+
+    Every file is checked before anything is returned, so a calculation is never
+    archived with some of its files left out.
 
     Parameters
     -----------
-    file_metas : list of FileMetadata
+    file_metas : sequence of FileMetadata
+        The files of one calculation.
+    calc_suffix : str or None
+        The suffix of the calculation. If not None, files whose names have
+        a different calculation suffix are not accepted. Files with no suffix
+        are always accepted, as they can be shared between the
+        calculations of a directory.
+    suffixes : sequence of str
+        The calculation suffixes which file names can have. This must be
+        the same as those used to find the files.
 
     Returns
     -----------
     dict of str to FileMetadata
-        The same input FileMetadata but in the hierarchical
-        structure expected by RawArchive.
+        The files by their key in the archive, e.g., `output/vasprun.xml`.
+
+    Raises
+    -----------
+    ValueError
+        If a file is not a VASP file, has unrecognized parts in its name, has the
+        suffix of another calculation, or if two files have the same key.
     """
     file_paths: dict[str, FileMetadata] = {}
     for file_meta in file_metas:
-        file_name = file_meta.name.rsplit(".", 1)[0]
-        ref_file_name = None
-        for calc_type, base_file_names in VASP_RAW_DATA_ORG.items():
-            if matches := sorted(
-                [f for f in base_file_names if f in file_name], key=lambda k: len(k)
-            ):
-                # This ensures, e.g., INCAR.orig is matched instead of INCAR
-                ref_file_name = matches[-1]
-                break
-
-        if not ref_file_name:
-            continue
-
-        file_paths[f"{calc_type}/{ref_file_name}"] = file_meta
+        name = file_meta.path.name
+        key = _archive_key(name, suffixes)
+        file_suffix = check_vasp_file_name(name, suffixes).calc_suffix
+        if (
+            calc_suffix is not None
+            and file_suffix is not None
+            and file_suffix != calc_suffix
+        ):
+            raise ValueError(
+                f"{file_meta.path}: the file is for the calculation '{file_suffix}', "
+                f"and cannot be archived with the calculation '{calc_suffix}'."
+            )
+        if key in file_paths:
+            raise ValueError(
+                f"{file_meta.path} and {file_paths[key].path} are both {key} "
+                "in the archive. Only one can be archived per calculation."
+            )
+        file_paths[key] = file_meta
     return file_paths
 
 
+def _isoformat_mtime(path: Path) -> str:
+    """The modification time of a file as an ISO-8601 UTC string."""
+    return datetime.fromtimestamp(path.stat().st_mtime, tz=UTC).isoformat()
+
+
 class RawArchive(FileArchiveBase):
-    """Archive a raw VASP calculation directory and remove copyright-protected info."""
+    """Archive the raw files of one VASP calculation and remove copyright-protected info."""
 
     file_paths: dict[str, FileMetadata] = Field(
         description="A dict with the keys as hierarchies, and values as FileMetadata."
+    )
+    calc_suffix: str = Field(
+        STANDARD_CALC_SUFFIX,
+        description="The suffix of the calculation, or standard if it has none.",
+    )
+    root: Path | None = Field(
+        None,
+        description="The directory which the original names of the files are relative to.",
     )
 
     @staticmethod
@@ -92,29 +173,137 @@ class RawArchive(FileArchiveBase):
         )
 
     @classmethod
-    def from_directory(cls, calc_dir: str | Path) -> Self:
-        """Create a RawArchive from a directory.
+    def from_files(
+        cls,
+        files: Sequence[FileMetadata],
+        root: str | Path | None = None,
+        calc_suffix: str = STANDARD_CALC_SUFFIX,
+        suffixes: Sequence[str] = DEFAULT_CALC_SUFFIXES,
+    ) -> Self:
+        """Create a RawArchive from the files of one calculation.
+
+        Parameters
+        -----------
+        files : sequence of FileMetadata
+            The files of the calculation, including any files shared with
+            other calculations of its directory, e.g., a POTCAR.
+        root : str or Path or None
+            The directory the files are found in. The original names stored in
+            the archive are the paths of the files relative to it, so that the
+            archive does not reveal where the files were. Defaults to the
+            names of the files only.
+        calc_suffix : str
+            The suffix of the calculation, or standard if it has none.
+        suffixes : sequence of str
+            The calculation suffixes which file names can have. This must be
+            the same as those used to find the files.
+
+        Raises
+        -----------
+        ValueError
+            If any of the files cannot be archived, see `raw_archive_hierarchy_from_files`.
+            Nothing is archived unless all of them can.
+        """
+        return cls(
+            file_paths=raw_archive_hierarchy_from_files(
+                files, calc_suffix=calc_suffix, suffixes=suffixes
+            ),
+            calc_suffix=calc_suffix,
+            root=Path(root).resolve() if root is not None else None,
+        )
+
+    @classmethod
+    def from_directory(
+        cls,
+        calc_dir: str | Path,
+        suffixes: Sequence[str] = DEFAULT_CALC_SUFFIXES,
+        require_vasprun: bool = True,
+    ) -> list[Self]:
+        """Create RawArchives from a directory, one for each calculation in it.
+
+        The calculations of a directory, and the files which they share, are found
+        with `emmet.core.vasp.utils.discover_calculations`.
 
         Parameters
         -----------
         calc_dir : str or Path
             Directory with VASP files
+        suffixes : sequence of str
+            The suffixes of the calculations in the directory, in the order
+            they were run.
+        require_vasprun : bool = True
+            Whether to only archive calculations which have a vasprun.xml.
+
+        Returns
+        -----------
+        list of RawArchive
+            In the order that the calculations were run.
         """
         calc_dir = Path(calc_dir).resolve()
         if not calc_dir.exists():
             raise SystemError(f"Directory {calc_dir} does not exist!")
 
-        flat_file_paths = []
-        for file_paths_by_suffix in discover_vasp_files(calc_dir).values():
-            flat_file_paths.extend(file_paths_by_suffix)
-        file_paths = raw_archive_hierarchy_from_files(flat_file_paths)
+        return [
+            cls.from_files(
+                [FileMetadata(name=p.name, path=p) for p in files.file_paths()],
+                root=locator.path,
+                calc_suffix=locator.modifier or STANDARD_CALC_SUFFIX,
+                suffixes=suffixes,
+            )
+            for locator, files in discover_calculations(
+                calc_dir, suffixes, require_vasprun=require_vasprun
+            ).items()
+        ]
 
-        return cls(file_paths=file_paths)
+    def to_archive(  # type: ignore[override]
+        self,
+        file_name: FSPathType,
+        metadata: ArchiveMetadata | dict[str, Any],
+        compression: dict | None = None,
+        zarr_store: MutableMapping | None = None,
+    ) -> None:
+        """Write the archive.
+
+        Parameters
+        -----------
+        file_name (str or Path) : the name of the archive
+        metadata : ArchiveMetadata or dict
+            The metadata of the archive, see `ArchiveMetadata`. A dict is
+            validated against it, and the `calc_suffix` of the archive is
+            used if it has none. Nothing is written if it is not valid.
+        compression (dict[str,Any] or None) : If specified, compression
+            kwargs to pass to the file writer.
+        zarr_store : MutableMapping or None (default)
+            If specified, the ZARR store to begin file root at.
+        """
+        if not isinstance(metadata, ArchiveMetadata):
+            metadata = ArchiveMetadata(**{"calc_suffix": self.calc_suffix, **metadata})
+        if metadata.calc_suffix != self.calc_suffix:
+            raise ValueError(
+                f"The metadata is for the calculation '{metadata.calc_suffix}', "
+                f"but the archive is of the calculation '{self.calc_suffix}'."
+            )
+        super().to_archive(
+            file_name,
+            metadata=metadata.to_attrs(),
+            compression=compression,
+            zarr_store=zarr_store,
+        )
+
+    def _original_name(self, path: Path) -> str:
+        """The name of a file relative to the root, or just its name."""
+        if self.root is not None:
+            try:
+                return path.resolve().relative_to(self.root).as_posix()
+            except ValueError:
+                pass
+        return path.name
 
     def _to_hdf5_like(self, group: h5py.Group | zarr.Group, **kwargs) -> None:
         """Add VASP files to an existing archival group."""
 
         for file_arch, file_meta in self.file_paths.items():
+            content_md5: str | None = None
             if ".h5" in file_arch:
                 file_key = file_arch
                 # insert HDF5 files into output
@@ -153,20 +342,22 @@ class RawArchive(FileArchiveBase):
                     continue
 
                 file_key = file_arch
-                if "POTCAR" in file_arch and "spec" not in file_arch:
-                    if len(_split_arch := file_arch.rsplit(".", 1)) > 1:
-                        file_key = f"{_split_arch[0]}.spec.{_split_arch[1]}"
-                    else:
-                        file_key = f"{file_arch}.spec"
-
+                parsed = parse_vasp_file_name(file_meta.path.name)
+                if parsed is not None and parsed.file_type == "POTCAR":
+                    # raw POTCARs are archived as their spec, the key already is
                     data = self.convert_potcar_to_spec(data.decode())
 
+                content_md5 = hashlib.md5(data, usedforsecurity=False).hexdigest()
                 self._writeout(group, file_key, data)
 
-            group[file_key].attrs["file_path"] = str(file_meta.path)
-            group[file_key].attrs["md5"] = str(
+            attrs = group[file_key].attrs
+            attrs["original_name"] = self._original_name(file_meta.path)
+            attrs["mtime"] = _isoformat_mtime(file_meta.path)
+            attrs["md5"] = str(
                 file_meta.compute_hash() if file_meta.hash is None else file_meta.hash
             )
+            if content_md5 is not None:
+                attrs["content_md5"] = content_md5
 
     @classmethod
     def _extract_from_hdf5_like(

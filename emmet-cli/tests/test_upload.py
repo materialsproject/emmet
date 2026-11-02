@@ -1,14 +1,18 @@
 import hashlib
+import io
 import json
 import traceback
 import builtins
 from datetime import datetime, timedelta, UTC
+from pathlib import Path
 from uuid import uuid4
 
+import h5py
 import httpx2
 import pytest
 
 import emmet.cli.upload as upload_module
+from emmet.archival.vasp.metadata import ArchiveMetadata
 from emmet.cli.state_manager import StateManager
 from emmet.cli.submission import CalculationMetadata, Submission
 from emmet.cli.upload import HttpSubmissionUploader, UPLOAD_STATE_KEY
@@ -581,3 +585,131 @@ def test_removal_only_push_uploads_manifest(tmp_path):
     ]
     manifest = json.loads(next(iter(service.puts.values())))
     assert manifest["removed_calculations"][0]["calculation_id"] == str(removed_id)
+
+
+def _stage_directory(directory, calc_suffixes=None):
+    """Make a submission of the calculations in a directory, which pass validation."""
+    kwargs = {"calc_suffixes": calc_suffixes} if calc_suffixes else {}
+    submission = Submission.from_paths([directory], **kwargs)
+    for _, calculation in submission.calculations:
+        for file in calculation.files:
+            file.compute_hash()
+        calculation.calc_valid = True
+    return submission
+
+
+def _archives_by_calculation(service, submission):
+    archives = {}
+    for locator, calculation in submission.calculations:
+        object_id = next(
+            object_id
+            for object_id in service.puts
+            if object_id.startswith(f"calculations/{calculation.id}/")
+        )
+        archives[locator.modifier] = (
+            calculation,
+            h5py.File(io.BytesIO(service.puts[object_id]), "r"),
+        )
+    return archives
+
+
+def test_each_calculation_of_a_directory_is_archived_on_its_own(tmp_path):
+    calc_dir = tmp_path / "launcher_1"
+    calc_dir.mkdir()
+    for name in (
+        "INCAR.relax1",
+        "INCAR.relax2",
+        "vasprun.xml.relax1",
+        "vasprun.xml.relax2",
+        "INCAR.orig",
+        "POTCAR.spec",
+        "CHGCAR",
+    ):
+        content = "[]" if name == "POTCAR.spec" else f"contents of {name}"
+        (calc_dir / name).write_text(content)
+    submission = _stage_directory(calc_dir)
+    assert len(submission.calculations) == 2
+
+    submission.stage_for_push()
+    service = UploadService()
+    submission.push(_uploader(StateManager(tmp_path / "state"), service))
+
+    archives = _archives_by_calculation(service, submission)
+    assert set(archives) == {"relax1", "relax2"}
+    for suffix, (calculation, archive) in archives.items():
+        metadata = ArchiveMetadata.from_attrs(archive.attrs)
+        assert metadata.calculation_id == calculation.id
+        assert metadata.submission_id == submission.id
+        assert metadata.calc_suffix == suffix
+        assert metadata.snapshot_id == service.finalize_requests[0]["snapshot_id"]
+        # the directory of the user is not given away
+        assert metadata.source_dir_name == (
+            f"submission://{submission.id}/{calculation.id}"
+        )
+        assert str(tmp_path) not in str(dict(archive.attrs))
+
+        # every calculation has its own output, and the shared POTCAR
+        vasprun = archive["output/vasprun.xml"]
+        assert vasprun.attrs["original_name"] == f"vasprun.xml.{suffix}"
+        assert "input/POTCAR.spec" in archive
+        for key in ("input/INCAR", "output/vasprun.xml"):
+            assert not Path(archive[key].attrs["original_name"]).is_absolute()
+            assert "file_path" not in archive[key].attrs
+
+    assert "input/INCAR.orig" in archives["relax1"][1]
+    assert "input/INCAR.orig" not in archives["relax2"][1]
+    assert "volumetric/CHGCAR" in archives["relax2"][1]
+    assert "volumetric/CHGCAR" not in archives["relax1"][1]
+
+
+def test_custom_suffixes_are_used_to_archive(tmp_path):
+    calc_dir = tmp_path / "launcher_1"
+    calc_dir.mkdir()
+    for name in ("INCAR.nscf", "vasprun.xml.nscf"):
+        (calc_dir / name).write_text(f"contents of {name}")
+    submission = _stage_directory(calc_dir, calc_suffixes=("nscf",))
+    submission.stage_for_push()
+    service = UploadService()
+    submission.push(_uploader(StateManager(tmp_path / "state"), service))
+
+    ((calculation, archive),) = _archives_by_calculation(service, submission).values()
+    assert ArchiveMetadata.from_attrs(archive.attrs).calc_suffix == "nscf"
+    assert "output/vasprun.xml" in archive
+
+
+def test_a_file_which_cannot_be_archived_fails_the_push_before_uploading(tmp_path):
+    submission = _submission_with_raw_files(tmp_path)
+    ((locator, calculation),) = submission.calculations
+    # a file which was not checked when it was added, e.g., from an old submission
+    path = tmp_path / "OUTCAR.old"
+    path.write_text("x")
+    calculation.files.append(FileMetadata(name=path.name, path=path))
+    calculation.files[-1].compute_hash()
+
+    submission.stage_for_push()
+    service = UploadService()
+    with pytest.raises(ValueError, match="'old'"):
+        submission.push(_uploader(StateManager(tmp_path / "state"), service))
+    assert service.puts == {}
+    assert submission.calc_history == []
+
+
+def test_original_names_are_relative_to_the_directory_of_the_calculation(tmp_path):
+    launcher = tmp_path / "launcher_1"
+    for suffix in ("relax1", "relax2"):
+        (launcher / suffix).mkdir(parents=True)
+        for name in ("INCAR", "vasprun.xml"):
+            (launcher / suffix / name).write_text(f"{suffix} {name}")
+    (launcher / "POTCAR.spec").write_text("[]")
+    submission = _stage_directory(launcher)
+    assert {loc.modifier for loc, _ in submission.calculations} == {"relax1", "relax2"}
+
+    submission.stage_for_push()
+    service = UploadService()
+    submission.push(_uploader(StateManager(tmp_path / "state"), service))
+
+    for suffix, (_, archive) in _archives_by_calculation(service, submission).items():
+        assert archive["output/vasprun.xml"].attrs["original_name"] == (
+            f"{suffix}/vasprun.xml"
+        )
+        assert archive["input/POTCAR.spec"].attrs["original_name"] == "POTCAR.spec"

@@ -8,16 +8,20 @@ from multiprocessing import get_context
 from os import PathLike, cpu_count
 from pathlib import Path
 from typing import ClassVar, Literal, Protocol, Self
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, PrivateAttr
 
 from emmet.cli.utils import EmmetCliError
 from emmet.core.vasp.utils import (
+    DEFAULT_CALC_SUFFIXES,
+    STANDARD_CALC_SUFFIX,
     CalculationLocator,
     FileMetadata,
-    recursive_discover_vasp_files,
+    check_vasp_file_name,
+    discover_calculations,
+    recursive_discover_calculations,
 )
 from emmet.core.vasp.validation import ValidationDoc
 
@@ -90,6 +94,11 @@ class SubmissionChangeSet(BaseModel):
 
     current_calculations: list[tuple[CalculationLocator, CalculationMetadata]]
     changes: list[CalculationChange]
+    calc_suffixes: tuple[str, ...] = Field(
+        DEFAULT_CALC_SUFFIXES,
+        description="The calculation suffixes used to find the files of the "
+        "calculations, which the files are archived with.",
+    )
 
     @property
     def has_changes(self) -> bool:
@@ -123,6 +132,13 @@ class Submission(BaseModel):
     )
 
     # TODO: add origin
+
+    calc_suffixes: tuple[str, ...] = Field(
+        DEFAULT_CALC_SUFFIXES,
+        description="The suffixes of the calculations in the directories of "
+        "this submission, in the order that they were run. They are used to find "
+        "calculations, and to archive their files.",
+    )
 
     calculations: list[tuple[CalculationLocator, CalculationMetadata]] = Field(
         description="The calculations in this submission as a list of (locator, metadata) tuples"
@@ -159,12 +175,20 @@ class Submission(BaseModel):
         return cls.model_validate(data)
 
     @classmethod
-    def from_paths(cls, paths: Iterable[Path]) -> Self:
-        """Create Submission from all calculations in the provided paths"""
-        all_calculations = find_all_calculations(paths)
+    def from_paths(
+        cls,
+        paths: Iterable[Path],
+        calc_suffixes: Sequence[str] = DEFAULT_CALC_SUFFIXES,
+    ) -> Self:
+        """Create Submission from all calculations in the provided paths
+
+        Raises an EmmetCliError if a file is given whose name has parts which are
+        not understood, see `find_all_calculations`.
+        """
+        all_calculations = find_all_calculations(paths, calc_suffixes)
         logger.debug(f"found all calculations for {paths}:\n{all_calculations}")
 
-        return cls(calculations=all_calculations)
+        return cls(calculations=all_calculations, calc_suffixes=tuple(calc_suffixes))
 
     def _merge_calculations(
         self, cm: list[tuple[CalculationLocator, CalculationMetadata]]
@@ -197,7 +221,7 @@ class Submission(BaseModel):
     def add_to(self, paths: Iterable[Path]) -> list[FileMetadata]:
         """Add all files in the paths to the submission. Performs de-duping"""
         orig_calcs = self.calculations
-        calcs_to_add = find_all_calculations(paths)
+        calcs_to_add = find_all_calculations(paths, self.calc_suffixes)
         self._merge_calculations(calcs_to_add)
 
         self._clear_pending()
@@ -348,7 +372,9 @@ class Submission(BaseModel):
             )
 
         self._pending_push = self.get_submission_changes(
-            self.last_pushed(), self.pending_calculations
+            self.last_pushed(),
+            self.pending_calculations,
+            calc_suffixes=self.calc_suffixes,
         )
         return self._pending_push
 
@@ -356,6 +382,7 @@ class Submission(BaseModel):
         self,
         previous: list[tuple[CalculationLocator, CalculationMetadata]] | None,
         current: list[tuple[CalculationLocator, CalculationMetadata]],
+        calc_suffixes: Sequence[str] = DEFAULT_CALC_SUFFIXES,
     ) -> SubmissionChangeSet:
         """Return added, changed, and removed calculations and files."""
         previous_by_id = {
@@ -422,6 +449,7 @@ class Submission(BaseModel):
         return SubmissionChangeSet(
             current_calculations=current,
             changes=changes,
+            calc_suffixes=tuple(calc_suffixes),
         )
 
     def push(self, uploader: SubmissionUploader) -> None:
@@ -457,18 +485,72 @@ class Submission(BaseModel):
         self._pending_push = None
 
 
-def find_all_calculations(paths: Iterable[PathLike]):
+def _files_of(paths: Iterable[Path]) -> list[FileMetadata]:
+    return [FileMetadata(name=p.name, path=p) for p in paths]
+
+
+def find_all_calculations(
+    paths: Iterable[PathLike],
+    suffixes: Sequence[str] = DEFAULT_CALC_SUFFIXES,
+):
+    """Find the calculations in files and directories, and the files of each.
+
+    A directory is searched for calculations in all of its layouts, see
+    `emmet.core.vasp.utils.discover_calculations`. Calculations which have
+    not been run, or did not finish, are included, as they can be validated
+    before they are run. Files which are shared between the calculations of a
+    directory, e.g., an unsuffixed POTCAR, are part of each of them.
+
+    A file is a part of the calculation(s) of its directory that it belongs to,
+    and only that file is added.
+
+    Files in directories which have names that are not understood, such as an
+    unknown calculation suffix, are skipped with a warning, as it is not known
+    what they are. A file given on its own was chosen on purpose, so it
+    is not skipped, and an EmmetCliError is raised for it.
+
+    Parameters
+    -----------
+    paths : iterable of PathLike
+        Files and directories.
+    suffixes : sequence of str
+        The suffixes of the calculations, in the order that they were run.
+
+    Raises
+    -----------
+    EmmetCliError
+        If a file is not a VASP file, or its name has parts which are not understood.
+        Nothing is returned.
+    """
     all_calculations: dict[CalculationLocator, list[FileMetadata]] = defaultdict(list)
     for path in paths:
         path = Path(path).resolve()
         logger.info(f"Checking path: {path}")
         if path.is_dir():
-            calcs = recursive_discover_vasp_files(path)
-            all_calculations.update(calcs)
-        else:
-            parent = path.parent
-            fm = FileMetadata(name=path.name, path=path)
-            locator = CalculationLocator(path=parent, modifier=fm.calc_suffix)
+            for locator, calc_files in recursive_discover_calculations(
+                path, suffixes, require_vasprun=False
+            ).items():
+                all_calculations[locator] = _files_of(calc_files.file_paths())
+            continue
+
+        try:
+            parsed = check_vasp_file_name(path.name, suffixes)
+        except ValueError as exc:
+            raise EmmetCliError(str(exc)) from None
+
+        fm = FileMetadata(name=path.name, path=path)
+        locators = [
+            locator
+            for locator, calc_files in discover_calculations(
+                path.parent, suffixes, require_vasprun=False
+            ).items()
+            if path in calc_files.file_paths()
+        ] or [
+            CalculationLocator(
+                path=path.parent, modifier=parsed.calc_suffix or STANDARD_CALC_SUFFIX
+            )
+        ]
+        for locator in locators:
             if fm not in all_calculations[locator]:
                 all_calculations[locator].append(fm)
 
