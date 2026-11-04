@@ -44,6 +44,7 @@ from emmet.core.tasks import (
 )
 from emmet.core.types.enums import StoreTrajectoryOption, TaskState
 from emmet.core.types.typing import IdentifierType
+from emmet.core.band_theory import BSPathType
 from emmet.core.vasp.calc_types.enums import TaskType
 from emmet.core.vasp.calculation import (
     Calculation,
@@ -86,6 +87,7 @@ _ELECTRONIC_STRUCTURE_TASK_TYPES = (
     TaskType.Static,
     TaskType.NSCF_Uniform,
     TaskType.NSCF_Line,
+    TaskType.SCF_Line,
 )
 
 
@@ -119,9 +121,11 @@ class ParsePolicy(BaseModel):
         the calculation. A CHG file is the CHGCAR's charge density at a lower precision
         and without augmentation data, and a POT file is a restart file for
         optimized-effective-potential calculations: the local potential is in the LOCPOT.
-    - A density of states and a band structure are only kept for static and
-        non-self-consistent (uniform or line mode) calculations. The raw data
-        of the other calculations has them, for those who want them.
+    - A density of states and a band structure are only kept for static,
+        non-self-consistent (uniform or line mode) and self-consistent line mode
+        calculations. The last are the meta-GGA and hybrid calculations whose
+        k-points are a weighted mesh followed by a path of zero-weight k-points.
+        The raw data of the other calculations has them, for those who want them.
     - Calculations which VASP did not complete or converge, or whose type
         is unknown, have no large objects, but are still recorded.
 
@@ -285,6 +289,27 @@ class DirectorySource:
 
 
 @dataclass
+class _BandStructureInput:
+    """What is needed to read the band structure of a calculation from its files.
+
+    The band structure is read from the file again, so that the Vasprun, which can be
+    large, can be freed first.
+    """
+
+    vasprun_file: Path
+    incar: dict[str, Any]
+    kpoints_file: Path | None
+    task_type: TaskType
+
+
+_LINE_TASK_TYPES = (TaskType.NSCF_Line, TaskType.SCF_Line)
+"""Calculations whose band structure is along a path of k-points."""
+
+_MESH_TASK_TYPES = (TaskType.Static, TaskType.NSCF_Uniform)
+"""Calculations whose band structure is on a uniform mesh of k-points."""
+
+
+@dataclass
 class ParsedCalculation:
     """The result of parsing a calculation. See `parse_calculation`.
 
@@ -306,9 +331,7 @@ class ParsedCalculation:
     _policy: ParsePolicy = field(default_factory=ParsePolicy, repr=False)
     _files: CalculationFiles | None = field(default=None, repr=False)
     _vasprun: Vasprun | None = field(default=None, repr=False)
-    _bandstructure_input: tuple[Path, dict[str, Any]] | None = field(
-        default=None, repr=False
-    )
+    _bandstructure_input: _BandStructureInput | None = field(default=None, repr=False)
     _tables: list[str] = field(default_factory=list, repr=False)
     _started: bool = field(default=False, repr=False)
 
@@ -385,13 +408,37 @@ class ParsedCalculation:
         if bandstructure_input is not None:
             bs_rows: tuple[Any, Any] | None = None
             try:
-                vasprun_file, incar = bandstructure_input
+                is_line = bandstructure_input.task_type in _LINE_TASK_TYPES
                 pmg_bs = _parse_bandstructure_file(
-                    "auto", vasprun_file, incar, use_emmet_models=False
+                    "auto",
+                    bandstructure_input.vasprun_file,
+                    bandstructure_input.incar,
+                    use_emmet_models=False,
+                    kpoints_file=bandstructure_input.kpoints_file,
+                    # The band structure of a line calculation is along its path. An
+                    # NSCF one can be read as a band structure on its k-points if that
+                    # fails, as is done for TaskDoc. A self-consistent one cannot: its
+                    # k-points are a mesh and then the path, so that is not its band
+                    # structure, and an exception is raised.
+                    line_mode=True if is_line else None,
+                    strict_line_mode=(
+                        bandstructure_input.task_type == TaskType.SCF_Line
+                    ),
                 )
                 if pmg_bs is not None:
+                    # A band structure on a mesh has no path convention, which is
+                    # not the same as not knowing it
+                    path_kwargs = (
+                        {"path_convention": BSPathType.uniform}
+                        if bandstructure_input.task_type in _MESH_TASK_TYPES
+                        else {}
+                    )
                     bs_rows = split_band_structure_row(
-                        BandStructureRow.from_pmg(pmg_bs, **header_kwargs)  # type: ignore[arg-type]
+                        BandStructureRow.from_pmg(
+                            pmg_bs,
+                            **path_kwargs,
+                            **header_kwargs,  # type: ignore[arg-type]
+                        )
                     )
                     del pmg_bs
             except Exception as exc:
@@ -590,8 +637,10 @@ def _parse_calculation(
         if policy.wants_dos(header.task_type):
             parsed._vasprun = vasprun
         if policy.wants_bandstructure(header.task_type):
-            parsed._bandstructure_input = (
-                files.vasprun,  # type: ignore[assignment]
-                dict(vasprun.incar),
+            parsed._bandstructure_input = _BandStructureInput(
+                vasprun_file=files.vasprun,  # type: ignore[arg-type]
+                incar=dict(vasprun.incar),
+                kpoints_file=files.inputs.get("KPOINTS"),
+                task_type=header.task_type,
             )
     return parsed

@@ -7,6 +7,7 @@ import sys
 import time
 import weakref
 from datetime import UTC, datetime
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -14,6 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from emmet.core import ARROW_COMPATIBLE
+from emmet.core.band_theory import BSPathType, ElectronicBS
 from emmet.core.io.pymatgen import Chgcar, Vasprun
 from emmet.core.tasks import CoreTaskDoc
 from emmet.core.testing_utils import TEST_FILES_DIR, DataArchive, assert_nested_close
@@ -102,7 +104,12 @@ def mark(monkeypatch):
 class TestPolicy:
     @pytest.mark.parametrize("task_type", list(TaskType))
     def test_mp_production_electronic_structure(self, task_type):
-        wanted = task_type.value in {"Static", "NSCF Uniform", "NSCF Line"}
+        wanted = task_type.value in {
+            "Static",
+            "NSCF Uniform",
+            "NSCF Line",
+            "SCF Line",
+        }
         assert MP_PRODUCTION.wants_dos(task_type) is wanted
         assert MP_PRODUCTION.wants_bandstructure(task_type) is wanted
 
@@ -251,6 +258,9 @@ class TestParseCalculation:
         assert by_table["projected-bandstructures"].path_convention == (
             by_table["bandstructures"].path_convention
         )
+        # a band structure on a mesh follows no path, which is not an unknown path
+        assert by_table["bandstructures"].path_convention == BSPathType.uniform
+        assert by_table["bandstructures"].labels_dict == {}
 
         # the objects are those of the vasprun
         vasprun = Vasprun(directory / "vasprun.xml.gz", parse_projected_eigen=True)
@@ -840,3 +850,267 @@ class TestCoreTaskDoc:
     def test_no_calculation(self, tmp_path):
         with pytest.raises(ValueError, match="none"):
             CoreTaskDoc.from_directory(tmp_path)
+
+
+class TestBandStructureModes:
+    """How the band structure is read depends on the kind of calculation."""
+
+    @pytest.fixture
+    def record_reads(self, monkeypatch):
+        """Record how the band structure is read, instead of reading it."""
+        import emmet.core.vasp.calculation as calculation_module
+
+        reads: list[dict] = []
+        fail_line_mode = {"fail": False}
+        real = calculation_module.BSVasprun
+
+        class RecordingBSVasprun:
+            def __init__(self, filename, parse_projected_eigen=False, **kwargs):
+                self.vasprun = real(
+                    filename, parse_projected_eigen=parse_projected_eigen
+                )
+                self.parse_projected_eigen = parse_projected_eigen
+
+            def get_band_structure(self, **kwargs):
+                reads.append({"projected": self.parse_projected_eigen, **kwargs})
+                if kwargs.get("line_mode") and fail_line_mode["fail"]:
+                    raise RuntimeError("no band structure along symmetry lines")
+                kwargs.pop("line_mode", None)
+                kwargs.pop("kpoints_filename", None)
+                return self.vasprun.get_band_structure(**kwargs)
+
+        monkeypatch.setattr(calculation_module, "BSVasprun", RecordingBSVasprun)
+        return reads, fail_line_mode
+
+    def retype(self, monkeypatch, task_type):
+        """Make the calculation, which is of one type, a calculation of another."""
+        import emmet.core.vasp.parse as parse_module
+
+        real_from_calculation = parse_module.CoreTaskDoc.from_calculation
+
+        def from_calculation(*args, **kwargs):
+            task = real_from_calculation(*args, **kwargs)
+            task.task_type = task_type
+            return task
+
+        monkeypatch.setattr(
+            parse_module.CoreTaskDoc, "from_calculation", from_calculation
+        )
+
+    def band_structure_row(self, directory):
+        parsed, rows = parse(directory)
+        return parsed, dict(rows).get("bandstructures")
+
+    @pytest.mark.parametrize(
+        "task_type, line_mode, strict",
+        [
+            (TaskType.SCF_Line, True, True),
+            (TaskType.NSCF_Line, True, False),
+        ],
+    )
+    def test_line_calculations_are_read_along_their_path(
+        self, extract, monkeypatch, record_reads, task_type, line_mode, strict
+    ):
+        reads, _ = record_reads
+        directory = extract("Si_uniform")
+        self.retype(monkeypatch, task_type)
+        parsed, row = self.band_structure_row(directory)
+        assert parsed.errors == []
+
+        (read,) = reads
+        assert read["line_mode"] is True and read["projected"] is True
+        # the KPOINTS of the calculation is used, not one found next to the vasprun
+        assert (
+            Path(read["kpoints_filename"]).resolve()
+            == (directory / "KPOINTS.gz").resolve()
+        )
+        assert row is not None
+
+    @pytest.mark.parametrize("task_type", [TaskType.Static, TaskType.NSCF_Uniform])
+    def test_mesh_calculations_are_labelled_uniform(
+        self, extract, monkeypatch, record_reads, task_type
+    ):
+        reads, _ = record_reads
+        directory = extract("Si_uniform")
+        self.retype(monkeypatch, task_type)
+        parsed, row = self.band_structure_row(directory)
+        assert parsed.errors == []
+
+        # the mode is not forced for these, it is inferred from the INCAR as for a TaskDoc
+        assert reads
+        # whatever the way it was read, a band structure on a mesh follows no path
+        assert row is not None and row.path_convention == BSPathType.uniform
+
+    def test_a_failed_scf_line_is_an_error_and_not_another_band_structure(
+        self, extract, monkeypatch, record_reads
+    ):
+        reads, fail = record_reads
+        fail["fail"] = True
+        directory = extract("Si_uniform")
+        self.retype(monkeypatch, TaskType.SCF_Line)
+        parsed, rows = parse(directory)
+
+        assert "bandstructures" not in tables(rows)
+        assert "projected-bandstructures" not in tables(rows)
+        assert any("band structure" in err for err in parsed.errors)
+        # the rest of the calculation is not affected
+        assert "total-dos" in tables(rows)
+        # there is no second attempt on all of the calculation's k-points
+        assert [read.get("line_mode") for read in reads] == [True]
+
+    def test_a_failed_nscf_line_is_read_on_its_k_points(
+        self, extract, monkeypatch, record_reads
+    ):
+        reads, fail = record_reads
+        fail["fail"] = True
+        directory = extract("Si_uniform")
+        self.retype(monkeypatch, TaskType.NSCF_Line)
+        parsed, rows = parse(directory)
+
+        assert parsed.errors == []
+        assert [read.get("line_mode") for read in reads] == [True, None]
+        by_table = dict(rows)
+        # the path of a line calculation is not a mesh: it is not known
+        assert by_table["bandstructures"].path_convention != BSPathType.uniform
+        assert by_table["projected-bandstructures"].path_convention == (
+            by_table["bandstructures"].path_convention
+        )
+
+    def test_projections_row_follows_the_band_structure(self, extract):
+        directory = extract("Si_uniform")
+        _, rows = parse(directory)
+        by_table = dict(rows)
+        assert by_table["projected-bandstructures"].path_convention == (
+            BSPathType.uniform
+        )
+
+    def test_calculation_keeps_inferring_the_mode(self, extract, record_reads):
+        """Called as `Calculation` does, the reader behaves as it did before."""
+        from emmet.core.vasp.calculation import _parse_bandstructure_file
+
+        reads, _ = record_reads
+        directory = extract("Si_uniform")
+        vasprun = directory / "vasprun.xml.gz"
+
+        band_structure = _parse_bandstructure_file(
+            "auto", vasprun, {"NSW": 0, "ICHARG": 11}, use_emmet_models=True
+        )
+        # an NSCF calculation is tried as line mode, without a KPOINTS file given
+        assert [read.get("line_mode") for read in reads][0] is True
+        assert "kpoints_filename" in reads[0] and reads[0]["kpoints_filename"] is None
+        assert isinstance(band_structure, ElectronicBS)
+        # a path convention is inferred, and is never `uniform`
+        assert band_structure.path_convention != BSPathType.uniform
+
+
+class TestSCFLine:
+    """A self-consistent r2SCAN band structure: a weighted mesh, then a path of zero-weight k-points."""
+
+    @pytest.fixture
+    def scf_line(self, extract):
+        if not (TEST_FILES_DIR / "vasp" / "r2scan_scf_line.json.gz").exists():
+            pytest.skip("The SCF Line test file is not available.")
+        directory = extract("r2scan_scf_line")
+        parsed, rows = parse(directory)
+        return directory, parsed, dict(rows)
+
+    def test_the_calculation_is_an_scf_line(self, scf_line):
+        _, parsed, _ = scf_line
+        assert parsed.header.task_type == TaskType.SCF_Line
+        assert parsed.header.run_type.value == "r2SCAN"
+        assert parsed.errors == [] and parsed.outcome == ParseOutcome.PARSED
+
+    def test_electronic_structure_is_kept(self, scf_line):
+        _, _, rows = scf_line
+        assert {
+            "total-dos",
+            "projected-dos",
+            "bandstructures",
+            "projected-bandstructures",
+        } <= set(rows)
+
+    def test_only_the_path_is_the_band_structure(self, scf_line):
+        directory, _, rows = scf_line
+        vasprun = Vasprun(directory / "vasprun.xml.gz")
+        weights = np.array(vasprun.actual_kpoints_weights)
+        n_path = int((weights == 0).sum())
+        assert 0 < n_path < len(weights)
+        # the path follows the mesh
+        assert np.all(weights[-n_path:] == 0) and np.all(weights[:-n_path] > 0)
+
+        band_structure = rows["bandstructures"]
+        assert len(band_structure.qpoints) == n_path
+        # k-points of the mesh are not in it
+        mesh = np.array(vasprun.actual_kpoints)[: len(weights) - n_path]
+        path = np.array(band_structure.qpoints)
+        assert not any(
+            np.allclose(path[0], kpt) and w > 0 for kpt, w in zip(mesh, weights)
+        )
+        assert np.allclose(path, np.array(vasprun.actual_kpoints)[-n_path:])
+
+    def test_it_has_a_path_convention_and_labels(self, scf_line):
+        _, _, rows = scf_line
+        band_structure = rows["bandstructures"]
+        assert band_structure.path_convention not in (
+            BSPathType.unknown,
+            BSPathType.uniform,
+        )
+        assert band_structure.labels_dict
+        assert rows["projected-bandstructures"].path_convention == (
+            band_structure.path_convention
+        )
+
+    def test_projections_are_of_the_path(self, scf_line):
+        _, _, rows = scf_line
+        n_bands, n_kpts, _, _ = rows["projected-bandstructures"].rank
+        assert n_kpts == len(rows["bandstructures"].qpoints)
+        assert n_bands == len(rows["bandstructures"].spin_up_bands)
+
+    def test_reading_all_of_the_k_points_is_not_the_band_structure(self, scf_line):
+        """Without the SCF Line handling, the mesh and path are mixed, and the path is not found."""
+        from emmet.core.vasp.calculation import _parse_bandstructure_file
+
+        directory, _, rows = scf_line
+        vasprun = Vasprun(directory / "vasprun.xml.gz")
+        plain = _parse_bandstructure_file(
+            "auto", directory / "vasprun.xml.gz", dict(vasprun.incar), True
+        )
+        assert len(plain.qpoints) == len(vasprun.actual_kpoints)
+        assert len(plain.qpoints) > len(rows["bandstructures"].qpoints)
+        assert plain.path_convention == BSPathType.unknown
+
+    def test_a_failure_to_read_the_path_is_an_error(self, scf_line, monkeypatch):
+        directory, _, _ = scf_line
+        (directory / "KPOINTS.gz").unlink()
+        parsed, rows = parse(directory)
+        assert "bandstructures" not in tables(rows)
+        assert any("band structure" in err for err in parsed.errors)
+        assert "total-dos" in tables(rows)
+
+    def test_the_calculations_own_kpoints_is_used(self, scf_line):
+        """pymatgen looks for a file named KPOINTS; the one discovery chose may be named otherwise."""
+        directory, _, rows = scf_line
+        # the files of a calculation which has a suffix, as in a legacy directory
+        for path in directory.iterdir():
+            parts = path.name.split(".")
+            if parts[0] in {
+                "KPOINTS",
+                "INCAR",
+                "vasprun",
+                "OUTCAR",
+                "CONTCAR",
+                "POSCAR",
+            }:
+                stem = ".".join(p for p in parts if p != "gz")
+                path.rename(directory / f"{stem}.static.gz")
+
+        parsed, suffixed_rows = parse(directory)
+        assert parsed.errors == []
+        suffixed = dict(suffixed_rows)["bandstructures"]
+        # no file called KPOINTS exists, and the path is still found
+        assert (
+            not list(directory.glob("KPOINTS.gz"))
+            and not (directory / "KPOINTS").exists()
+        )
+        assert suffixed.path_convention == rows["bandstructures"].path_convention
+        assert len(suffixed.qpoints) == len(rows["bandstructures"].qpoints)

@@ -357,6 +357,33 @@ def test_obtain_path_type(fe_line_mode_bandstructure):
     ]
 
 
+def test_path_inference_only_matches_paths(fe_line_mode_bandstructure):
+    structure = fe_line_mode_bandstructure.structure
+    kpoints = [x.frac_coords for x in fe_line_mode_bandstructure.kpoints]
+    found = {path_type for path_type, _, _ in obtain_path_type(structure, kpoints)}
+    assert found and found <= {
+        BSPathType.setyawan_curtarolo,
+        BSPathType.hinuma,
+        BSPathType.latimer_munro,
+    }
+
+    # k-points on a mesh follow no path. Inference does not identify them as `uniform`:
+    # that is for whoever knows how the band structure was calculated to say
+    mesh = [(i / 4, j / 4, k / 4) for i in range(4) for j in range(4) for k in range(4)]
+    path_type, kpath, labels = next(obtain_path_type(structure, mesh))
+    assert path_type == BSPathType.unknown and kpath is None and labels == {}
+
+
+def test_bs_path_type_values():
+    assert {p.value for p in BSPathType} == {
+        "setyawan_curtarolo",
+        "hinuma",
+        "latimer_munro",
+        "uniform",
+        "unknown",
+    }
+
+
 def test_utilities():
 
     assert _coarse_list_superset([1, 2, 3, 4, 5, 6, 7], [3, 4, 5])

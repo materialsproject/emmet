@@ -1490,33 +1490,87 @@ def _parse_bandstructure_file(
     vasprun_file: Path | str,
     incar: Mapping[str, Any],
     use_emmet_models: bool,
+    *,
+    kpoints_file: Path | str | None = None,
+    line_mode: bool | None = None,
+    strict_line_mode: bool = False,
 ) -> ElectronicBS | BandStructure | None:
     """Parse band structure from a vasprun.xml file and its INCAR parameters.
 
     Needing only the file name and INCAR, and not a parsed Vasprun, lets callers
     free a Vasprun, which can be large, before reading the band structure.
+
+    With only the first four arguments, which all of `Calculation.from_vasp_files`
+    does, the mode is inferred from the INCAR, and pymatgen looks for the KPOINTS
+    file next to the vasprun.xml. The remaining arguments are for callers which
+    know what kind of calculation it is.
+
+    Parameters
+    -----------
+    parse_mode : str or bool
+        See `Calculation.from_vasp_files`. Only "auto" is affected by `line_mode`.
+    vasprun_file : Path or str
+    incar : Mapping
+    use_emmet_models : bool
+    kpoints_file : Path or str or None
+        The KPOINTS (or KPOINTS_OPT) file of the calculation, which pymatgen otherwise
+        takes to be the file of that name next to the vasprun.xml.
+    line_mode : bool or None
+        If True, read the band structure along symmetry lines, with projections.
+        For self-consistent calculations with zero-weight k-points, only those
+        k-points are kept. If False, read a band structure on the k-points of the
+        calculation. If None, infer from the INCAR.
+    strict_line_mode : bool
+        If `line_mode` is True, whether a failure to read the band structure along
+        symmetry lines raises an exception instead of reading the calculation
+        as a band structure on its k-points, which is a different band structure.
     """
     bs: ElectronicBS | BandStructure | None = None
+    kpoints_filename = str(kpoints_file) if kpoints_file is not None else None
     # only save the bandstructure if not moving ions
     if parse_mode == "auto" and incar.get("NSW", 0) <= 1:
-        if incar.get("ICHARG", 0) > 10:
+        if line_mode:
+            bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=True)
+            try:
+                bs = bs_vrun.get_band_structure(
+                    kpoints_filename=kpoints_filename,
+                    line_mode=True,
+                    efermi="smart",
+                )
+            except Exception:
+                if strict_line_mode:
+                    raise
+                bs = bs_vrun.get_band_structure(
+                    kpoints_filename=kpoints_filename, efermi="smart"
+                )
+        elif line_mode is None and incar.get("ICHARG", 0) > 10:
             # NSCF calculation
             bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=True)
             try:
                 # try parsing line mode
-                bs = bs_vrun.get_band_structure(line_mode=True, efermi="smart")
+                bs = bs_vrun.get_band_structure(
+                    kpoints_filename=kpoints_filename, line_mode=True, efermi="smart"
+                )
             except Exception:
                 # treat as a regular calculation
-                bs = bs_vrun.get_band_structure(efermi="smart")
+                bs = bs_vrun.get_band_structure(
+                    kpoints_filename=kpoints_filename, efermi="smart"
+                )
         else:
             # Not a NSCF calculation
             bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=False)
-            bs = bs_vrun.get_band_structure(efermi="smart")
+            bs = bs_vrun.get_band_structure(
+                kpoints_filename=kpoints_filename, efermi="smart"
+            )
 
     elif parse_mode:
         # legacy line/True behavior for bandstructure_mode
         bs_vrun = BSVasprun(vasprun_file, parse_projected_eigen=True)
-        bs = bs_vrun.get_band_structure(line_mode=parse_mode == "line", efermi="smart")
+        bs = bs_vrun.get_band_structure(
+            kpoints_filename=kpoints_filename,
+            line_mode=parse_mode == "line",
+            efermi="smart",
+        )
 
     if bs and use_emmet_models:
         return ElectronicBS.from_pmg(bs)

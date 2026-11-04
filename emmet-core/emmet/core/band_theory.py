@@ -38,12 +38,29 @@ SETTINGS = EmmetSettings()  # type: ignore[call-arg]
 
 
 class BSPathType(ValueEnum):
-    """Define path conventions used in pymatgen."""
+    """Define path conventions used in pymatgen, and the band structures which have none.
+
+    - `setyawan_curtarolo`, `hinuma`, `latimer_munro`: the high-symmetry path that a
+        band structure along symmetry lines follows.
+    - `uniform`: the band structure is on a uniform mesh of k-points, as for static and
+        non-self-consistent uniform calculations, and not along a path, so no path
+        convention applies. Inferring a path never gives this: it is assigned by whoever
+        knows how the band structure was calculated.
+    - `unknown`: a band structure whose path could not be identified.
+    """
 
     setyawan_curtarolo = "setyawan_curtarolo"
     hinuma = "hinuma"
     latimer_munro = "latimer_munro"
+    uniform = "uniform"
     unknown = "unknown"
+
+
+_NOT_A_PATH = ("uniform", "unknown")
+"""The values of `BSPathType` which are not a path that can be matched.
+
+Skipping them avoids building a `HighSymmKpath` for each, which has no path to match.
+"""
 
 
 class BandTheoryBase(BaseModel):
@@ -536,7 +553,9 @@ def obtain_path_type(
     BSPathType
     """
     found_path_types: set[BSPathType] = set()
-    for path_type in (bspt for bspt in BSPathType if bspt.value != "unknown"):  # type: ignore[attr-defined]
+    for path_type in (
+        bspt for bspt in BSPathType if bspt.value not in _NOT_A_PATH  # type: ignore[attr-defined]
+    ):
         found_path_type = False
         for symprec, angtol in product(symprecs, angtols):
             if found_path_type:
