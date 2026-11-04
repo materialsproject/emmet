@@ -14,16 +14,17 @@ import pytest
 from pydantic import ValidationError
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.io.pymatgen import Vasprun
+from emmet.core.io.pymatgen import Chgcar, Vasprun
 from emmet.core.tasks import CoreTaskDoc
 from emmet.core.testing_utils import TEST_FILES_DIR, DataArchive, assert_nested_close
 from emmet.core.types.enums import TaskState
 from emmet.core.vasp.calc_types.enums import TaskType
 from emmet.core.vasp.calculation import Calculation
-from emmet.core.vasp.models import VOLUMETRIC_PARSERS
+from emmet.core.vasp.models import VOLUMETRIC_PARSERS, Pot
 from emmet.core.vasp.parse import (
     DEFAULT_VOLUMETRIC_TYPES,
     MP_PRODUCTION,
+    NOT_PARSED_BY_DEFAULT_VOLUMETRIC_TYPES,
     DirectorySource,
     ParsePolicy,
     parse_calculation,
@@ -111,13 +112,19 @@ class TestPolicy:
         assert not MP_PRODUCTION.include_failed
         assert MP_PRODUCTION.require_known_task_type
         assert MP_PRODUCTION.dos_projections and MP_PRODUCTION.bandstructure_projections
-        # every volumetric type except CHG, which duplicates the CHGCAR
-        assert "CHG" in VOLUMETRIC_PARSERS and "CHG" not in DEFAULT_VOLUMETRIC_TYPES
-        assert set(DEFAULT_VOLUMETRIC_TYPES) == set(VOLUMETRIC_PARSERS) - {"CHG"}
-        assert all(
-            MP_PRODUCTION.wants_volumetric(t) for t in VOLUMETRIC_PARSERS if t != "CHG"
-        )
-        assert not MP_PRODUCTION.wants_volumetric("CHG")
+        # every volumetric type except CHG, which duplicates the CHGCAR, and POT,
+        # a restart file whose potential is in the LOCPOT
+        not_parsed = {"CHG", "POT"}
+        assert not_parsed <= set(VOLUMETRIC_PARSERS)
+        assert not_parsed == set(NOT_PARSED_BY_DEFAULT_VOLUMETRIC_TYPES)
+        assert set(DEFAULT_VOLUMETRIC_TYPES) == set(VOLUMETRIC_PARSERS) - not_parsed
+        for file_type in VOLUMETRIC_PARSERS:
+            assert MP_PRODUCTION.wants_volumetric(file_type) is (
+                file_type not in not_parsed
+            )
+        # the files which are the point of the potential and the charge density are
+        assert MP_PRODUCTION.wants_volumetric("LOCPOT")
+        assert MP_PRODUCTION.wants_volumetric("CHGCAR")
 
     def test_task_types_can_be_configured(self):
         everything = ParsePolicy(dos_task_types=None, bandstructure_task_types=None)
@@ -140,8 +147,10 @@ class TestPolicy:
         assert not policy.wants_volumetric("AECCAR0")
         assert not ParsePolicy(volumetric_types=()).wants_volumetric("CHGCAR")
 
-        # CHG is not parsed by default, but can be asked for
+        # CHG and POT are not parsed by default, but can be asked for
         assert not ParsePolicy().wants_volumetric("CHG")
+        assert not ParsePolicy().wants_volumetric("POT")
+        assert ParsePolicy(volumetric_types=("chg", "pot")).wants_volumetric("POT")
         assert ParsePolicy(volumetric_types=("chg",)).wants_volumetric("CHG")
         assert ParsePolicy(
             volumetric_types=(*DEFAULT_VOLUMETRIC_TYPES, "CHG")
@@ -303,8 +312,6 @@ class TestParseCalculation:
         assert row.structure.composition == parsed.task.structure.composition
 
         # the volumetric data is that of the file
-        from emmet.core.io.pymatgen import Chgcar
-
         pmg_chgcar = Chgcar.from_file(str(directory / "CHGCAR.gz"))
         assert np.allclose(
             row.to_pmg(pmg_cls=Chgcar).data["total"], pmg_chgcar.data["total"]
@@ -358,6 +365,34 @@ class TestParseCalculation:
             "chgcar",
         ]
         assert sorted(volumetric_tables(volumetric_types=None)) == ["chg", "chgcar"]
+
+    def test_pot_is_not_parsed_by_default(self, extract, tmp_path):
+        directory = extract("Si_static")
+
+        # a spin-polarized POT: two blocks of potential with augmentation data
+        chgcar = Chgcar.from_file(str(directory / "CHGCAR.gz"))
+        grid = chgcar.data["total"]
+        pot = Pot(
+            chgcar.structure,
+            {"total": grid, "diff": -grid},
+            data_aug={"total": {}, "diff": {}},
+        )
+        pot.write_file(directory / "POT")
+
+        def volumetric_rows(**policy):
+            _, rows = parse(directory, policy=ParsePolicy(**policy))
+            return {t: row for t, row in rows if t in {"pot", "chgcar", "locpot"}}
+
+        # a POT next to a CHGCAR is not parsed with it by default
+        assert set(volumetric_rows()) == {"chgcar"}
+
+        # but can be asked for, and its blocks are spin-up and spin-down
+        rows = volumetric_rows(volumetric_types=("CHGCAR", "POT"))
+        assert set(rows) == {"chgcar", "pot"}
+        assert [lab.value for lab in rows["pot"].labels] == ["spin_up", "spin_down"]
+        assert rows["pot"].file_name == "POT"
+        # while a CHGCAR's are the total and the difference (magnetization)
+        assert [lab.value for lab in rows["chgcar"].labels] == ["total", "diff"]
 
     def test_legacy_directory(self, extract):
         """Each calculation of a directory is parsed by itself, and has its own row."""

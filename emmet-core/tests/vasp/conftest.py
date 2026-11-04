@@ -67,6 +67,10 @@ def volumetric_files(tmp_path_factory):
         ("collinear_no_aug", 2, False),
         ("unpolarized", 1, False),
         ("noncollinear", 4, False),
+        # the spin blocks of a POT file have the layout of a CHGCAR with augmentation
+        ("pot_collinear", 2, True),
+        ("pot_unpolarized", 1, True),
+        ("pot_noncollinear", 4, True),
     ):
         paths[name] = out / name
         paths[name].write_text(_volumetric_text(nblocks, aug))

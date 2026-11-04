@@ -164,19 +164,22 @@ def test_policy_options(launchers, tmp_path):
     assert {p.name for p in output.iterdir()} == {"tasks", "trajectories", "manifest"}
 
 
-def test_chg_is_not_stored_unless_asked_for():
+def test_chg_and_pot_are_not_stored_unless_asked_for():
     policy = tasks_module._make_policy((), False, False, False, False)
     assert policy == ParsePolicy()
     assert policy.wants_volumetric("CHGCAR") and policy.wants_volumetric("LOCPOT")
-    assert not policy.wants_volumetric("CHG")
+    assert not policy.wants_volumetric("CHG") and not policy.wants_volumetric("POT")
 
     # not giving the option must not mean every type
     assert tasks_module._make_policy((), True, True, True, True).volumetric_types == (
         DEFAULT_VOLUMETRIC_TYPES
     )
 
-    asked_for = tasks_module._make_policy(("CHG", "CHGCAR"), False, False, False, False)
-    assert asked_for.wants_volumetric("CHG") and asked_for.wants_volumetric("CHGCAR")
+    asked_for = tasks_module._make_policy(
+        ("CHG", "POT", "CHGCAR"), False, False, False, False
+    )
+    for file_type in ("CHG", "POT", "CHGCAR"):
+        assert asked_for.wants_volumetric(file_type)
     assert not asked_for.wants_volumetric("LOCPOT")
 
 

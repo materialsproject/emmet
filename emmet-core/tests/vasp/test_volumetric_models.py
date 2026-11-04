@@ -8,6 +8,7 @@ from emmet.core.io.pymatgen import Chgcar, Elfcar, Locpot
 from emmet.core.vasp.models import (
     VOLUMETRIC_PARSERS,
     ChgcarLike,
+    Pot,
     VolumetricLabel,
     volumetric_file_type,
 )
@@ -52,9 +53,15 @@ def test_volumetric_file_type(file_name, expected):
 def test_volumetric_parsers():
     assert VOLUMETRIC_PARSERS["LOCPOT"] is Locpot
     assert VOLUMETRIC_PARSERS["ELFCAR"] is Elfcar
-    assert {
-        k for k, v in VOLUMETRIC_PARSERS.items() if v is Chgcar
-    } == {"CHGCAR", "CHG", "AECCAR0", "AECCAR1", "AECCAR2", "POT", "PARCHG"}
+    assert VOLUMETRIC_PARSERS["POT"] is Pot
+    assert {k for k, v in VOLUMETRIC_PARSERS.items() if v is Chgcar} == {
+        "CHGCAR",
+        "CHG",
+        "AECCAR0",
+        "AECCAR1",
+        "AECCAR2",
+        "PARCHG",
+    }
 
 
 @pytest.mark.parametrize(
@@ -103,9 +110,7 @@ def test_arrow_types():
     # augmentation data is not downcast
     aug_type = schema.field("data_aug").type
     assert aug_type == pa.list_(
-        pa.list_(
-            pa.struct([("label", pa.string()), ("data", pa.list_(pa.float64()))])
-        )
+        pa.list_(pa.struct([("label", pa.string()), ("data", pa.list_(pa.float64()))]))
     )
 
 
@@ -151,3 +156,83 @@ def test_arrow_roundtrip(volumetric_files):
 def test_volumetric_labels():
     for lab in ("total", "diff", "diff_x", "diff_y", "diff_z", "spin_up", "spin_down"):
         assert VolumetricLabel(lab).value == lab
+
+
+class TestPot:
+    """A POT file is a potential, whose spin blocks are not those of a CHGCAR."""
+
+    def test_spin_polarized_blocks_are_spin_up_and_down(self, volumetric_files):
+        path = volumetric_files["pot_collinear"]
+
+        # pymatgen's CHGCAR reader gets the physical meaning of the blocks wrong
+        assert set(Chgcar.from_file(path).data) == {"total", "diff"}
+
+        pot = Pot.from_file(path)
+        assert isinstance(pot, Chgcar)
+        assert set(pot.data) == {"spin_up", "spin_down"}
+        # the blocks are the ones in the file, in order, not a sum or a difference
+        chgcar = Chgcar.from_file(path)
+        assert np.array_equal(pot.data["spin_up"], chgcar.data["total"])
+        assert np.array_equal(pot.data["spin_down"], chgcar.data["diff"])
+        assert not np.allclose(pot.data["spin_up"], pot.data["spin_down"])
+
+    def test_augmentation_data_is_kept_and_relabelled(self, volumetric_files):
+        path = volumetric_files["pot_collinear"]
+        chgcar = Chgcar.from_file(path)
+        pot = Pot.from_file(path)
+        assert set(pot.data_aug) == {"spin_up", "spin_down"}
+        for new, old in (("spin_up", "total"), ("spin_down", "diff")):
+            assert pot.data_aug[new].keys() == chgcar.data_aug[old].keys()
+            assert pot.data_aug[new]  # not empty
+            for atom, occupancies in chgcar.data_aug[old].items():
+                assert np.array_equal(pot.data_aug[new][atom], occupancies)
+
+    def test_other_numbers_of_blocks(self, volumetric_files):
+        unpolarized = Pot.from_file(volumetric_files["pot_unpolarized"])
+        assert set(unpolarized.data) == {"total"}
+        assert set(unpolarized.data_aug) == {"total"}
+
+        # the scalar potential and the three components of the magnetic field
+        noncollinear = Pot.from_file(volumetric_files["pot_noncollinear"])
+        assert set(noncollinear.data) >= {"total", "diff_x", "diff_y", "diff_z"}
+        assert "spin_up" not in noncollinear.data
+
+    def test_there_is_no_magnetization(self, volumetric_files):
+        assert (
+            Pot.from_file(volumetric_files["pot_collinear"]).net_magnetization is None
+        )
+        assert Chgcar.from_file(volumetric_files["pot_collinear"]).net_magnetization
+
+    def test_model_roundtrip(self, volumetric_files):
+        pot = Pot.from_file(volumetric_files["pot_collinear"])
+        model = ChgcarLike.from_pmg(pot, identifier="mp-0")
+        assert [lab.value for lab in model.labels] == ["spin_up", "spin_down"]
+        assert model.data_aug is not None and all(model.data_aug)
+
+        new_pot = model.to_pmg(pmg_cls=Pot)
+        assert isinstance(new_pot, Pot)
+        assert set(new_pot.data) == {"spin_up", "spin_down"}
+        assert set(new_pot.data_aug) == {"spin_up", "spin_down"}
+        for k, v in pot.data.items():
+            assert np.allclose(new_pot.data[k], v)
+        # `to_pmg` gives the augmentation data of each atom as an AugChargeData
+        for k, atoms in pot.data_aug.items():
+            assert len(new_pot.data_aug[k]) == len(atoms)
+            for aug, occupancies in zip(new_pot.data_aug[k], atoms.values()):
+                assert np.allclose(aug.data, occupancies)
+
+    @pytest.mark.skipif(
+        not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+    )
+    def test_arrow_roundtrip(self, volumetric_files):
+        schema = pa.schema(arrowize(ChgcarLike))
+        pot = Pot.from_file(volumetric_files["pot_collinear"])
+        model = ChgcarLike.from_pmg(pot, identifier="mp-0")
+        table = pa.Table.from_pylist(
+            [model.model_dump(context={"format": "arrow"})], schema=schema
+        )
+        row = table.to_pylist(maps_as_pydicts="strict")[0]
+        new_pot = ChgcarLike(**row).to_pmg(pmg_cls=Pot)
+        assert set(new_pot.data) == {"spin_up", "spin_down"}
+        for k, v in pot.data.items():
+            assert np.allclose(new_pot.data[k], v, rtol=1e-6, atol=1e-6)

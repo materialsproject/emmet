@@ -661,8 +661,9 @@ def _parse_options(func):
             "--store-volumetric-data",
             multiple=True,
             help="Store only these volumetric files, e.g., CHGCAR or LOCPOT: any of "
-            f"{', '.join(VOLUMETRIC_PARSERS)}. All of them except CHG by default, "
-            "which duplicates the CHGCAR at a lower precision.",
+            f"{', '.join(VOLUMETRIC_PARSERS)}. All of them except CHG and POT by "
+            "default: CHG duplicates the CHGCAR at a lower precision, and POT is "
+            "a restart file whose potential is in the LOCPOT.",
         ),
         click.option(
             "-r",

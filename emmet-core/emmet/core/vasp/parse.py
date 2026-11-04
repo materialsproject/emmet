@@ -89,14 +89,23 @@ _ELECTRONIC_STRUCTURE_TASK_TYPES = (
 )
 
 
-DEFAULT_VOLUMETRIC_TYPES: tuple[str, ...] = tuple(
-    file_type for file_type in VOLUMETRIC_PARSERS if file_type != "CHG"
-)
-"""The types of volumetric file which are parsed by default: all except CHG.
+NOT_PARSED_BY_DEFAULT_VOLUMETRIC_TYPES: dict[str, str] = {
+    "CHG": "it holds the same charge density as the CHGCAR, at a lower precision "
+    "and without the augmentation data",
+    "POT": "it is written to restart optimized-effective-potential calculations "
+    "(LVTOT = True), and the local potential is in the LOCPOT",
+}
+"""The types of volumetric file which are not parsed by default, and why."""
 
-A CHG file holds the same charge density as the CHGCAR, but at a lower precision
-and without the augmentation data, so keeping both is redundant. CHG files can still
-be parsed by asking for them: `ParsePolicy(volumetric_types=(..., "CHG"))`.
+DEFAULT_VOLUMETRIC_TYPES: tuple[str, ...] = tuple(
+    file_type
+    for file_type in VOLUMETRIC_PARSERS
+    if file_type not in NOT_PARSED_BY_DEFAULT_VOLUMETRIC_TYPES
+)
+"""The types of volumetric file which are parsed by default: all except CHG and POT.
+
+See `NOT_PARSED_BY_DEFAULT_VOLUMETRIC_TYPES` for the reasons. These files can still
+be parsed by asking for them: `ParsePolicy(volumetric_types=(..., "CHG", "POT"))`.
 """
 
 
@@ -106,9 +115,10 @@ class ParsePolicy(BaseModel):
     The default is the policy of the Materials Project production pipeline,
     which is `MP_PRODUCTION`:
 
-    - Every kind of volumetric data except CHG is kept, whatever the type of the
-        calculation. A CHG file is the CHGCAR's charge density at a lower precision
-        and without augmentation data.
+    - Every kind of volumetric data except CHG and POT is kept, whatever the type of
+        the calculation. A CHG file is the CHGCAR's charge density at a lower precision
+        and without augmentation data, and a POT file is a restart file for
+        optimized-effective-potential calculations: the local potential is in the LOCPOT.
     - A density of states and a band structure are only kept for static and
         non-self-consistent (uniform or line mode) calculations. The raw data
         of the other calculations has them, for those who want them.
@@ -121,8 +131,8 @@ class ParsePolicy(BaseModel):
     volumetric_types: tuple[str, ...] | None = Field(
         DEFAULT_VOLUMETRIC_TYPES,
         description="The types of volumetric file to keep, e.g., (CHGCAR, LOCPOT). "
-        "By default all of them except CHG. All of them, including CHG, if None, "
-        "and none if empty.",
+        "By default all of them except CHG and POT. All of them, including those, if "
+        "None, and none if empty.",
     )
     dos_task_types: tuple[TaskType, ...] | None = Field(
         _ELECTRONIC_STRUCTURE_TASK_TYPES,

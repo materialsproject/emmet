@@ -71,13 +71,48 @@ class VolumetricLabel(ValueEnum):
     SPIN_DOWN = "spin_down"
 
 
+class Pot(Chgcar):
+    """Reader of POT files: the total local potential, with PAW augmentation data.
+
+    A POT file has the format of a CHGCAR, but its spin blocks are not those of a
+    CHGCAR: with two blocks (`ISPIN = 2`) they are the spin-up and spin-down
+    potentials, and not the total and the difference (magnetization) that pymatgen
+    names the two blocks of a CHGCAR. This reader gives them the labels
+    `spin_up` and `spin_down`, for the grids and for the augmentation data.
+    Files with one block (`total`), or four, as for noncollinear calculations
+    (`total` and `diff_x`, `diff_y`, `diff_z`: the scalar potential and the three
+    components of the magnetic field), keep the labels pymatgen gives them.
+
+    See https://www.vasp.at/wiki/POT
+    """
+
+    @classmethod
+    def from_file(cls, filename: str) -> Self:
+        """Read a POT file.
+
+        Args:
+            filename (str): Path to the POT file.
+        """
+        poscar, data, data_aug = cls.parse_file(filename)
+        if set(data) == {"total", "diff"}:
+            spin_labels = {"total": "spin_up", "diff": "spin_down"}
+            data = {spin_labels[k]: v for k, v in data.items()}
+            data_aug = {spin_labels[k]: v for k, v in data_aug.items()}
+        return cls(poscar, data, data_aug=data_aug)  # type: ignore[arg-type]
+
+    @property
+    def net_magnetization(self) -> float | None:
+        """A potential has no magnetization, so there is none."""
+        return None
+
+
 VOLUMETRIC_PARSERS: dict[str, type[PmgVolumetricData]] = {
     "CHGCAR": Chgcar,
     "CHG": Chgcar,
     "AECCAR0": Chgcar,
     "AECCAR1": Chgcar,
     "AECCAR2": Chgcar,
-    "POT": Chgcar,  # includes augmentation data
+    "POT": Pot,  # includes augmentation data
     "PARCHG": Chgcar,
     "LOCPOT": Locpot,
     "ELFCAR": Elfcar,
@@ -85,7 +120,7 @@ VOLUMETRIC_PARSERS: dict[str, type[PmgVolumetricData]] = {
 """Map of VASP volumetric file types to the pymatgen class which parses them.
 
 LOCPOT and ELFCAR do not contain augmentation charges. Everything else is
-CHGCAR-formatted.
+CHGCAR-formatted, but the spin blocks of POT files are labelled differently, see `Pot`.
 """
 
 
