@@ -124,12 +124,12 @@ def test_thermal_displacement_data(legacy_ph_task):
         **deepcopy(legacy_ph_task),
         thermal_displacement_data={
             "imaginary_modes": "absolute",
-            "structure": structure,
+            "primitive_structure": structure,
         },
     )
     data = PhononBSDOSDoc(**ph_doc.model_dump()).thermal_displacement_data
     assert data.imaginary_modes == "absolute"
-    assert data.structure == structure
+    assert data.primitive_structure == structure
 
 
 @pytest.mark.skipif(

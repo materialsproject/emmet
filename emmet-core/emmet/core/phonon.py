@@ -557,7 +557,7 @@ class ThermalDisplacementData(BaseModel):
         "of the same absolute frequency (absolute). None if the mesh had none or if "
         "this was not recorded.",
     )
-    structure: StructureType | None = Field(
+    primitive_structure: StructureType | None = Field(
         None,
         description="primitive cell of phonopy, whose sites the thermal displacement "
         "matrices refer to, in the same order",
