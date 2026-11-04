@@ -10,6 +10,7 @@ from collections import defaultdict
 from datetime import datetime
 from fnmatch import fnmatch
 from pathlib import Path
+from typing import Any
 
 import click
 from hpsspy import HpssOSError
@@ -660,7 +661,8 @@ def _parse_options(func):
             "--store-volumetric-data",
             multiple=True,
             help="Store only these volumetric files, e.g., CHGCAR or LOCPOT: any of "
-            f"{', '.join(VOLUMETRIC_PARSERS)}. All of them by default.",
+            f"{', '.join(VOLUMETRIC_PARSERS)}. All of them except CHG by default, "
+            "which duplicates the CHGCAR at a lower precision.",
         ),
         click.option(
             "-r",
@@ -700,12 +702,13 @@ def _parse_options(func):
 def _make_policy(
     store_volumetric_data, no_dos, no_bandstructure, no_projections, include_failed
 ) -> ParsePolicy:
-    config = {
-        "volumetric_types": tuple(store_volumetric_data) or None,
+    config: dict[str, Any] = {
         "dos_projections": not no_projections,
         "bandstructure_projections": not no_projections,
         "include_failed": include_failed,
     }
+    if store_volumetric_data:
+        config["volumetric_types"] = tuple(store_volumetric_data)
     if no_dos:
         config["dos_task_types"] = ()
     if no_bandstructure:

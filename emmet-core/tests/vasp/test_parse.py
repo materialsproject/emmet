@@ -22,6 +22,7 @@ from emmet.core.vasp.calc_types.enums import TaskType
 from emmet.core.vasp.calculation import Calculation
 from emmet.core.vasp.models import VOLUMETRIC_PARSERS
 from emmet.core.vasp.parse import (
+    DEFAULT_VOLUMETRIC_TYPES,
     MP_PRODUCTION,
     DirectorySource,
     ParsePolicy,
@@ -106,11 +107,17 @@ class TestPolicy:
 
     def test_mp_production(self):
         assert MP_PRODUCTION == ParsePolicy()
-        assert MP_PRODUCTION.volumetric_types is None
+        assert MP_PRODUCTION.volumetric_types == DEFAULT_VOLUMETRIC_TYPES
         assert not MP_PRODUCTION.include_failed
         assert MP_PRODUCTION.require_known_task_type
         assert MP_PRODUCTION.dos_projections and MP_PRODUCTION.bandstructure_projections
-        assert all(MP_PRODUCTION.wants_volumetric(t) for t in VOLUMETRIC_PARSERS)
+        # every volumetric type except CHG, which duplicates the CHGCAR
+        assert "CHG" in VOLUMETRIC_PARSERS and "CHG" not in DEFAULT_VOLUMETRIC_TYPES
+        assert set(DEFAULT_VOLUMETRIC_TYPES) == set(VOLUMETRIC_PARSERS) - {"CHG"}
+        assert all(
+            MP_PRODUCTION.wants_volumetric(t) for t in VOLUMETRIC_PARSERS if t != "CHG"
+        )
+        assert not MP_PRODUCTION.wants_volumetric("CHG")
 
     def test_task_types_can_be_configured(self):
         everything = ParsePolicy(dos_task_types=None, bandstructure_task_types=None)
@@ -132,6 +139,16 @@ class TestPolicy:
         assert policy.wants_volumetric("CHGCAR") and policy.wants_volumetric("LOCPOT")
         assert not policy.wants_volumetric("AECCAR0")
         assert not ParsePolicy(volumetric_types=()).wants_volumetric("CHGCAR")
+
+        # CHG is not parsed by default, but can be asked for
+        assert not ParsePolicy().wants_volumetric("CHG")
+        assert ParsePolicy(volumetric_types=("chg",)).wants_volumetric("CHG")
+        assert ParsePolicy(
+            volumetric_types=(*DEFAULT_VOLUMETRIC_TYPES, "CHG")
+        ).wants_volumetric("CHG")
+        # None is all of them
+        everything = ParsePolicy(volumetric_types=None)
+        assert all(everything.wants_volumetric(t) for t in VOLUMETRIC_PARSERS)
 
         with pytest.raises(ValidationError, match="Unknown volumetric file types"):
             ParsePolicy(volumetric_types=("CHGCAR", "WAVECAR"))
@@ -322,6 +339,25 @@ class TestParseCalculation:
             "projected-dos",
             "chgcar",
         ]
+
+    def test_chg_is_not_parsed_by_default(self, extract):
+        directory = extract("Si_static")
+        shutil.copy(directory / "CHGCAR.gz", directory / "CHG.gz")
+
+        def volumetric_tables(**policy):
+            _, rows = parse(directory, policy=ParsePolicy(**policy))
+            return [t for t in tables(rows) if t in {"chg", "chgcar"}]
+
+        # a CHG next to a CHGCAR does not make a second charge density
+        _, rows = parse(directory)
+        assert [t for t in tables(rows) if t in {"chg", "chgcar"}] == ["chgcar"]
+        assert volumetric_tables() == ["chgcar"]
+        # but it can be asked for
+        assert sorted(volumetric_tables(volumetric_types=("CHGCAR", "CHG"))) == [
+            "chg",
+            "chgcar",
+        ]
+        assert sorted(volumetric_tables(volumetric_types=None)) == ["chg", "chgcar"]
 
     def test_legacy_directory(self, extract):
         """Each calculation of a directory is parsed by itself, and has its own row."""

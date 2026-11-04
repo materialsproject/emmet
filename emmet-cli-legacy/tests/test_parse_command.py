@@ -10,6 +10,7 @@ from click.testing import CliRunner
 
 from emmet.cli.legacy import tasks as tasks_module
 from emmet.cli.legacy.entry_point import emmet_legacy
+from emmet.core.vasp.parse import DEFAULT_VOLUMETRIC_TYPES, ParsePolicy
 
 from conftest import snapshot
 
@@ -161,6 +162,22 @@ def test_policy_options(launchers, tmp_path):
     )
     assert result.exit_code == 0, result.output
     assert {p.name for p in output.iterdir()} == {"tasks", "trajectories", "manifest"}
+
+
+def test_chg_is_not_stored_unless_asked_for():
+    policy = tasks_module._make_policy((), False, False, False, False)
+    assert policy == ParsePolicy()
+    assert policy.wants_volumetric("CHGCAR") and policy.wants_volumetric("LOCPOT")
+    assert not policy.wants_volumetric("CHG")
+
+    # not giving the option must not mean every type
+    assert tasks_module._make_policy((), True, True, True, True).volumetric_types == (
+        DEFAULT_VOLUMETRIC_TYPES
+    )
+
+    asked_for = tasks_module._make_policy(("CHG", "CHGCAR"), False, False, False, False)
+    assert asked_for.wants_volumetric("CHG") and asked_for.wants_volumetric("CHGCAR")
+    assert not asked_for.wants_volumetric("LOCPOT")
 
 
 def test_unknown_volumetric_file(launchers, tmp_path):

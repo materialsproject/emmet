@@ -89,13 +89,26 @@ _ELECTRONIC_STRUCTURE_TASK_TYPES = (
 )
 
 
+DEFAULT_VOLUMETRIC_TYPES: tuple[str, ...] = tuple(
+    file_type for file_type in VOLUMETRIC_PARSERS if file_type != "CHG"
+)
+"""The types of volumetric file which are parsed by default: all except CHG.
+
+A CHG file holds the same charge density as the CHGCAR, but at a lower precision
+and without the augmentation data, so keeping both is redundant. CHG files can still
+be parsed by asking for them: `ParsePolicy(volumetric_types=(..., "CHG"))`.
+"""
+
+
 class ParsePolicy(BaseModel):
     """Which of the large objects of a calculation to parse.
 
     The default is the policy of the Materials Project production pipeline,
     which is `MP_PRODUCTION`:
 
-    - Every kind of volumetric data is kept, whatever the type of the calculation.
+    - Every kind of volumetric data except CHG is kept, whatever the type of the
+        calculation. A CHG file is the CHGCAR's charge density at a lower precision
+        and without augmentation data.
     - A density of states and a band structure are only kept for static and
         non-self-consistent (uniform or line mode) calculations. The raw data
         of the other calculations has them, for those who want them.
@@ -106,9 +119,10 @@ class ParsePolicy(BaseModel):
     """
 
     volumetric_types: tuple[str, ...] | None = Field(
-        None,
+        DEFAULT_VOLUMETRIC_TYPES,
         description="The types of volumetric file to keep, e.g., (CHGCAR, LOCPOT). "
-        "All of them if None, and none if empty.",
+        "By default all of them except CHG. All of them, including CHG, if None, "
+        "and none if empty.",
     )
     dos_task_types: tuple[TaskType, ...] | None = Field(
         _ELECTRONIC_STRUCTURE_TASK_TYPES,
