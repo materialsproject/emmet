@@ -92,6 +92,32 @@ def level_of_theory(parameters: dict[str, Any]) -> LevelOfTheory:
     return LevelOfTheory(lot)
 
 
+#: $smx keys of a custom ("solvent other") SMD solvent, in the order of custom_smd:
+#: dielectric constant, refractive index, Abraham acidity and basicity, surface
+#: tension, aromaticity and electronegative halogenicity
+CUSTOM_SMD_KEYS = ("epsilon", "soln", "sola", "solb", "solg", "solc", "solh")
+
+
+def custom_smd_from_smx(smx: dict[str, Any] | None) -> str | None:
+    """
+    Build the custom_smd string of a custom SMD solvent from a $smx section.
+
+    Q-Chem inputs for a custom SMD solvent ("solvent other") contain the seven
+    solvent descriptors in the $smx section; this returns them as the
+    comma-separated custom_smd string, or None if the section does not define a
+    custom solvent.
+
+    Args:
+        smx: the $smx section of a Q-Chem input
+    """
+    smx = smx or {}
+    if str(smx.get("solvent", "")).lower() != "other":
+        return None
+    if not all(key in smx for key in CUSTOM_SMD_KEYS):
+        return None
+    return ",".join(str(smx[key]) for key in CUSTOM_SMD_KEYS)
+
+
 def solvent(parameters: dict[str, Any], custom_smd: str | None = None) -> str:
     """
     Returns the solvent used for this calculation.
@@ -99,7 +125,8 @@ def solvent(parameters: dict[str, Any], custom_smd: str | None = None) -> str:
     Args:
         parameters: dict of Q-Chem input parameters
         custom_smd: (Optional) string representing SMD parameters for a
-        non-standard solvent
+        non-standard solvent. If not given for a custom SMD solvent, the
+        parameters are taken from the $smx section of the input.
     """
 
     lot = level_of_theory(parameters)
@@ -137,6 +164,8 @@ def solvent(parameters: dict[str, Any], custom_smd: str | None = None) -> str:
         solvent = parameters.get("smx", {}).get("solvent", "water")
         if solvent == "other":
             if custom_smd is None:
+                custom_smd = custom_smd_from_smx(parameters.get("smx"))
+            if custom_smd is None:
                 raise ValueError(
                     "SMD calculation with solvent=other requires custom_smd!"
                 )
@@ -163,7 +192,8 @@ def lot_solvent_string(
     Args:
         parameters: dict of Q-Chem input parameters
         custom_smd: (Optional) string representing SMD parameters for a
-        non-standard solvent
+        non-standard solvent. If not given for a custom SMD solvent, the
+        parameters are taken from the $smx section of the input.
     """
 
     lot = level_of_theory(parameters).value
