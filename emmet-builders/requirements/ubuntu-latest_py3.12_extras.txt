@@ -16,7 +16,7 @@ blake3==1.0.11
     # via emmet-core
 bracex==3.2
     # via wcmatch
-certifi==2026.10.19
+certifi==2026.10.18
     # via requests
 cfgv==3.5.0
     # via pre-commit
@@ -48,7 +48,7 @@ emmet-core[all]==0.88.0
     # via emmet-builders (pyproject.toml)
 execnet==2.1.2
     # via pytest-xdist
-filelock==4.2.4
+filelock==4.2.1
     # via
     #   python-discovery
     #   virtualenv
@@ -327,7 +327,7 @@ pymdown-extensions==12.3
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.19.0
+pymongo==4.18.3
     # via emmet-core
 pyparsing==3.3.3
     # via
@@ -432,7 +432,7 @@ uncertainties==3.2.3
     # via pymatgen-core
 urllib3==2.8.0
     # via requests
-virtualenv==21.14.12
+virtualenv==21.14.13
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs

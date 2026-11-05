@@ -18,7 +18,7 @@ bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.11
     # via emmet-core (pyproject.toml)
-certifi==2026.10.19
+certifi==2026.10.23
     # via requests
 cfgv==3.5.0
     # via pre-commit
@@ -36,7 +36,7 @@ cycler==0.12.1
     # via matplotlib
 distlib==0.4.4
     # via virtualenv
-dnspython==2.9.0
+dnspython==2.9.2
     # via
     #   email-validator
     #   pymongo
@@ -50,7 +50,7 @@ email-validator==2.3.0
     # via pydantic
 execnet==2.1.2
     # via pytest-xdist
-filelock==4.2.4
+filelock==4.2.9
     # via
     #   python-discovery
     #   virtualenv
@@ -408,5 +408,5 @@ urllib3==2.8.0
     # via
     #   requests
     #   types-requests
-virtualenv==21.14.12
+virtualenv==21.14.13
     # via pre-commit

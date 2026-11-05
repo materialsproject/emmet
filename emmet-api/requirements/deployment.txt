@@ -22,7 +22,7 @@ botocore==1.43.117
     #   s3transfer
 bytecode==0.19.1
     # via ddtrace
-certifi==2026.10.19
+certifi==2026.10.23
     # via requests
 charset-normalizer==3.5.2
     # via requests
@@ -34,9 +34,9 @@ contourpy==1.4.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-ddtrace==4.8.2
+ddtrace==4.15.6
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-dnspython==2.9.0
+dnspython==2.9.2
     # via pymongo
 emmet-core==0.88.0
     # via emmet-api (emmet/emmet-api/pyproject.toml)
@@ -178,7 +178,7 @@ pymatgen-io-validation==0.1.4
     # via
     #   emmet-api (emmet/emmet-api/pyproject.toml)
     #   emmet-core
-pymongo==4.17.0
+pymongo==4.18.3
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 pyparsing==3.3.3
     # via

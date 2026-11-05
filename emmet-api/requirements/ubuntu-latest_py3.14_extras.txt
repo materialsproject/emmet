@@ -29,7 +29,7 @@ bracex==3.2
     # via wcmatch
 bytecode==0.19.1
     # via ddtrace
-certifi==2026.10.19
+certifi==2026.10.23
     # via
     #   httpcore
     #   httpx
@@ -52,11 +52,11 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddtrace==4.8.2
+ddtrace==4.15.6
     # via emmet-api (pyproject.toml)
 distlib==0.4.4
     # via virtualenv
-dnspython==2.9.0
+dnspython==2.9.2
     # via pymongo
 emmet-core==0.88.0
     # via emmet-api (pyproject.toml)
@@ -66,7 +66,7 @@ execnet==2.1.2
     # via pytest-xdist
 fastapi==0.159.1
     # via emmet-api (pyproject.toml)
-filelock==4.2.4
+filelock==4.2.9
     # via
     #   python-discovery
     #   virtualenv
@@ -340,7 +340,7 @@ pymdown-extensions==12.3
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.17.0
+pymongo==4.18.3
     # via emmet-api (pyproject.toml)
 pyparsing==3.3.3
     # via
@@ -462,7 +462,7 @@ urllib3==2.8.0
     #   types-requests
 uvicorn==0.54.0
     # via emmet-api (pyproject.toml)
-virtualenv==21.14.12
+virtualenv==21.14.13
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
