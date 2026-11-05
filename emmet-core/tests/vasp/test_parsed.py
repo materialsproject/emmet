@@ -12,6 +12,7 @@ from pydantic import TypeAdapter, ValidationError
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.io.pymatgen import Chgcar, Dos, Elfcar, Locpot, Vasprun
 from emmet.core.testing_utils import DataArchive, assert_nested_close
+from emmet.core.trajectory import RelaxTrajectory
 from emmet.core.types.typing import IdentifierType
 from emmet.core.vasp.calc_types.enums import RunType, TaskType
 from emmet.core.vasp.models import VOLUMETRIC_PARSERS
@@ -731,3 +732,32 @@ def test_tasks_table(test_dir):
     assert restored.task_id == "aaaaaaab"
     assert restored.calc_suffix == "standard"
     assert restored.completed_at == parsed.task.completed_at
+
+
+def test_importing_the_tables_does_not_warn():
+    """The trajectory row stores properties of its parent as columns, which pydantic warns about.
+
+    That is intended, and is silenced for that field only. This runs in a new
+    interpreter, as the warning is only raised when the class is defined.
+    """
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-W",
+            "error::UserWarning:pydantic",
+            "-c",
+            "import emmet.core.vasp.parsed",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "shadows an attribute" not in result.stderr
+
+
+def test_the_row_stores_the_value_of_the_property():
+    """The field shadows RelaxTrajectory.has_full_output, and the two must agree."""
+    assert "has_full_output" in TrajectoryRow.model_fields
+    assert isinstance(
+        RelaxTrajectory.__dict__["has_full_output"], property
+    ), "the parent defines it as a property: this is the shadowing which is silenced"

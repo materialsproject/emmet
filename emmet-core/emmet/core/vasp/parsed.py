@@ -38,6 +38,7 @@ and not by dumping an existing model and validating that dump again.
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Annotated
@@ -316,47 +317,57 @@ class ValidationRow(ParsedRowHeader):
     )
 
 
-class TrajectoryRow(RelaxTrajectory):
-    """A row of the trajectory table: a trajectory with its convergence data.
-
-    The convergence data of a trajectory is computed from it, and computed
-    properties are not columns of a table, so they are stored here. They are
-    columns of the trajectories already in production, which are partitioned
-    by run type.
-    """
-
-    has_full_output: bool = Field(
-        description="Whether the trajectory has all structures and SCF convergence data."
-    )
-    energy_convergence: list[float] | None = Field(
-        None, description="Convergence of the energy, see `convergence_data`."
-    )
-    e_fr_energy_convergence: list[float] | None = Field(
-        None, description="Convergence of the free energy, see `convergence_data`."
-    )
-    e_wo_entrp_convergence: list[float] | None = Field(
-        None,
-        description="Convergence of the energy without entropy, see `convergence_data`.",
-    )
-    forces_convergence: list[float] | None = Field(
-        None, description="Convergence of the forces, see `convergence_data`."
+# The convergence data is computed by RelaxTrajectory, as properties, and is stored as
+# columns of the trajectory table by the row. That the row's fields have the names of
+# those properties is intended, and pydantic warns about it. Only that is silenced.
+with warnings.catch_warnings():
+    warnings.filterwarnings(
+        "ignore",
+        message=r'Field name "has_full_output" in "TrajectoryRow" shadows an attribute',
+        category=UserWarning,
     )
 
-    @classmethod
-    def from_trajectory(cls, trajectory: RelaxTrajectory) -> TrajectoryRow:
-        """Make a row from a trajectory, computing its convergence data."""
-        values = {
-            name: getattr(trajectory, name) for name in RelaxTrajectory.model_fields
-        }
-        convergence = trajectory.convergence_data
-        return cls(
-            **values,
-            has_full_output=trajectory.has_full_output,
-            **{
-                f"{name}_convergence": convergence.get(name)
-                for name in ("energy", "e_fr_energy", "e_wo_entrp", "forces")
-            },
+    class TrajectoryRow(RelaxTrajectory):
+        """A row of the trajectory table: a trajectory with its convergence data.
+
+        The convergence data of a trajectory is computed from it, and computed
+        properties are not columns of a table, so they are stored here. They are
+        columns of the trajectories already in production, which are partitioned
+        by run type.
+        """
+
+        has_full_output: bool = Field(
+            description="Whether the trajectory has all structures and SCF convergence data."
         )
+        energy_convergence: list[float] | None = Field(
+            None, description="Convergence of the energy, see `convergence_data`."
+        )
+        e_fr_energy_convergence: list[float] | None = Field(
+            None, description="Convergence of the free energy, see `convergence_data`."
+        )
+        e_wo_entrp_convergence: list[float] | None = Field(
+            None,
+            description="Convergence of the energy without entropy, see `convergence_data`.",
+        )
+        forces_convergence: list[float] | None = Field(
+            None, description="Convergence of the forces, see `convergence_data`."
+        )
+
+        @classmethod
+        def from_trajectory(cls, trajectory: RelaxTrajectory) -> TrajectoryRow:
+            """Make a row from a trajectory, computing its convergence data."""
+            values = {
+                name: getattr(trajectory, name) for name in RelaxTrajectory.model_fields
+            }
+            convergence = trajectory.convergence_data
+            return cls(
+                **values,
+                has_full_output=trajectory.has_full_output,
+                **{
+                    f"{name}_convergence": convergence.get(name)
+                    for name in ("energy", "e_fr_energy", "e_wo_entrp", "forces")
+                },
+            )
 
 
 class ParseOutcome(ValueEnum):
