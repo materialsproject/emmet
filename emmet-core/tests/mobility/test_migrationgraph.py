@@ -190,5 +190,7 @@ def test_augment_from_mgd_and_npr(match_mgdoc_npr, match_mgd_w_cost_prop):
         "costs": [uhop["cost"] for uhop in res_uhops],
         "hop_keys": [uhop["hop_key"] for uhop in res_uhops],
     }
-    for k, v in match_mgd_w_cost_prop.items():
-        assert res_prop[k] == pytest.approx(v, 0.01)
+
+    expected = match_mgd_w_cost_prop
+    assert res_prop["costs"] == pytest.approx(expected["costs"], 0.01)
+    assert res_prop["hop_keys"] == expected["hop_keys"]
