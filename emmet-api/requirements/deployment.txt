@@ -8,25 +8,25 @@ annotated-doc==0.0.5
     # via fastapi
 annotated-types==0.8.0
     # via pydantic
-anyio==4.15.1
+anyio==4.16.0
     # via starlette
 bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.11
     # via emmet-core
-boto3==1.43.117
+boto3==1.43.125
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-botocore==1.43.117
+botocore==1.43.125
     # via
     #   boto3
     #   s3transfer
 bytecode==0.19.1
     # via ddtrace
-certifi==2026.10.19
+certifi==2026.10.23
     # via requests
 charset-normalizer==3.5.2
     # via requests
-click==8.5.0
+click==8.5.1
     # via uvicorn
 cloudpickle==3.1.2
     # via joblib
@@ -36,15 +36,15 @@ cycler==0.12.1
     # via matplotlib
 ddtrace==4.8.2
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-dnspython==2.9.0
+dnspython==2.9.2
     # via pymongo
 emmet-core==0.88.0
     # via emmet-api (emmet/emmet-api/pyproject.toml)
 envier==0.6.1
     # via ddtrace
-fastapi==0.160.0
+fastapi==0.162.0
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-fonttools==4.67.0
+fonttools==4.68.0
     # via matplotlib
 gunicorn==24.1.1
     # via emmet-api (emmet/emmet-api/pyproject.toml)
@@ -88,11 +88,11 @@ more-itertools==11.2.1
     # via
     #   inflect
     #   jaraco-functools
-mp-pyrho==0.5.1
+mp-pyrho==0.5.2
     # via pymatgen-analysis-defects
 mpmath==1.3.0
     # via sympy
-narwhals==2.27.1
+narwhals==2.28.0
     # via plotly
 networkx==3.7
     # via
@@ -114,7 +114,7 @@ numpy==2.4.6
     #   shapely
     #   spglib
     #   tifffile
-opentelemetry-api==1.45.1
+opentelemetry-api==1.45.2
     # via
     #   ddtrace
     #   fastapi
@@ -129,7 +129,7 @@ packaging==26.3
     #   scikit-image
 palettable==3.3.3
     # via pymatgen-core
-pandas==3.1.0
+pandas==3.1.1
     # via
     #   -r python/requirements.txt
     #   pymatgen-analysis-defects
@@ -147,30 +147,30 @@ pubchempy==1.0.5
     # via emmet-core
 pybtex==0.26.1
     # via emmet-core
-pydantic==2.14.1
+pydantic==2.14.3
     # via
     #   emmet-core
     #   fastapi
     #   pydantic-settings
     #   pymatgen-io-validation
-pydantic-core==2.50.1
+pydantic-core==2.50.4
     # via pydantic
-pydantic-settings==2.16.1
+pydantic-settings==2.16.2
     # via
     #   emmet-core
     #   pymatgen-io-validation
-pymatgen==2026.9.24
+pymatgen==2026.10.24
     # via
     #   emmet-core
-    #   mp-pyrho
     #   pymatgen-analysis-alloys
 pymatgen-analysis-alloys==0.0.9
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-pymatgen-analysis-defects==2026.10.16
+pymatgen-analysis-defects==2026.10.24
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-pymatgen-core==2026.10.16
+pymatgen-core==2026.10.31
     # via
     #   emmet-core
+    #   mp-pyrho
     #   pymatgen
     #   pymatgen-analysis-defects
     #   pymatgen-io-validation
@@ -219,7 +219,7 @@ six==1.17.0
     # via python-dateutil
 spglib==2.8.0
     # via pymatgen-core
-starlette==1.9.0
+starlette==1.10.0
     # via fastapi
 sympy==1.14.0
     # via pymatgen-core
@@ -243,7 +243,7 @@ typing-extensions==4.16.0
     #   starlette
     #   typeguard
     #   typing-inspection
-typing-inspection==0.4.4
+typing-inspection==0.4.5
     # via
     #   fastapi
     #   pydantic
@@ -256,5 +256,5 @@ urllib3==2.8.0
     #   requests
 uvicorn==0.54.0
     # via emmet-api (emmet/emmet-api/pyproject.toml)
-wrapt==2.5.1
+wrapt==2.5.2
     # via ddtrace
