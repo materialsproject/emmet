@@ -52,7 +52,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cycler==0.12.1
     # via matplotlib
-ddtrace==4.8.2
+ddtrace==4.15.6
     # via emmet-api (pyproject.toml)
 distlib==0.4.4
     # via virtualenv
@@ -182,7 +182,7 @@ mkdocs-get-deps==0.2.2
     # via mkdocs
 mkdocs-markdownextradata-plugin==0.2.6
     # via emmet-api (pyproject.toml)
-mkdocs-material==8.2.16
+mkdocs-material==9.7.7
     # via emmet-api (pyproject.toml)
 mkdocs-material-extensions==1.3.1
     # via
@@ -340,7 +340,7 @@ pymdown-extensions==12.3
     # via
     #   mkdocs-material
     #   mkdocstrings
-pymongo==4.17.0
+pymongo==4.18.3
     # via emmet-api (pyproject.toml)
 pyparsing==3.3.3
     # via

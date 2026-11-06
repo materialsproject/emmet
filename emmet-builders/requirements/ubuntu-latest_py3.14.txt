@@ -12,7 +12,7 @@ bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.11
     # via emmet-core
-certifi==2026.10.23
+certifi==2026.10.18
     # via requests
 charset-normalizer==3.5.2
     # via requests
@@ -24,7 +24,7 @@ custodian==2026.10.21
     # via emmet-core
 cycler==0.12.1
     # via matplotlib
-dnspython==2.9.2
+dnspython==2.9.0
     # via
     #   email-validator
     #   pymongo
@@ -188,7 +188,7 @@ pymatgen-core==2026.10.31
     #   pymatgen-io-validation
 pymatgen-io-validation==0.1.4
     # via emmet-core
-pymongo==4.19.0
+pymongo==4.18.3
     # via emmet-core
 pyparsing==3.3.3
     # via
