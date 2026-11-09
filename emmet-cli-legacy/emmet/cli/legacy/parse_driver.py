@@ -511,7 +511,10 @@ class _TableWriters:
         if table not in self._writers:
             self._tmp_path(table).parent.mkdir(parents=True, exist_ok=True)
             self._writers[table] = pq.ParquetWriter(
-                str(self._tmp_path(table)), schema, compression="ZSTD"
+                str(self._tmp_path(table)),
+                schema,
+                compression="ZSTD",
+                **PARSED_TABLES[table].parquet_options,
             )
         self._writers[table].write_table(arrow_table)
         self.rows_written[table] += arrow_table.num_rows

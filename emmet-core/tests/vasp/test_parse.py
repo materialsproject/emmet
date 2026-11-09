@@ -38,7 +38,7 @@ from emmet.core.vasp.parsed import (
     DosProjectionsRow,
     DosRow,
     ParseOutcome,
-    VolumetricRow,
+    ChargeDensityRow,
     band_structure_from_rows,
     dos_from_rows,
 )
@@ -312,11 +312,11 @@ class TestParseCalculation:
         parsed, rows = parse(directory)
 
         assert parsed.task.task_type == TaskType.Structure_Optimization
-        assert tables(rows) == ["chgcar"]
+        assert tables(rows) == ["charge-density"]
         row = rows[0][1]
-        assert isinstance(row, VolumetricRow)
+        assert isinstance(row, ChargeDensityRow)
         assert row.file_name == "CHGCAR.gz"
-        assert [lab.value for lab in row.labels] in (["total"], ["total", "diff"])
+        assert row.spin_mode.value == "collinear"
         assert row.run_type == parsed.task.run_type
         # the structure in a CHGCAR is the one it was written for, not necessarily the final one
         assert row.structure.composition == parsed.task.structure.composition
@@ -326,6 +326,8 @@ class TestParseCalculation:
         assert np.allclose(
             row.to_pmg(pmg_cls=Chgcar).data["total"], pmg_chgcar.data["total"]
         )
+        # the settings which explain the data are on the row
+        assert parsed._parameters["LVTOT"] is True
 
     def test_policy_selects_objects(self, extract):
         directory = extract("Si_static")
@@ -335,13 +337,13 @@ class TestParseCalculation:
             return tables(rows)
 
         everything = {"dos_task_types": None, "bandstructure_task_types": None}
-        assert "chgcar" in objects(**everything)
+        assert "charge-density" in objects(**everything)
         assert objects(**everything)[:2] == ["total-dos", "projected-dos"]
         assert "bandstructures" in objects(**everything)
 
-        assert "chgcar" not in objects(volumetric_types=())
-        assert "chgcar" not in objects(volumetric_types=("LOCPOT",))
-        assert objects(volumetric_types=("CHGCAR",)) == ["chgcar"]
+        assert "charge-density" not in objects(volumetric_types=())
+        assert "charge-density" not in objects(volumetric_types=("LOCPOT",))
+        assert objects(volumetric_types=("CHGCAR",)) == ["charge-density"]
 
         # projections are optional, the DOS and band structure are not
         no_projections = objects(
@@ -354,27 +356,29 @@ class TestParseCalculation:
         assert objects(dos_task_types=None, bandstructure_task_types=()) == [
             "total-dos",
             "projected-dos",
-            "chgcar",
+            "charge-density",
         ]
 
     def test_chg_is_not_parsed_by_default(self, extract):
         directory = extract("Si_static")
         shutil.copy(directory / "CHGCAR.gz", directory / "CHG.gz")
+        wanted = {"charge-density", "charge-density-chg"}
 
         def volumetric_tables(**policy):
             _, rows = parse(directory, policy=ParsePolicy(**policy))
-            return [t for t in tables(rows) if t in {"chg", "chgcar"}]
+            return [t for t in tables(rows) if t in wanted]
 
         # a CHG next to a CHGCAR does not make a second charge density
-        _, rows = parse(directory)
-        assert [t for t in tables(rows) if t in {"chg", "chgcar"}] == ["chgcar"]
-        assert volumetric_tables() == ["chgcar"]
-        # but it can be asked for
+        assert volumetric_tables() == ["charge-density"]
+        # but it can be asked for, and has a table of its own
         assert sorted(volumetric_tables(volumetric_types=("CHGCAR", "CHG"))) == [
-            "chg",
-            "chgcar",
+            "charge-density",
+            "charge-density-chg",
         ]
-        assert sorted(volumetric_tables(volumetric_types=None)) == ["chg", "chgcar"]
+        assert sorted(volumetric_tables(volumetric_types=None)) == [
+            "charge-density",
+            "charge-density-chg",
+        ]
 
     def test_pot_is_not_parsed_by_default(self, extract, tmp_path):
         directory = extract("Si_static")
@@ -391,18 +395,29 @@ class TestParseCalculation:
 
         def volumetric_rows(**policy):
             _, rows = parse(directory, policy=ParsePolicy(**policy))
-            return {t: row for t, row in rows if t in {"pot", "chgcar", "locpot"}}
+            wanted = {"local-potential-pot", "charge-density", "local-potential"}
+            return {t: row for t, row in rows if t in wanted}
 
         # a POT next to a CHGCAR is not parsed with it by default
-        assert set(volumetric_rows()) == {"chgcar"}
+        assert set(volumetric_rows()) == {"charge-density"}
 
         # but can be asked for, and its blocks are spin-up and spin-down
         rows = volumetric_rows(volumetric_types=("CHGCAR", "POT"))
-        assert set(rows) == {"chgcar", "pot"}
-        assert [lab.value for lab in rows["pot"].labels] == ["spin_up", "spin_down"]
-        assert rows["pot"].file_name == "POT"
-        # while a CHGCAR's are the total and the difference (magnetization)
-        assert [lab.value for lab in rows["chgcar"].labels] == ["total", "diff"]
+        assert set(rows) == {"charge-density", "local-potential-pot"}
+        potential = rows["local-potential-pot"]
+        # its blocks are the potentials of the two spins, and are not a total and a magnetization
+        assert [
+            c for c in potential.BLOCK_COLUMNS if getattr(potential, c) is not None
+        ] == [
+            "spin_up",
+            "spin_down",
+        ]
+        assert potential.file_name == "POT"
+        charge = rows["charge-density"]
+        assert [c for c in charge.BLOCK_COLUMNS if getattr(charge, c) is not None] == [
+            "total",
+            "magnetization",
+        ]
 
     def test_legacy_directory(self, extract):
         """Each calculation of a directory is parsed by itself, and has its own row."""
@@ -537,7 +552,7 @@ class TestSkippedCalculations:
         )
         assert parsed.outcome == ParseOutcome.PARSED
         # volumetric data is kept whatever the type, but there is no electronic structure
-        assert tables(rows) == ["chgcar"]
+        assert tables(rows) == ["charge-density"]
 
 
 class TestErrors:
@@ -588,11 +603,11 @@ class TestErrors:
 
         parsed, rows = parse(directory)
         assert parsed.outcome == ParseOutcome.PARSED
-        assert sorted(tables(rows)) == ["aeccar0", "locpot"]
+        assert sorted(tables(rows)) == ["core-density", "local-potential"]
         assert len(parsed.errors) == 1 and "CHGCAR.gz" in parsed.errors[0]
 
         manifest = parsed.manifest_row()
-        assert sorted(manifest.tables) == ["aeccar0", "locpot"]
+        assert sorted(manifest.tables) == ["core-density", "local-potential"]
         assert manifest.errors == parsed.errors
         assert manifest.outcome == ParseOutcome.PARSED
 
@@ -803,7 +818,7 @@ def test_rows_fit_their_tables(extract):
         "total-dos",
         "projected-dos",
         "bandstructures",
-        "chgcar",
+        "charge-density",
         "manifest",
     }
 
@@ -1114,3 +1129,137 @@ class TestSCFLine:
         )
         assert suffixed.path_convention == rows["bandstructures"].path_convention
         assert len(suffixed.qpoints) == len(rows["bandstructures"].qpoints)
+
+
+class TestVolumetricParsing:
+    """Each kind of volumetric file is parsed into the table of its kind."""
+
+    @pytest.fixture
+    def static_directory(self, extract):
+        return extract("Si_static")
+
+    def rows_of(self, directory, **policy):
+        policy.setdefault("volumetric_types", None)
+        parsed, rows = parse(directory, policy=ParsePolicy(**policy))
+        assert parsed.errors == []
+        return parsed, rows
+
+    def test_the_values_are_the_charge_times_the_cell_volume(self, static_directory):
+        """n(r) = value / V_cell, and the sum of the values over the grid is NELECT * N_grid."""
+        parsed, rows = self.rows_of(static_directory)
+        row = dict(rows)["charge-density"]
+        vasprun = Vasprun(static_directory / "vasprun.xml.gz")
+        nelect = vasprun.parameters["NELECT"]
+        total = np.asarray(row.total, dtype=np.float64)
+        assert total.size == int(np.prod(row.grid_shape))
+        assert total.sum() / total.size == pytest.approx(nelect, rel=1e-4)
+        # so the density, in 1/Angstrom^3, integrates to the number of electrons
+        volume = abs(np.linalg.det(np.array(row.lattice)))
+        density = total / volume
+        assert density.sum() * volume / total.size == pytest.approx(nelect, rel=1e-4)
+
+    def test_the_settings_of_the_calculation_are_on_the_row(self, static_directory):
+        shutil.copy(static_directory / "CHGCAR.gz", static_directory / "LOCPOT.gz")
+        _, rows = self.rows_of(static_directory)
+        potential = dict(rows)["local-potential"]
+        # these are the effective parameters of the vasprun, and include defaults:
+        # LVHAR was not set by the user
+        assert potential.lvtot is True and potential.lvhar is False
+        assert potential.potential_kind == "total"
+        assert potential.spin_mode.value == "collinear"
+        assert potential.saxis is None
+
+    def test_each_aeccar_is_a_row_of_its_own(self, static_directory):
+        for name in ("AECCAR0", "AECCAR1", "AECCAR2"):
+            shutil.copy(static_directory / "CHGCAR.gz", static_directory / f"{name}.gz")
+        _, rows = self.rows_of(static_directory)
+        by_table = {}
+        for table, row in rows:
+            by_table.setdefault(table, []).append(row)
+        for table, name in (
+            ("core-density", "AECCAR0.gz"),
+            ("atomic-density", "AECCAR1.gz"),
+            ("valence-density", "AECCAR2.gz"),
+        ):
+            (row,) = by_table[table]
+            assert row.file_name == name
+        # and a missing one is not a failure of the others
+        (static_directory / "AECCAR1.gz").unlink()
+        _, rows = self.rows_of(static_directory)
+        assert "atomic-density" not in tables(rows)
+        assert {"core-density", "valence-density"} <= set(tables(rows))
+
+    def test_every_partial_charge_density_is_a_row(self, static_directory):
+        names = [
+            "PARCHG.0001.0001.gz",
+            "PARCHG.0001.0002.gz",
+            "PARCHG.0002.ALLK.gz",
+            "PARCHG.ALLB.0002.gz",
+            "PARCHG.gz",
+        ]
+        for name in names:
+            shutil.copy(static_directory / "CHGCAR.gz", static_directory / name)
+        (source,) = sources(static_directory)
+        # discovery accepted every name
+        assert len(source.files.extra_parchg) + 1 == len(names)
+
+        _, rows = self.rows_of(static_directory)
+        parchg = [row for table, row in rows if table == "partial-charge-density"]
+        assert sorted(row.file_name for row in parchg) == sorted(names)
+        assert sorted(
+            ((row.band_index, row.kpoint_index) for row in parchg),
+            key=lambda x: (x[0] is None, x[0] or 0, x[1] is None, x[1] or 0),
+        ) == [(1, 1), (1, 2), (2, None), (None, 2), (None, None)]
+        # together with the identifier, they identify a row
+        assert (
+            len({(row.identifier, row.band_index, row.kpoint_index) for row in parchg})
+            == 5
+        )
+
+    def test_parchg_selection_settings_are_on_the_row(self, static_directory):
+        shutil.copy(
+            static_directory / "CHGCAR.gz", static_directory / "PARCHG.0003.ALLK.gz"
+        )
+        (source,) = sources(static_directory)
+        policy = ParsePolicy(volumetric_types=("PARCHG",))
+
+        # the vasprun of this calculation did not set the selection
+        parsed = parse_calculation(source, ID_1, policy)
+        (_, row) = next(parsed.objects())
+        assert (row.band_index, row.kpoint_index) == (3, None)
+        assert row.iband is None and row.kpuse is None and row.lsepb is None
+
+        # settings which the vasprun does have are given to the rows
+        parsed = parse_calculation(source, ID_1, policy)
+        parsed._parameters.update({"IBAND": [3], "KPUSE": [1, 2], "LSEPB": True})
+        (_, row) = next(parsed.objects())
+        assert row.iband == [3] and row.kpuse == [1, 2] and row.lsepb is True
+
+    def test_the_parameters_that_describe_volumetric_files_are_kept(self):
+        from emmet.core.vasp.parse import _VOLUMETRIC_PARAMETERS
+
+        assert set(_VOLUMETRIC_PARAMETERS) == {
+            "SAXIS",
+            "LVTOT",
+            "LVHAR",
+            "WRT_POTENTIAL",
+            "IBAND",
+            "EINT",
+            "NBMOD",
+            "KPUSE",
+            "LSEPB",
+            "LSEPK",
+        }
+
+    def test_an_unreadable_parchg_does_not_affect_the_others(self, static_directory):
+        shutil.copy(
+            static_directory / "CHGCAR.gz", static_directory / "PARCHG.0001.0001.gz"
+        )
+        (static_directory / "PARCHG.0001.0002.gz").write_bytes(b"not a PARCHG")
+        parsed, rows = parse(
+            static_directory, policy=ParsePolicy(volumetric_types=("PARCHG", "CHGCAR"))
+        )
+        assert len(parsed.errors) == 1 and "PARCHG.0001.0002.gz" in parsed.errors[0]
+        parchg = [row for table, row in rows if table == "partial-charge-density"]
+        assert [row.file_name for row in parchg] == ["PARCHG.0001.0001.gz"]
+        assert "charge-density" in tables(rows)

@@ -22,8 +22,9 @@ to put them back together.
 Because the models validate their input, rows should be constructed directly
 from pymatgen objects, which avoids copying very large arrays:
 
-    >>> VolumetricRow.from_pmg(
+    >>> ChargeDensityRow.from_pmg(
     ...     chgcar,
+    ...     parameters=vasprun.parameters,
     ...     identifier="mp-1",
     ...     file_name="CHGCAR.relax1.gz",
     ...     completed_at=completed_at,
@@ -41,7 +42,9 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, ClassVar, Literal
+
+import numpy as np
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
@@ -58,7 +61,9 @@ from emmet.core.types.enums import ValueEnum
 from emmet.core.types.typing import TaskIdentifierType
 from emmet.core.utils import convert_datetime, utcnow
 from emmet.core.vasp.calc_types.enums import RunType, TaskType
-from emmet.core.vasp.models import VOLUMETRIC_PARSERS, ChgcarLike, volumetric_file_type
+from emmet.core.io.pymatgen import Chgcar, Elfcar, Locpot, Structure
+from emmet.core.types.arrow_annotations import Float32Grid
+from emmet.core.vasp.models import volumetric_file_type
 
 if TYPE_CHECKING:
     from typing import Any, Self
@@ -163,19 +168,558 @@ class BandStructureProjectionsRow(ParsedRowHeader, ProjectedBS):
     )
 
 
-class VolumetricRow(ParsedRowHeader, ChgcarLike):
-    """A row of a volumetric data table: one row per volumetric file.
+class SpinMode(ValueEnum):
+    """How the spin of a volumetric file is represented, by its number of blocks."""
 
-    All volumetric tables have the same schema, regardless of the type of
-    the file (CHGCAR, LOCPOT, ...), which is given by the name of the table.
-    The `data_aug` column is empty for files which have no augmentation
-    charges, like LOCPOT and ELFCAR.
+    UNPOLARIZED = "unpolarized"
+    COLLINEAR = "collinear"
+    NONCOLLINEAR = "noncollinear"
+
+
+_NONCOLLINEAR_BLOCKS = 4
+
+
+def _spin_mode(num_blocks: int) -> SpinMode:
+    """The spin mode of a file, from the number of blocks of data it has."""
+    modes = {
+        1: SpinMode.UNPOLARIZED,
+        2: SpinMode.COLLINEAR,
+        _NONCOLLINEAR_BLOCKS: SpinMode.NONCOLLINEAR,
+    }
+    if num_blocks not in modes:
+        raise ValueError(
+            f"A volumetric file has 1, 2 or {_NONCOLLINEAR_BLOCKS} blocks, not {num_blocks}."
+        )
+    return modes[num_blocks]  # type: ignore[return-value]
+
+
+def _structure_columns(structure: Any) -> dict[str, Any]:
+    """The lattice and sites of a structure, which is all that a volumetric file has."""
+    return {
+        "lattice": structure.lattice.matrix.tolist(),
+        "species": [site.species_string for site in structure],
+        "frac_coords": structure.frac_coords.tolist(),
+    }
+
+
+def _flat(grid: Any) -> Any:
+    """Flatten a grid indexed by `[ix, iy, iz]` in C order, so that z varies fastest."""
+    return np.asarray(grid).flatten(order="C")
+
+
+class VolumetricGridRow(ParsedRowHeader):
+    """The columns every table of volumetric data (CHGCAR, LOCPOT, ...) has.
+
+    A volumetric file is a structure followed by one or more *blocks*, each a value
+    at every point of a uniform real-space grid, which is spanned by the lattice
+    vectors: the point `(ix, iy, iz)` is at `ix/NX * a + iy/NY * b + iz/NZ * c`.
+    What the blocks are, and their units, depends on the kind of file, and is
+    described by the model of each table. The file's own structure is stored as
+    its lattice, species and fractional coordinates, which is all it has.
+    That is not necessarily the final structure of the calculation.
+
+    The columns of the blocks are `list<float32>`. A block is **flattened in C order
+    from an array indexed `[ix, iy, iz]`, so z varies fastest** along the list. It is
+    rebuilt with `np.reshape(block, grid_shape)`. VASP writes the values
+    of its files with x varying fastest, the opposite order.
     """
+
+    BLOCK_COLUMNS: ClassVar[tuple[str, ...]] = ()
+    """The names of the columns which hold a block of data."""
 
     file_name: str = Field(
         description="The name of the volumetric file, including any calculation "
         "suffix and compression extension, e.g., CHGCAR.relax1.gz"
     )
+    spin_mode: SpinMode = Field(
+        description="How the spin is represented, which is found from the number "
+        "of blocks the file has: one (unpolarized), two (collinear) or four "
+        "(noncollinear)."
+    )
+    grid_shape: list[int] = Field(
+        description="The number of grid points along each lattice vector: "
+        "(NGXF, NGYF, NGZF), the fine FFT grid. All blocks of a file have it."
+    )
+    lattice: list[list[float]] = Field(
+        description="The lattice vectors a, b, c, as rows, in Angstrom."
+    )
+    species: list[str] = Field(
+        description="The element of each site, in the order of the file."
+    )
+    frac_coords: list[list[float]] = Field(
+        description="The fractional coordinates of each site."
+    )
+
+    @classmethod
+    def from_pmg(
+        cls, pmg_obj: Any, parameters: Any = None, **kwargs: Any
+    ) -> VolumetricGridRow:
+        """Make a row from the pymatgen object of a file, and the parameters of its calculation.
+
+        `kwargs` are the columns of the header, and `file_name`.
+        """
+        raise NotImplementedError
+
+    def to_pmg(self, pmg_cls: Any = None) -> Any:
+        """Make the pymatgen object of the file, with the labels pymatgen gives its blocks."""
+        raise NotImplementedError
+
+    @property
+    def structure(self) -> Structure:
+        """The structure of the file, as a pymatgen object."""
+        return Structure(self.lattice, self.species, self.frac_coords)
+
+    def _grid(self, name: str) -> Any:
+        """A block as an array indexed `[ix, iy, iz]`, or None if the row has no such block."""
+        flat = getattr(self, name)
+        if flat is None:
+            return None
+        return np.asarray(flat).reshape(self.grid_shape, order="C")
+
+    @staticmethod
+    def _blocks_of(pmg_obj: Any) -> dict[str, Any]:
+        """The blocks that are in the file, with the names pymatgen gave them.
+
+        pymatgen also adds a block it computes from the others to noncollinear files
+        (`diff`, the signed magnitude of the magnetization), which is not in the file.
+        """
+        data = dict(pmg_obj.data)
+        if {"diff_x", "diff_y", "diff_z"} <= set(data):
+            data.pop("diff", None)
+        return data
+
+    @classmethod
+    def _grid_columns(cls, pmg_obj: Any, names: dict[str, str]) -> dict[str, Any]:
+        """Flatten the blocks of a pymatgen object into the columns they belong in."""
+        data = cls._blocks_of(pmg_obj)
+        unknown = set(data).difference(names)
+        if unknown:
+            raise ValueError(
+                f"Unexpected blocks {sorted(unknown)} in a {cls.__name__}, "
+                f"expected only {sorted(names)}."
+            )
+        columns = {names[k]: _flat(v) for k, v in data.items()}
+        shape = {np.asarray(v).shape for v in data.values()}
+        if len(shape) != 1:
+            raise ValueError(f"The blocks have different grids: {sorted(shape)}.")
+        return {
+            **columns,
+            "grid_shape": list(shape.pop()),
+            "spin_mode": _spin_mode(len(data)),
+            **_structure_columns(pmg_obj.structure),
+        }
+
+    def _data_for(self, pmg_names: dict[str, str]) -> dict[str, Any]:
+        """The blocks of the row, under the names pymatgen gives them."""
+        return {
+            pmg_name: grid
+            for column, pmg_name in pmg_names.items()
+            if (grid := self._grid(column)) is not None
+        }
+
+    @staticmethod
+    def _with_noncollinear_diff(data: dict[str, Any]) -> dict[str, Any]:
+        """Add the block pymatgen computes for noncollinear data, as it does."""
+        if {"diff_x", "diff_y", "diff_z"} <= set(data):
+            m1, m2, m3 = data["diff_x"], data["diff_y"], data["diff_z"]
+            sign = np.sign(m1 * 1.01 + m2 * 1.02 + m3 * 1.03)
+            data = {**data, "diff": np.sqrt(m1**2 + m2**2 + m3**2) * sign}
+        return data
+
+
+_SAXIS_DOC = (
+    "The spin quantization axis (SAXIS), in which the components of the noncollinear "
+    "magnetization are given. They are components along the Cartesian axes only for "
+    "the default (0, 0, 1). Null unless the calculation is noncollinear."
+)
+
+
+def _saxis(parameters: Any, spin_mode: SpinMode) -> list[float] | None:
+    if spin_mode != SpinMode.NONCOLLINEAR:
+        return None
+    saxis = (parameters or {}).get("SAXIS")
+    return [float(x) for x in saxis] if saxis is not None else None
+
+
+class ChargeDensityRow(VolumetricGridRow):
+    """A row of a charge density table: a CHGCAR (or CHG, which has no augmentation data).
+
+    VASP stores `n(r) * V_cell` at each grid point, where `n(r)` is the density in
+    1/Angstrom^3 and `V_cell` is the volume of the cell, so `n(r) = value / V_cell`, and
+    the sum of the values over the grid divided by the number of grid points is the number
+    of valence electrons (see https://vasp.at/wiki/CHGCAR). The values are stored as in the
+    file. The PAW augmentation occupancies the file has are not stored: they are
+    only needed to restart a calculation, for which the raw file is kept.
+
+    The blocks of the file depend on the spin:
+    - unpolarized: `total`, the density.
+    - collinear: `total`, the density (spin up + spin down), then `magnetization`
+        (spin up - spin down).
+    - noncollinear: `total`, then `magnetization_1`, `magnetization_2`, `magnetization_3`,
+        the magnetization density in the basis of the spin quantization axis (`saxis`).
+    """
+
+    BLOCK_COLUMNS: ClassVar[tuple[str, ...]] = (
+        "total",
+        "magnetization",
+        "magnetization_1",
+        "magnetization_2",
+        "magnetization_3",
+    )
+    _PMG_NAMES: ClassVar[dict[str, str]] = {
+        "total": "total",
+        "magnetization": "diff",
+        "magnetization_1": "diff_x",
+        "magnetization_2": "diff_y",
+        "magnetization_3": "diff_z",
+    }
+
+    total: Float32Grid | None = Field(
+        None, description="The charge density times the cell volume, flattened."
+    )
+    magnetization: Float32Grid | None = Field(
+        None,
+        description="The magnetization density (spin up - spin down) times the cell "
+        "volume, of a collinear calculation.",
+    )
+    magnetization_1: Float32Grid | None = Field(
+        None,
+        description="The first component of the noncollinear magnetization density.",
+    )
+    magnetization_2: Float32Grid | None = Field(
+        None,
+        description="The second component of the noncollinear magnetization density.",
+    )
+    magnetization_3: Float32Grid | None = Field(
+        None,
+        description="The third component of the noncollinear magnetization density.",
+    )
+    saxis: list[float] | None = Field(None, description=_SAXIS_DOC)
+
+    @classmethod
+    def from_pmg(
+        cls, pmg_obj: Any, parameters: Any = None, **kwargs: Any
+    ) -> ChargeDensityRow:
+        """Make a row from a pymatgen Chgcar, and the parameters of its calculation."""
+        columns = cls._grid_columns(pmg_obj, {v: k for k, v in cls._PMG_NAMES.items()})
+        return cls(**columns, saxis=_saxis(parameters, columns["spin_mode"]), **kwargs)
+
+    def to_pmg(self, pmg_cls: Any = Chgcar) -> Chgcar:
+        """Make a pymatgen object, with the labels pymatgen gives the blocks."""
+        data = self._with_noncollinear_diff(self._data_for(self._PMG_NAMES))
+        return pmg_cls(self.structure, data)
+
+
+class PartialChargeDensityRow(ChargeDensityRow):
+    """A row of the partial charge density table: one PARCHG file.
+
+    A PARCHG holds the part of the density that comes from the bands and k-points
+    selected with the `IBAND`, `EINT`, `NBMOD` and `KPUSE` tags (see
+    https://vasp.at/wiki/PARCHG), with the blocks and units of a CHGCAR, but without
+    augmentation occupancies. With `LSEPB` and `LSEPK`, a file is written for each
+    band and k-point, and `band_index` and `kpoint_index` are the ones in its name.
+    Together with the identifier, they are the key of a row.
+    """
+
+    band_index: int | None = Field(
+        None,
+        description="The index of the band in the file name, PARCHG.<band>.<k-point>. "
+        "Null if the file is the sum of the selected bands (it is named ALLB or has no "
+        "indices).",
+    )
+    kpoint_index: int | None = Field(
+        None,
+        description="The index of the k-point in the file name. Null if the file is "
+        "the sum of the selected k-points (it is named ALLK or has no indices).",
+    )
+    iband: list[int] | None = Field(None, description="The IBAND tag: the bands used.")
+    eint: list[float] | None = Field(
+        None, description="The EINT tag: the energy range of the bands used."
+    )
+    nbmod: int | None = Field(
+        None, description="The NBMOD tag: how the bands used are selected."
+    )
+    kpuse: list[int] | None = Field(
+        None, description="The KPUSE tag: the k-points used."
+    )
+    lsepb: bool | None = Field(
+        None, description="The LSEPB tag: whether a file is written for each band."
+    )
+    lsepk: bool | None = Field(
+        None, description="The LSEPK tag: whether a file is written for each k-point."
+    )
+
+    @classmethod
+    def from_pmg(  # type: ignore[override]
+        cls, pmg_obj: Any, parameters: Any = None, **kwargs: Any
+    ) -> PartialChargeDensityRow:
+        """Make a row from a pymatgen Chgcar of a PARCHG, and its calculation's parameters.
+
+        `file_name` is needed, as the indices of the bands and k-points are in it.
+        """
+        parameters = parameters or {}
+        band_index, kpoint_index = parchg_indices(kwargs["file_name"])
+        columns = cls._grid_columns(pmg_obj, {v: k for k, v in cls._PMG_NAMES.items()})
+
+        def _list(name: str, cast: Any) -> list | None:
+            value = parameters.get(name)
+            if value is None:
+                return None
+            return [
+                cast(x) for x in (value if isinstance(value, list | tuple) else [value])
+            ]
+
+        nbmod = parameters.get("NBMOD")
+        return cls(
+            **columns,
+            saxis=_saxis(parameters, columns["spin_mode"]),
+            band_index=band_index,
+            kpoint_index=kpoint_index,
+            iband=_list("IBAND", int),
+            eint=_list("EINT", float),
+            nbmod=int(nbmod) if nbmod is not None else None,
+            kpuse=_list("KPUSE", int),
+            lsepb=parameters.get("LSEPB"),
+            lsepk=parameters.get("LSEPK"),
+            **kwargs,
+        )
+
+
+_ALL_PARTS = ("ALLB", "ALLK")
+
+
+def parchg_indices(file_name: str) -> tuple[int | None, int | None]:
+    """The band and k-point indices in the name of a PARCHG file, None for all.
+
+    PARCHG.0003.0002 is band 3 and k-point 2. PARCHG.0003.ALLK is band 3, summed over
+    the k-points, and PARCHG.ALLB.0002 is k-point 2, summed over the bands. A PARCHG
+    with no indices is summed over both. Compression extensions and calculation
+    suffixes are ignored.
+    """
+    parts = [
+        part
+        for part in file_name.rsplit("/", 1)[-1].split(".")[1:]
+        if part.isdigit() or part in _ALL_PARTS
+    ]
+    if len(parts) != 2:
+        return None, None
+    band, kpoint = parts
+    return (
+        int(band) if band.isdigit() else None,
+        int(kpoint) if kpoint.isdigit() else None,
+    )
+
+
+class AllElectronDensityRow(VolumetricGridRow):
+    """A row of an all-electron density table: one of the AECCAR files.
+
+    With `LAECHG = .TRUE.`, VASP reconstructs the all-electron charge density, which has
+    the nodal features near the nuclei that the pseudo density lacks, on the fine
+    grid, and writes three files (https://vasp.at/wiki/LAECHG): AECCAR0, the core density,
+    and AECCAR1, the overlapping atomic densities, are written at the start of the
+    run, and AECCAR2, the self-consistent valence density, at the end. In a
+    relaxation, their structures can differ. The values have the units of a CHGCAR:
+    `n(r) * V_cell`. Charge partitioning, e.g., a Bader analysis, uses the core
+    density plus the valence density.
+    """
+
+    BLOCK_COLUMNS: ClassVar[tuple[str, ...]] = ("total", "magnetization")
+
+    total: Float32Grid | None = Field(
+        None, description="The density times the cell volume, flattened."
+    )
+    magnetization: Float32Grid | None = Field(
+        None,
+        description="The magnetization density (spin up - spin down) times the cell "
+        "volume, if the file has a second block.",
+    )
+
+    @classmethod
+    def from_pmg(
+        cls, pmg_obj: Any, parameters: Any = None, **kwargs: Any
+    ) -> AllElectronDensityRow:
+        """Make a row from a pymatgen Chgcar of an AECCAR.
+
+        `parameters` is not used, it is accepted so that every row is made the same way.
+        """
+        return cls(
+            **cls._grid_columns(pmg_obj, {"total": "total", "diff": "magnetization"}),
+            **kwargs,
+        )
+
+    def to_pmg(self, pmg_cls: Any = Chgcar) -> Chgcar:
+        return pmg_cls(
+            self.structure,
+            self._data_for({"total": "total", "magnetization": "diff"}),
+        )
+
+
+class LocalPotentialRow(VolumetricGridRow):
+    """A row of a local potential table: a LOCPOT (or POT, which also has augmentation data).
+
+    The values are the potential in eV, not multiplied by the volume. What the
+    potential is depends on the settings of the calculation (see `potential_kind`):
+    https://vasp.at/wiki/LOCPOT, https://vasp.at/wiki/LVTOT, https://vasp.at/wiki/LVHAR.
+
+    The blocks depend on the spin:
+    - unpolarized: `potential`.
+    - collinear: `spin_up` and `spin_down`, the potentials of each spin.
+    - noncollinear: `potential`, the scalar potential, then `b_field_1`, `b_field_2` and
+        `b_field_3`, the B-field-like potential in the basis of the spin quantization
+        axis (`saxis`).
+    """
+
+    BLOCK_COLUMNS: ClassVar[tuple[str, ...]] = (
+        "potential",
+        "spin_up",
+        "spin_down",
+        "b_field_1",
+        "b_field_2",
+        "b_field_3",
+    )
+
+    potential: Float32Grid | None = Field(
+        None, description="The scalar potential, in eV, flattened."
+    )
+    spin_up: Float32Grid | None = Field(
+        None, description="The spin-up potential of a collinear calculation, in eV."
+    )
+    spin_down: Float32Grid | None = Field(
+        None, description="The spin-down potential of a collinear calculation, in eV."
+    )
+    b_field_1: Float32Grid | None = Field(
+        None,
+        description="The first component of the noncollinear B-field-like potential.",
+    )
+    b_field_2: Float32Grid | None = Field(
+        None,
+        description="The second component of the noncollinear B-field-like potential.",
+    )
+    b_field_3: Float32Grid | None = Field(
+        None,
+        description="The third component of the noncollinear B-field-like potential.",
+    )
+    saxis: list[float] | None = Field(None, description=_SAXIS_DOC)
+    lvtot: bool | None = Field(
+        None,
+        description="The LVTOT tag: write the total local potential, the sum of the "
+        "ionic, Hartree and (semi-)local exchange-correlation potentials.",
+    )
+    lvhar: bool | None = Field(
+        None,
+        description="The LVHAR tag: write the sum of the ionic and Hartree potentials "
+        "only. It sets LVTOT to false.",
+    )
+    wrt_potential: list[str] | None = Field(
+        None,
+        description="The WRT_POTENTIAL tag: the components of the potential written to "
+        "vaspout.h5, one of which, `total`, is also written to the LOCPOT.",
+    )
+    potential_kind: Literal["total", "electrostatic"] | None = Field(
+        None,
+        description="What the potential in the file is, from the tags above: `total` "
+        "(ionic + Hartree + exchange-correlation) or `electrostatic` (ionic + Hartree). "
+        "Null if the tags do not say. Note that the exchange-correlation part only "
+        "covers (semi-)local functionals, not the meta-GGA kinetic energy density "
+        "potential or the nonlocal exchange of hybrids.",
+    )
+
+    @classmethod
+    def from_pmg(
+        cls, pmg_obj: Any, parameters: Any = None, **kwargs: Any
+    ) -> LocalPotentialRow:
+        """Make a row from a pymatgen Locpot (or Pot), and the parameters of its calculation."""
+        parameters = parameters or {}
+        columns = cls._grid_columns(
+            pmg_obj,
+            {
+                "total": "potential",
+                "spin_up": "spin_up",
+                "spin_down": "spin_down",
+                "diff_x": "b_field_1",
+                "diff_y": "b_field_2",
+                "diff_z": "b_field_3",
+            },
+        )
+        lvtot, lvhar = parameters.get("LVTOT"), parameters.get("LVHAR")
+        wrt = parameters.get("WRT_POTENTIAL")
+        wrt_list = wrt.split() if isinstance(wrt, str) else wrt
+        if lvhar:
+            kind = "electrostatic"
+        elif lvtot or (wrt_list and "total" in wrt_list):
+            kind = "total"
+        else:
+            kind = None
+        return cls(
+            **columns,
+            saxis=_saxis(parameters, columns["spin_mode"]),
+            lvtot=lvtot,
+            lvhar=lvhar,
+            wrt_potential=wrt_list,
+            potential_kind=kind,
+            **kwargs,
+        )
+
+    def to_pmg(self, pmg_cls: Any = Locpot) -> Locpot:
+        names = {
+            "potential": "total",
+            "spin_up": "spin_up",
+            "spin_down": "spin_down",
+            "b_field_1": "diff_x",
+            "b_field_2": "diff_y",
+            "b_field_3": "diff_z",
+        }
+        return pmg_cls(
+            self.structure, self._with_noncollinear_diff(self._data_for(names))
+        )
+
+
+class ElectronLocalizationRow(VolumetricGridRow):
+    """A row of the electron localization function (ELF) table: an ELFCAR.
+
+    The ELF is dimensionless, between 0 and 1 (https://vasp.at/wiki/ELFCAR). VASP does not
+    implement it for noncollinear calculations, so there are only two layouts:
+    - unpolarized: `elf`.
+    - collinear: `elf_up`, then `elf_down`.
+    """
+
+    BLOCK_COLUMNS: ClassVar[tuple[str, ...]] = ("elf", "elf_up", "elf_down")
+
+    elf: Float32Grid | None = Field(
+        None, description="The electron localization function, flattened."
+    )
+    elf_up: Float32Grid | None = Field(
+        None,
+        description="The ELF of the spin-up electrons, of a collinear calculation.",
+    )
+    elf_down: Float32Grid | None = Field(
+        None,
+        description="The ELF of the spin-down electrons, of a collinear calculation.",
+    )
+
+    @classmethod
+    def from_pmg(
+        cls, pmg_obj: Any, parameters: Any = None, **kwargs: Any
+    ) -> ElectronLocalizationRow:
+        """Make a row from a pymatgen Elfcar.
+
+        `parameters` is not used, it is accepted so that every row is made the same way.
+        """
+        return cls(
+            **cls._grid_columns(
+                pmg_obj,
+                {"total": "elf", "spin_up": "elf_up", "spin_down": "elf_down"},
+            ),
+            **kwargs,
+        )
+
+    def to_pmg(self, pmg_cls: Any = Elfcar) -> Elfcar:
+        return pmg_cls(
+            self.structure,
+            self._data_for(
+                {"elf": "total", "elf_up": "spin_up", "elf_down": "spin_down"}
+            ),
+        )
 
 
 def _assemble_row(
@@ -455,6 +999,62 @@ class TableSpec:
             if not field.exclude
         }
 
+    def _leaf_columns(self) -> list[tuple[str, bool]]:
+        """The leaves of the schema by their path in a Parquet file, and whether they are float32.
+
+        Parquet names the elements of lists `element`, whatever their Arrow name
+        is. A writer ignores a path which is not in the file, so a path with another name
+        does nothing, without an error.
+        """
+        import pyarrow as pa
+
+        from emmet.core.arrow import arrowize
+
+        schema = pa.schema(arrowize(self.row_model))
+        leaves: list[tuple[str, bool]] = []
+
+        def _walk(dtype: Any, path: str) -> None:
+            if pa.types.is_list(dtype) or pa.types.is_large_list(dtype):
+                _walk(dtype.value_field.type, f"{path}.list.element")
+            elif pa.types.is_struct(dtype):
+                for child in dtype:
+                    _walk(child.type, f"{path}.{child.name}")
+            elif pa.types.is_map(dtype):
+                _walk(dtype.key_type, f"{path}.key_value.key")
+                _walk(dtype.item_type, f"{path}.key_value.value")
+            else:
+                leaves.append((path, pa.types.is_float32(dtype)))
+
+        for name in self.ordered_columns:
+            if name in schema.names:
+                _walk(schema.field(name).type, name)
+        return leaves
+
+    @property
+    def byte_stream_split_columns(self) -> list[str]:
+        """The float32 leaves of the schema, by their path in a Parquet file.
+
+        Floating point numbers compress better when written with the BYTE_STREAM_SPLIT
+        encoding than with the default one (24% smaller for a charge density).
+        Requires pyarrow.
+        """
+        return [path for path, is_float32 in self._leaf_columns() if is_float32]
+
+    @property
+    def parquet_options(self) -> dict[str, Any]:
+        """Keyword arguments for a pyarrow Parquet writer that encode the float32 columns well.
+
+        BYTE_STREAM_SPLIT is used for the float32 columns, which needs dictionary encoding
+        to be off for them: with both, the dictionary is used and BYTE_STREAM_SPLIT is
+        silently ignored. It is wasted on floating point numbers anyway. Dictionary encoding
+        is left on for the rest. Requires pyarrow.
+        """
+        leaves = self._leaf_columns()
+        return {
+            "use_byte_stream_split": [path for path, f32 in leaves if f32],
+            "use_dictionary": [path for path, f32 in leaves if not f32],
+        }
+
     @property
     def ordered_columns(self) -> list[str]:
         """The columns of the table, in the order they are stored in.
@@ -485,6 +1085,36 @@ _TRAJECTORY_COLUMNS = (
     ),
 )
 
+_VOLUMETRIC_TABLE_MODELS: dict[str, type[VolumetricGridRow]] = {
+    "charge-density": ChargeDensityRow,
+    "partial-charge-density": PartialChargeDensityRow,
+    "core-density": AllElectronDensityRow,
+    "atomic-density": AllElectronDensityRow,
+    "valence-density": AllElectronDensityRow,
+    "local-potential": LocalPotentialRow,
+    "electron-localization": ElectronLocalizationRow,
+    "charge-density-chg": ChargeDensityRow,
+    "local-potential-pot": LocalPotentialRow,
+}
+
+VOLUMETRIC_FILE_TABLES: dict[str, str] = {
+    "CHGCAR": "charge-density",
+    "PARCHG": "partial-charge-density",
+    "AECCAR0": "core-density",
+    "AECCAR1": "atomic-density",
+    "AECCAR2": "valence-density",
+    "LOCPOT": "local-potential",
+    "ELFCAR": "electron-localization",
+    "CHG": "charge-density-chg",
+    "POT": "local-potential-pot",
+}
+"""The table that each type of volumetric file is parsed into."""
+
+VOLUMETRIC_FILE_MODELS: dict[str, type[VolumetricGridRow]] = {
+    file_type: _VOLUMETRIC_TABLE_MODELS[table]
+    for file_type, table in VOLUMETRIC_FILE_TABLES.items()
+}
+
 PARSED_TABLES: dict[str, TableSpec] = {
     "total-dos": TableSpec("total-dos", DosRow, partition_by=("run_type",)),
     "projected-dos": TableSpec(
@@ -508,10 +1138,8 @@ PARSED_TABLES: dict[str, TableSpec] = {
         column_order=_TRAJECTORY_COLUMNS,
     ),
     **{
-        file_type.lower(): TableSpec(
-            file_type.lower(), VolumetricRow, partition_by=_VOLUMETRIC_PARTITION
-        )
-        for file_type in VOLUMETRIC_PARSERS
+        name: TableSpec(name, row_model, partition_by=_VOLUMETRIC_PARTITION)
+        for name, row_model in _VOLUMETRIC_TABLE_MODELS.items()
     },
 }
 """The tables of the parsed tier of large objects, by name.
@@ -519,8 +1147,10 @@ PARSED_TABLES: dict[str, TableSpec] = {
 The names of the DOS and band structure tables, and the order of their
 partitions, are those of the tables already in production.
 
-There is one table for each type of volumetric file, named after the file
-in lowercase (`chgcar`, `aeccar0`, `locpot`, ...). These all use `VolumetricRow`.
+The volumetric files are in tables of the kind of data they hold, each with its own
+model (`ChargeDensityRow`, `PartialChargeDensityRow`, `AllElectronDensityRow`,
+`LocalPotentialRow`, `ElectronLocalizationRow`), because the blocks of a file mean different
+things and have different units in each. See `VOLUMETRIC_FILE_TABLES`.
 
 The tasks table is not partitioned, and the trajectories table is partitioned
 by run_type.
@@ -542,4 +1172,4 @@ def volumetric_table_name(file_name: str) -> str | None:
         not a volumetric file.
     """
     file_type = volumetric_file_type(file_name)
-    return file_type.lower() if file_type else None
+    return VOLUMETRIC_FILE_TABLES.get(file_type) if file_type else None

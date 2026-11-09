@@ -33,6 +33,7 @@ from emmet.core.vasp.calculation import PotcarSpec
 from emmet.core.vasp.utils import (
     COMPRESSION_EXTENSIONS,
     DEFAULT_CALC_SUFFIXES,
+    PARCHG_ALL_PARTS,
     STANDARD_CALC_SUFFIX,
     VASP_RAW_DATA_ORG,
     FileMetadata,
@@ -71,7 +72,7 @@ def _archive_key(file_name: str, suffixes: Sequence[str]) -> str:
         base = base.rsplit(".", 1)[0]
     extra = base.split(".")[1:]
     if parsed.file_type == "PARCHG":
-        name += "".join(f".{p}" for p in extra if p.isdigit())
+        name += "".join(f".{p}" for p in extra if p.isdigit() or p in PARCHG_ALL_PARTS)
     elif parsed.file_type == "POSCAR.T":
         name = next(f"POSCAR.{p}" for p in extra if p.startswith("T="))
 

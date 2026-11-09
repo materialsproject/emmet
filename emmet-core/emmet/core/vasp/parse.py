@@ -58,7 +58,7 @@ from emmet.core.vasp.parsed import (
     ManifestRow,
     ParsedRowHeader,
     ParseOutcome,
-    VolumetricRow,
+    VOLUMETRIC_FILE_MODELS,
     split_band_structure_row,
     split_dos_row,
     volumetric_table_name,
@@ -302,6 +302,20 @@ class _BandStructureInput:
     task_type: TaskType
 
 
+_VOLUMETRIC_PARAMETERS = (
+    "SAXIS",
+    "LVTOT",
+    "LVHAR",
+    "WRT_POTENTIAL",
+    "IBAND",
+    "EINT",
+    "NBMOD",
+    "KPUSE",
+    "LSEPB",
+    "LSEPK",
+)
+"""The parameters which describe a volumetric file, see `parsed.py`."""
+
 _LINE_TASK_TYPES = (TaskType.NSCF_Line, TaskType.SCF_Line)
 """Calculations whose band structure is along a path of k-points."""
 
@@ -332,6 +346,7 @@ class ParsedCalculation:
     _files: CalculationFiles | None = field(default=None, repr=False)
     _vasprun: Vasprun | None = field(default=None, repr=False)
     _bandstructure_input: _BandStructureInput | None = field(default=None, repr=False)
+    _parameters: dict[str, Any] = field(default_factory=dict, repr=False)
     _tables: list[str] = field(default_factory=list, repr=False)
     _started: bool = field(default=False, repr=False)
 
@@ -451,14 +466,15 @@ class ParsedCalculation:
                     yield self._yielded("projected-bandstructures", projections)
                 del bandstructure, projections
 
-        for file_type, path in files.volumetric.items():
+        for file_type, path in _volumetric_files(files):
             if not policy.wants_volumetric(file_type):
                 continue
             table = volumetric_table_name(path.name)
             try:
                 pmg_vol = VOLUMETRIC_PARSERS[file_type].from_file(str(path))
-                volumetric = VolumetricRow.from_pmg(
+                volumetric = VOLUMETRIC_FILE_MODELS[file_type].from_pmg(
                     pmg_vol,
+                    parameters=self._parameters,
                     file_name=path.name,
                     **header_kwargs,  # type: ignore[arg-type]
                 )
@@ -492,6 +508,16 @@ class ParsedCalculation:
             tables=list(self._tables),
             errors=list(self.errors),
         )
+
+
+def _volumetric_files(files: CalculationFiles) -> list[tuple[str, Path]]:
+    """Every volumetric file of a calculation, by its type.
+
+    A calculation can have many PARCHG files, which `volumetric` has only one of.
+    """
+    found = list(files.volumetric.items())
+    found.extend(("PARCHG", path) for path in files.extra_parchg)
+    return found
 
 
 def parse_calculation(
@@ -632,6 +658,13 @@ def _parse_calculation(
         _files=files,
     )
     if parsed.outcome == ParseOutcome.PARSED:
+        # the settings of the calculation that explain the volumetric data. These are the
+        # effective parameters of the vasprun.xml, which include the defaults
+        parsed._parameters = {
+            key: vasprun.parameters[key]
+            for key in _VOLUMETRIC_PARAMETERS
+            if key in vasprun.parameters
+        }
         # keep only what the large objects need. The band structure is read from
         # the file again, so it does not need the Vasprun, which can be freed first
         if policy.wants_dos(header.task_type):

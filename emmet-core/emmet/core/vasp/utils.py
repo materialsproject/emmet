@@ -38,6 +38,9 @@ calculation is the one which unsuffixed output files belong to.
 COMPRESSION_EXTENSIONS: tuple[str, ...] = (".gz", ".bz2", ".xz", ".zst", ".lzma", ".Z")
 """Extensions of compressed files, which are ignored when identifying VASP files."""
 
+PARCHG_ALL_PARTS: tuple[str, ...] = ("ALLB", "ALLK")
+"""Parts of the names of PARCHG files, e.g., PARCHG.ALLB.0002, which stand for all bands / k-points."""
+
 STANDARD_CALC_SUFFIX = "standard"
 """The suffix of a calculation whose files have no calculation suffix."""
 
@@ -234,7 +237,7 @@ def parse_vasp_file_name(
     Other dot-separated parts of the name which are not recognized, such as an
     unknown calculation suffix, do not stop the file from being identified,
     but are returned in `unrecognized`. The indices of PARCHG files, e.g.,
-    `PARCHG.0001.0002`, are understood.
+    `PARCHG.0001.0002`, `PARCHG.0001.ALLK` and `PARCHG.ALLB.0002`, are understood.
 
     Parameters
     -----------
@@ -280,8 +283,9 @@ def parse_vasp_file_name(
         elif file_type == "POSCAR" and part.startswith("T="):
             # POSCARs displaced for electron-phonon coupling
             file_type = "POSCAR.T"
-        elif file_type == "PARCHG" and part.isdigit():
-            # band and k-point indices of partial charge densities
+        elif file_type == "PARCHG" and (part.isdigit() or part in PARCHG_ALL_PARTS):
+            # band and k-point indices of partial charge densities, or ALLB / ALLK
+            # for the sum over all selected bands / k-points
             continue
         else:
             unrecognized.append(part)

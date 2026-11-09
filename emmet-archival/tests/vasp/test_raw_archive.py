@@ -127,6 +127,8 @@ def _file_metas(directory: Path, names: list[str]) -> list[FileMetadata]:
         # PARCHG is not CHG, and its indices keep files apart
         ("PARCHG", "volumetric/PARCHG"),
         ("PARCHG.0001.0002.gz", "volumetric/PARCHG.0001.0002"),
+        ("PARCHG.0001.ALLK", "volumetric/PARCHG.0001.ALLK"),
+        ("PARCHG.ALLB.0002.relax1.gz", "volumetric/PARCHG.ALLB.0002"),
         ("CHG", "volumetric/CHG"),
         ("POT", "volumetric/POT"),
         ("POSCAR.T=300.gz", "input/POSCAR.T=300"),
@@ -142,9 +144,16 @@ def test_archive_keys(file_name, key):
 
 
 def test_files_with_distinct_names_do_not_overwrite_each_other():
-    names = ["PARCHG.0001.0002", "PARCHG.0001.0003", "POSCAR.T=300", "POSCAR.T=1000"]
+    names = [
+        "PARCHG.0001.0002",
+        "PARCHG.0001.0003",
+        "PARCHG.0001.ALLK",
+        "PARCHG.ALLB.0003",
+        "POSCAR.T=300",
+        "POSCAR.T=1000",
+    ]
     hierarchy = raw_archive_hierarchy_from_files(_file_metas(Path("/calc"), names))
-    assert len(hierarchy) == 4
+    assert len(hierarchy) == 6
 
 
 class TestFileChecks:

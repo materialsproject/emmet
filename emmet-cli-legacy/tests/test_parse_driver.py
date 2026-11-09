@@ -1,5 +1,6 @@
 """Test the experimental driver which parses launchers into Parquet tables."""
 
+import shutil
 import warnings
 from pathlib import Path
 
@@ -21,6 +22,7 @@ from emmet.cli.legacy.parse_driver import (
     read_local_task_ids,
     run_parse,
 )
+from emmet.core.testing_utils import TEST_FILES_DIR, DataArchive
 from emmet.core.vasp.parse import ParsePolicy
 from emmet.core.vasp.parsed import PARSED_TABLES, ParseOutcome, TrajectoryRow
 
@@ -415,6 +417,41 @@ class TestParseChunk:
         assert pq.read_schema(
             next((output / "trajectories").glob("*.parquet"))
         ).names == (PARSED_TABLES["trajectories"].ordered_columns)
+
+    def test_float32_columns_are_written_with_byte_stream_split(
+        self, items, launchers, tmp_path
+    ):
+        """Checked in the files, as a writer ignores a path which is not a column."""
+        # a launcher with a CHGCAR, which the others do not have
+        with DataArchive.extract(TEST_FILES_DIR / "vasp" / "Si_static.json.gz") as d:
+            shutil.copytree(d, launchers / "block_3" / "launcher_static")
+        items = plan_parse(discover_launchers(launchers)).items
+
+        output = tmp_path / "out"
+        parse_chunk(items, output)
+        written = {p.name for p in output.iterdir()}
+        assert {"charge-density", "total-dos", "bandstructures"} <= written
+
+        for table in output.iterdir():
+            options = PARSED_TABLES[table.name].parquet_options
+            for file in table.glob("*.parquet"):
+                group = pq.ParquetFile(file).metadata.row_group(0)
+                encodings = {
+                    group.column(i).path_in_schema: group.column(i).encodings
+                    for i in range(group.num_columns)
+                }
+                split = {p for p, e in encodings.items() if "BYTE_STREAM_SPLIT" in e}
+                assert split == set(options["use_byte_stream_split"]), table.name
+
+        # the grid of the charge density is among them
+        group = pq.ParquetFile(
+            next((output / "charge-density").glob("*.parquet"))
+        ).metadata.row_group(0)
+        by_path = {
+            group.column(i).path_in_schema: group.column(i).encodings
+            for i in range(group.num_columns)
+        }
+        assert "BYTE_STREAM_SPLIT" in by_path["total.list.element"]
 
     def test_rows_are_the_parsed_objects(self, items, tmp_path):
         output = tmp_path / "out"

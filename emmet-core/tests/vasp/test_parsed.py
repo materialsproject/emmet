@@ -10,7 +10,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.io.pymatgen import Chgcar, Dos, Elfcar, Locpot, Vasprun
+from emmet.core.io.pymatgen import Chgcar, Dos, Vasprun
 from emmet.core.testing_utils import DataArchive, assert_nested_close
 from emmet.core.trajectory import RelaxTrajectory
 from emmet.core.types.typing import IdentifierType
@@ -29,7 +29,9 @@ from emmet.core.vasp.parsed import (
     ParsedRowHeader,
     TrajectoryRow,
     ValidationRow,
-    VolumetricRow,
+    VOLUMETRIC_FILE_TABLES,
+    ChargeDensityRow,
+    SpinMode,
     band_structure_from_rows,
     dos_from_rows,
     split_band_structure_row,
@@ -177,20 +179,24 @@ def test_rows_from_pmg(dos, band_structure, volumetric_files):
     assert "projections" not in bs_row.model_dump()
 
     chgcar = Chgcar.from_file(volumetric_files["collinear"])
-    vol_row = VolumetricRow.from_pmg(chgcar, **header(), file_name="CHGCAR.relax1.gz")
-    assert isinstance(vol_row, VolumetricRow)
+    vol_row = ChargeDensityRow.from_pmg(
+        chgcar, **header(), file_name="CHGCAR.relax1.gz"
+    )
+    assert isinstance(vol_row, ChargeDensityRow)
     assert vol_row.file_name == "CHGCAR.relax1.gz"
-    assert vol_row.labels is not None and len(vol_row.data) == len(vol_row.labels)
+    assert vol_row.spin_mode == SpinMode.COLLINEAR
+    assert vol_row.total is not None and vol_row.magnetization is not None
+    assert vol_row.magnetization_1 is None
 
     # file name is required
     with pytest.raises(ValidationError, match="file_name"):
-        VolumetricRow.from_pmg(chgcar, **header())
+        ChargeDensityRow.from_pmg(chgcar, **header())
 
     # so are the header fields
     with pytest.raises(ValidationError, match="chemsys"):
         header_missing = header()
         header_missing.pop("chemsys")
-        VolumetricRow.from_pmg(chgcar, **header_missing, file_name="CHGCAR")
+        ChargeDensityRow.from_pmg(chgcar, **header_missing, file_name="CHGCAR")
 
 
 def test_validation_row():
@@ -205,17 +211,19 @@ def test_validation_row():
 
 
 def test_table_registry():
-    volumetric = {k.lower() for k in VOLUMETRIC_PARSERS}
+    volumetric = set(VOLUMETRIC_FILE_TABLES.values())
+    # every type of volumetric file the parser reads has a table
+    assert set(VOLUMETRIC_FILE_TABLES) == set(VOLUMETRIC_PARSERS)
     assert volumetric == {
-        "chgcar",
-        "chg",
-        "aeccar0",
-        "aeccar1",
-        "aeccar2",
-        "pot",
-        "parchg",
-        "locpot",
-        "elfcar",
+        "charge-density",
+        "partial-charge-density",
+        "core-density",
+        "atomic-density",
+        "valence-density",
+        "local-potential",
+        "electron-localization",
+        "charge-density-chg",
+        "local-potential-pot",
     }
     # the names of the DOS and band structure tables are those in production
     assert (
@@ -260,8 +268,16 @@ def test_table_registry():
     assert PARSED_TABLES["validation"].partition_by == ()
     assert PARSED_TABLES["manifest"].partition_by == ()
     for name in volumetric:
-        assert PARSED_TABLES[name].row_model is VolumetricRow
         assert PARSED_TABLES[name].partition_by == ("year", "month", "day", "run_type")
+    # each kind of data has its own model, as the blocks of its files mean different things
+    assert PARSED_TABLES["charge-density"].row_model is ChargeDensityRow
+    assert PARSED_TABLES["charge-density-chg"].row_model is ChargeDensityRow
+    assert PARSED_TABLES["local-potential-pot"].row_model is (
+        PARSED_TABLES["local-potential"].row_model
+    )
+    assert PARSED_TABLES["core-density"].row_model is (
+        PARSED_TABLES["valence-density"].row_model
+    )
 
     # every column used to lay out a table is a column of the table
     for spec in PARSED_TABLES.values():
@@ -271,12 +287,17 @@ def test_table_registry():
 @pytest.mark.parametrize(
     "file_name, table",
     [
-        ("CHGCAR", "chgcar"),
-        ("CHGCAR.relax1.gz", "chgcar"),
-        ("CHG.relax2.gz", "chg"),
-        ("PARCHG", "parchg"),
-        ("AECCAR1.gz", "aeccar1"),
-        ("LOCPOT", "locpot"),
+        ("CHGCAR", "charge-density"),
+        ("CHGCAR.relax1.gz", "charge-density"),
+        ("CHG.relax2.gz", "charge-density-chg"),
+        ("PARCHG", "partial-charge-density"),
+        ("PARCHG.0001.ALLK", "partial-charge-density"),
+        ("AECCAR0", "core-density"),
+        ("AECCAR1.gz", "atomic-density"),
+        ("AECCAR2", "valence-density"),
+        ("LOCPOT", "local-potential"),
+        ("POT", "local-potential-pot"),
+        ("ELFCAR", "electron-localization"),
         ("POTCAR", None),
         ("vasprun.xml", None),
     ],
@@ -335,20 +356,18 @@ class TestArrow:
         assert schemas["projected-bandstructures"].field("path_convention").type == (
             pa.string()
         )
-        assert schemas["chgcar"].field("data").type == pa.list_(
-            pa.large_list(pa.float32())
+        assert schemas["charge-density"].field("total").type == pa.large_list(
+            pa.float32()
         )
-        assert schemas["chgcar"].field("file_name").type == pa.string()
+        assert schemas["charge-density"].field("file_name").type == pa.string()
+        # the structure of a volumetric file is its lattice and sites, not a pymatgen dict
+        for name in set(VOLUMETRIC_FILE_TABLES.values()):
+            fields = set(schemas[name].names)
+            assert {"lattice", "species", "frac_coords", "grid_shape"} <= fields
+            assert not {"structure", "data_aug", "data", "labels"} & fields
         assert schemas["validation"].field("valid").type == pa.bool_()
         assert schemas["manifest"].field("tables").type == pa.list_(pa.string())
         assert schemas["manifest"].field("outcome").type == pa.string()
-
-        # all volumetric tables share a schema
-        assert all(
-            schemas[name] == schemas["chgcar"]
-            for name in PARSED_TABLES
-            if name in {k.lower() for k in VOLUMETRIC_PARSERS}
-        )
 
     def test_batch_roundtrip(self, dos, band_structure, volumetric_files):
         """Mixed batches of rows share a schema, and survive a trip through arrow."""
@@ -366,21 +385,24 @@ class TestArrow:
             efermi=0.0,
         )
 
-        entries = [
-            (Chgcar, "collinear", "CHGCAR"),
-            (Chgcar, "unpolarized", "AECCAR0.relax1.gz"),
-            (Chgcar, "noncollinear", "CHG"),
-            (Locpot, "collinear_no_aug", "LOCPOT"),
-            (Elfcar, "unpolarized", "ELFCAR"),
+        chgcars = [
+            Chgcar.from_file(volumetric_files[key])
+            for key in ("collinear", "unpolarized", "noncollinear")
         ]
-        pmg_objs = [cls.from_file(volumetric_files[key]) for cls, key, _ in entries]
         vol_rows = [
-            VolumetricRow.from_pmg(
+            ChargeDensityRow.from_pmg(
                 obj,
                 **header(identifier=f"mp-{i}"),
                 file_name=file_name,
             )
-            for i, (obj, (_, _, file_name)) in enumerate(zip(pmg_objs, entries))
+            for i, (obj, file_name) in enumerate(
+                zip(chgcars, ("CHGCAR", "CHGCAR.relax1.gz", "CHGCAR.relax2.gz"))
+            )
+        ]
+        assert [row.spin_mode for row in vol_rows] == [
+            SpinMode.COLLINEAR,
+            SpinMode.UNPOLARIZED,
+            SpinMode.NONCOLLINEAR,
         ]
 
         for rows, table_name in (
@@ -388,7 +410,7 @@ class TestArrow:
             ([dos_projections], "projected-dos"),
             ([bs_row], "bandstructures"),
             ([bs_projections], "projected-bandstructures"),
-            (vol_rows, "chgcar"),
+            (vol_rows, "charge-density"),
         ):
             spec = PARSED_TABLES[table_name]
             schema = pa.schema(arrowize(spec.row_model))
@@ -461,7 +483,7 @@ class TestArrow:
         """Rows are laid out by their partition columns, including awkward run types."""
         chgcar = Chgcar.from_file(volumetric_files["collinear"])
         rows = [
-            VolumetricRow.from_pmg(
+            ChargeDensityRow.from_pmg(
                 chgcar,
                 **header(
                     identifier=f"mp-{i}",
@@ -479,27 +501,27 @@ class TestArrow:
             )
         ]
 
-        spec = PARSED_TABLES["chgcar"]
+        spec = PARSED_TABLES["charge-density"]
         table = pa.Table.from_pylist(
             [row.model_dump(context={"format": "arrow"}) for row in rows],
             schema=pa.schema(arrowize(spec.row_model)),
         )
         pq.write_to_dataset(
             table,
-            tmp_path / "chgcar",
+            tmp_path / "charge-density",
             partition_cols=list(spec.partition_by),
         )
 
         parts = {
-            p.relative_to(tmp_path / "chgcar").parent.as_posix()
-            for p in (tmp_path / "chgcar").rglob("*.parquet")
+            p.relative_to(tmp_path / "charge-density").parent.as_posix()
+            for p in (tmp_path / "charge-density").rglob("*.parquet")
         }
         assert len(parts) == 3
         assert any("year=2021/month=1/day=2/" in p for p in parts)
 
         # no data is lost reading the dataset back, including the awkward "GGA+U"
         # partition value, which is escaped in the directory name
-        restored = pq.read_table(tmp_path / "chgcar", partitioning="hive")
+        restored = pq.read_table(tmp_path / "charge-density", partitioning="hive")
         assert restored.num_rows == 3
         # identifiers are normalized to the padded AlphaID form by the row header
         expected_ids = [
@@ -590,7 +612,7 @@ class TestManifest:
             outcome=ParseOutcome.PARSED,
             run_type=RunType.GGA,
             task_type=TaskType.Static,
-            tables=["chgcar"],
+            tables=["charge-density"],
         )
         assert row.identifier == "aaaaaaab"
         assert row.outcome == ParseOutcome.PARSED
@@ -631,7 +653,7 @@ class TestManifest:
                 outcome="parsed",
                 run_type=RunType.GGA,
                 task_type=TaskType.Static,
-                tables=["chgcar", "locpot"],
+                tables=["charge-density", "local-potential"],
             ),
             ManifestRow(
                 identifier="aaaaaaac",
@@ -649,7 +671,7 @@ class TestManifest:
             ParseOutcome.PARSED,
             ParseOutcome.ERROR,
         ]
-        assert restored[0].tables == ["chgcar", "locpot"]
+        assert restored[0].tables == ["charge-density", "local-potential"]
         assert restored[1].completed_at is None
 
 

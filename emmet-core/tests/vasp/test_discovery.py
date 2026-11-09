@@ -121,6 +121,9 @@ def names(paths) -> set[str]:
         ("CHG.relax2.gz", ("CHG", "volumetric", "relax2", False)),
         ("PARCHG", ("PARCHG", "volumetric", None, False)),
         ("PARCHG.0001.0002", ("PARCHG", "volumetric", None, False)),
+        ("PARCHG.0001.ALLK", ("PARCHG", "volumetric", None, False)),
+        ("PARCHG.ALLB.0002", ("PARCHG", "volumetric", None, False)),
+        ("PARCHG.ALLB.ALLK.relax1.gz", ("PARCHG", "volumetric", "relax1", False)),
         ("AECCAR0.bz2", ("AECCAR0", "volumetric", None, False)),
         ("LOCPOT", ("LOCPOT", "volumetric", None, False)),
         ("ELFCAR.gz", ("ELFCAR", "volumetric", None, False)),
@@ -183,6 +186,11 @@ def test_parse_vasp_file_name_suffixes():
     assert parse_vasp_file_name("CHGCAR.relax1.old.gz").unrecognized == ("old",)
     # but are understood in the names of some files
     assert parse_vasp_file_name("PARCHG.0001.0002").unrecognized == ()
+    assert parse_vasp_file_name("PARCHG.0001.ALLK").unrecognized == ()
+    assert parse_vasp_file_name("PARCHG.ALLB.0002").unrecognized == ()
+    # ALLB and ALLK are only for PARCHG files
+    assert parse_vasp_file_name("CHGCAR.ALLB").unrecognized == ("ALLB",)
+    assert parse_vasp_file_name("PARCHG.ALLX").unrecognized == ("ALLX",)
     assert parse_vasp_file_name("CHGCAR.0001").unrecognized == ("0001",)
 
 
@@ -696,11 +704,16 @@ class TestFilePaths:
         assert (tmp_path / "custodian.json.gz").resolve() in paths_1 + paths_2
 
     def test_all_parchg_files_are_kept(self, tmp_path):
-        parchgs = ["PARCHG.0001.0002", "PARCHG.0001.0003", "PARCHG.0002.0001"]
+        parchgs = [
+            "PARCHG.0001.0002",
+            "PARCHG.0001.ALLK",
+            "PARCHG.ALLB.0001",
+            "PARCHG.0002.0001",
+        ]
         make_files(tmp_path, ["vasprun.xml", "INCAR", *parchgs])
         (calc,) = discover_calculations(tmp_path).values()
         assert names(calc.file_paths()) >= set(parchgs)
-        assert len(calc.extra_parchg) == 2
+        assert len(calc.extra_parchg) == 3
         # the parser still gets one
         assert list(calc.volumetric) == ["PARCHG"]
 
