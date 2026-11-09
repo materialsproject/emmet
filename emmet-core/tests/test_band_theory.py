@@ -21,6 +21,7 @@ from emmet.core.band_theory import (
     ProjectedBS,
     ElectronicDos,
     ProjectedDos,
+    infer_path,
     obtain_path_type,
     _coarse_list_superset,
     _loose_path_match,
@@ -408,3 +409,33 @@ def test_utilities():
     assert _loose_path_match(["Γ", "\\Gamma", "b"]) == BSPathType.unknown
     assert _loose_path_match(["GAMMA", "Γ", "b"]) == BSPathType.unknown
     assert _loose_path_match(["Γ", "a", "b", "P_1"]) == BSPathType.unknown
+
+
+def test_infer_path(fe_line_mode_bandstructure):
+    """The labels given are tried first, and are the ones kept if they identify the path."""
+    bs = fe_line_mode_bandstructure
+    qpoints = [list(x.frac_coords) for x in bs.kpoints]
+    labels = {label: list(kpt.frac_coords) for label, kpt in bs.labels_dict.items()}
+    path_type, kpath, found = infer_path(bs.structure, qpoints, labels)
+    assert path_type == BSPathType.setyawan_curtarolo and kpath
+
+    # k-points on periodic images of the high-symmetry points are only found with the
+    # labels of those images: the coordinates of the convention do not match them
+    shift = np.array([1.0, 0.0, 0.0])
+    images = [list(np.array(q) + shift) for q in qpoints]
+    image_labels = {k: list(np.array(v) + shift) for k, v in labels.items()}
+    path_type, kpath, found = infer_path(bs.structure, images, image_labels)
+    assert path_type == BSPathType.setyawan_curtarolo and kpath
+    assert found == image_labels
+    # without them the path is not found, and the labels alone are no help
+    assert infer_path(bs.structure, images, None) == (BSPathType.unknown, None, {})
+
+    # a mesh has no path and no labels to guess one from
+    mesh = [(i / 4, j / 4, k / 4) for i in range(4) for j in range(4) for k in range(4)]
+    assert infer_path(bs.structure, mesh, None) == (BSPathType.unknown, None, {})
+    # the labels alone are used to guess if the path is not found
+    path_type, kpath, found = infer_path(
+        bs.structure, mesh, {"\\Gamma": [0, 0, 0], "H": [0.5, -0.5, 0.5]}
+    )
+    assert path_type == BSPathType.setyawan_curtarolo and kpath is None
+    assert set(found) == {"\\Gamma", "H"}

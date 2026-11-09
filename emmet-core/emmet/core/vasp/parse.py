@@ -59,6 +59,7 @@ from emmet.core.vasp.parsed import (
     ParsedRowHeader,
     ParseOutcome,
     VOLUMETRIC_FILE_MODELS,
+    _ELECTRONIC_CONTEXT,
     split_band_structure_row,
     split_dos_row,
     volumetric_table_name,
@@ -300,6 +301,8 @@ class _BandStructureInput:
     incar: dict[str, Any]
     kpoints_file: Path | None
     task_type: TaskType
+    kpoint_weights: list[float] | None = None
+    """The weights of the k-points of a band structure on a mesh, which a path has none of."""
 
 
 _VOLUMETRIC_PARAMETERS = (
@@ -315,6 +318,12 @@ _VOLUMETRIC_PARAMETERS = (
     "LSEPK",
 )
 """The parameters which describe a volumetric file, see `parsed.py`."""
+
+_ELECTRONIC_PARAMETERS = (
+    "LNONCOLLINEAR",
+    *(key for key, _ in _ELECTRONIC_CONTEXT.values()),
+)
+"""The parameters which describe a density of states and a band structure."""
 
 _LINE_TASK_TYPES = (TaskType.NSCF_Line, TaskType.SCF_Line)
 """Calculations whose band structure is along a path of k-points."""
@@ -407,7 +416,12 @@ class ParsedCalculation:
         if vasprun is not None:
             dos_rows: tuple[Any, Any] | None = None
             try:
-                dos = DosRow.from_pmg(vasprun.complete_dos, **header_kwargs)  # type: ignore[arg-type]
+                dos = DosRow.from_pmg(
+                    vasprun.complete_dos,
+                    idos=vasprun.idos,
+                    parameters=self._parameters,
+                    **header_kwargs,  # type: ignore[arg-type]
+                )
                 dos_rows = split_dos_row(dos)
             except Exception as exc:
                 self._record_error("the density of states", exc)
@@ -451,6 +465,8 @@ class ParsedCalculation:
                     bs_rows = split_band_structure_row(
                         BandStructureRow.from_pmg(
                             pmg_bs,
+                            parameters=self._parameters,
+                            kpoint_weights=bandstructure_input.kpoint_weights,
                             **path_kwargs,
                             **header_kwargs,  # type: ignore[arg-type]
                         )
@@ -658,11 +674,11 @@ def _parse_calculation(
         _files=files,
     )
     if parsed.outcome == ParseOutcome.PARSED:
-        # the settings of the calculation that explain the volumetric data. These are the
+        # the settings of the calculation that explain the large objects. These are the
         # effective parameters of the vasprun.xml, which include the defaults
         parsed._parameters = {
             key: vasprun.parameters[key]
-            for key in _VOLUMETRIC_PARAMETERS
+            for key in (*_VOLUMETRIC_PARAMETERS, *_ELECTRONIC_PARAMETERS)
             if key in vasprun.parameters
         }
         # keep only what the large objects need. The band structure is read from
@@ -675,5 +691,10 @@ def _parse_calculation(
                 incar=dict(vasprun.incar),
                 kpoints_file=files.inputs.get("KPOINTS"),
                 task_type=header.task_type,
+                kpoint_weights=(
+                    [float(w) for w in vasprun.actual_kpoints_weights]
+                    if header.task_type in _MESH_TASK_TYPES
+                    else None
+                ),
             )
     return parsed

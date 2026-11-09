@@ -123,28 +123,62 @@ class BandStructure(
 
     def model_post_init(self, __context: Any) -> None:
         if self.structure and self.path_convention == BSPathType.unknown:
+            self.path_convention, self.kpath, self.labels_dict = infer_path(
+                self.structure, self.qpoints, self.labels_dict
+            )
 
-            # Try the user-input labels if provided, as well as regenerating
-            # them on the fly if path determination fails
-            labels = [self.labels_dict, None] if self.labels_dict else [None]
-            for label_set in labels:
-                try:
-                    self.path_convention, self.kpath, new_labels = next(
-                        obtain_path_type(
-                            self.structure,
-                            self.qpoints,
-                            user_kpoint_labels=label_set,
-                        )
-                    )
-                    if self.path_convention != BSPathType.unknown:
-                        self.labels_dict = new_labels.copy()
-                        break
-                except StopIteration:
-                    pass
 
-            # Fallback, use antipatterns to intuit path type
-            if self.path_convention == BSPathType.unknown and self.labels_dict:
-                self.path_convention = _loose_path_match(list(self.labels_dict))
+def infer_path(
+    structure: Structure,
+    qpoints: list[Vector3D],
+    labels_dict: dict[str, Vector3D] | None = None,
+) -> tuple[BSPathType, list[str] | None, dict[str, Vector3D]]:
+    """Identify the high-symmetry path convention of a band structure.
+
+    The labels given are tried first, if there are any, and then the labels of
+    each path convention, which are made from the structure. If no path convention
+    matches, the labels alone are used to guess.
+
+    Parameters
+    -----------
+    structure : pymatgen .Structure
+        The structure of the band structure.
+    qpoints : list of Vector3D
+        The k-points of the band structure, in direct coordinates.
+    labels_dict : dict of str to Vector3D, or None
+        The labels of high-symmetry k-points known beforehand.
+
+    Returns
+    -----------
+    BSPathType
+        The path convention, `unknown` if there is none.
+    list of str or None
+        The labels of the path in order, if a path convention was found.
+    dict of str to Vector3D
+        The labels of the high-symmetry k-points. They are replaced by those
+        of the path convention only if one was found, otherwise they are
+        the input labels.
+    """
+    labels_dict = dict(labels_dict or {})
+    path_convention, kpath = BSPathType.unknown, None
+
+    # Try the user-input labels if provided, as well as regenerating
+    # them on the fly if path determination fails
+    for label_set in [labels_dict, None] if labels_dict else [None]:
+        try:
+            path_convention, kpath, new_labels = next(
+                obtain_path_type(structure, qpoints, user_kpoint_labels=label_set)
+            )
+            if path_convention != BSPathType.unknown:
+                labels_dict = new_labels.copy()
+                break
+        except StopIteration:
+            pass
+
+    # Fallback, use antipatterns to intuit path type
+    if path_convention == BSPathType.unknown and labels_dict:
+        path_convention = _loose_path_match(list(labels_dict))
+    return path_convention, kpath, labels_dict  # type: ignore[return-value]
 
 
 class ProjectedBS(BaseModel):
@@ -156,9 +190,9 @@ class ProjectedBS(BaseModel):
     tensor where:
         - Index 1: band index
         - Index 2: k-point index
-        - Index 3: site index
-        - Index 4: index for the orbital character, ordered as
+        - Index 3: index for the orbital character, ordered as
             s, py, pz, px, dxy, dyz, dz2, dxz, dx2-y2,...
+        - Index 4: site index
     """
 
     spin_up: Float32Grid | None = Field(

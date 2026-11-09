@@ -443,10 +443,17 @@ class TestTableLayout:
         requested = set(options["use_byte_stream_split"]) | set(
             options["use_dictionary"]
         )
-        assert requested == set(encodings)
+        doubles = {
+            path for path, dtype in spec._leaf_columns() if pa.types.is_float64(dtype)
+        }
+        assert requested | doubles == set(encodings)
+        assert not requested & doubles
         assert not set(options["use_byte_stream_split"]) & set(
             options["use_dictionary"]
         )
+        # a dictionary is of no use to a double, so they are not encoded with one
+        for path in doubles:
+            assert not {"PLAIN_DICTIONARY", "RLE_DICTIONARY"} & set(encodings[path])
         for path in options["use_byte_stream_split"]:
             assert "BYTE_STREAM_SPLIT" in encodings[path], path
         assert not {p for p, e in encodings.items() if "BYTE_STREAM_SPLIT" in e} - set(
@@ -459,15 +466,35 @@ class TestTableLayout:
     @pytest.mark.parametrize(
         "table, columns",
         [
-            ("total-dos", ["spin_up_densities.list.element"]),
-            ("projected-bandstructures", ["spin_up.list.element"]),
-            ("bandstructures", ["spin_up_bands.list.element.list.element"]),
+            (
+                "total-dos",
+                [
+                    "energies.list.element",
+                    *(
+                        f"{c}{s}.list.element"
+                        for c in ("density", "integrated")
+                        for s in ("", "_up", "_down")
+                    ),
+                ],
+            ),
+            (
+                "projected-dos",
+                [f"density{s}.list.element" for s in ("", "_up", "_down")],
+            ),
+            (
+                "projected-bandstructures",
+                [f"weights{s}.list.element" for s in ("", "_up", "_down")],
+            ),
+            (
+                "bandstructures",
+                [f"bands{s}.list.element" for s in ("", "_up", "_down")],
+            ),
         ],
     )
     def test_every_float32_column_is_split(self, table, columns):
         assert set(columns) <= set(PARSED_TABLES[table].byte_stream_split_columns)
         # none of the tables' doubles are
         assert not any(
-            c.startswith(("energies", "efermi"))
+            c.startswith(("efermi", "qpoints", "lattice", "frac_coords"))
             for c in PARSED_TABLES[table].byte_stream_split_columns
         )

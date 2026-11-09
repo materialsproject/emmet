@@ -1,8 +1,14 @@
 """Define the row models of the parsed-tier tables of large VASP objects.
 
-Each model here describes one row of a table: an emmet-core model of a
-VASP object (e.g., `ElectronicDos`), plus a header of top-level columns used
-to partition, sort, and filter the table without joining on other tables.
+Each model here describes one row of a table: the data of a VASP object (e.g., a
+density of states), plus a header of top-level columns used to partition, sort, and
+filter the table without joining on other tables. The models do not derive from the
+emmet-core models of these objects (e.g., `ElectronicDos`): they are the layout of
+a table, which is not that of a document.
+
+Large numeric arrays are flat lists of float32, in C order, with their shape
+in a column or defined by the model. The structure of an object is its lattice,
+species and fractional coordinates.
 
 The schema of every table is `pa.schema(arrowize(<row model>))`: no schemas
 are defined separately from the models. Arrow-specific column types, such as
@@ -16,8 +22,8 @@ because they are far larger than the rest of the data and are rarely needed
 together with it. A DOS or band structure therefore has two tables, which
 are joined on `identifier`: one with the rows of `DosRow` / `BandStructureRow`
 (no projections), and one with the rows of `DosProjectionsRow` /
-`BandStructureProjectionsRow`. Use `dos_from_rows` / `band_structure_from_rows`
-to put them back together.
+`BandStructureProjectionsRow`. Use `DosRow.to_pmg` / `BandStructureRow.to_pmg`,
+with the projections row, to put them back together.
 
 Because the models validate their input, rows should be constructed directly
 from pymatgen objects, which avoids copying very large arrays:
@@ -46,26 +52,34 @@ from typing import TYPE_CHECKING, Annotated, ClassVar, Literal
 
 import numpy as np
 
-from pydantic import BaseModel, BeforeValidator, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, PrivateAttr, model_validator
 
-from emmet.core.band_theory import (
-    BSPathType,
-    ElectronicBS,
-    ElectronicDos,
-    ProjectedBS,
-    ProjectedDos,
-)
+from emmet.core.band_theory import BSPathType, _get_site_indices, infer_path
 from emmet.core.tasks import CoreTaskDoc
 from emmet.core.trajectory import RelaxTrajectory
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.typing import TaskIdentifierType
 from emmet.core.utils import convert_datetime, utcnow
 from emmet.core.vasp.calc_types.enums import RunType, TaskType
-from emmet.core.io.pymatgen import Chgcar, Elfcar, Locpot, Structure
-from emmet.core.types.arrow_annotations import Float32Grid
+from emmet.core.io.pymatgen import (
+    BandStructure as PmgBandStructure,
+    BandStructureSymmLine,
+    Chgcar,
+    CompleteDos,
+    Dos,
+    Elfcar,
+    Lattice,
+    Locpot,
+    Orbital,
+    OrbitalType,
+    Spin,
+    Structure,
+)
+from emmet.core.types.arrow_annotations import Float32Grid, Float32List
 from emmet.core.vasp.models import volumetric_file_type
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from typing import Any, Self
 
 
@@ -125,49 +139,6 @@ class ParsedRowHeader(BaseModel):
         return self
 
 
-class DosRow(ParsedRowHeader, ElectronicDos):
-    """A row of the total density of states table.
-
-    The projections are not a column of the table. They are kept on the
-    row for the convenience of building the row of the projections table from it.
-    """
-
-    projected_densities: ProjectedDos | None = Field(
-        None,
-        exclude=True,
-        description="The orbital- and site-projected DOS. Not stored in this "
-        "table, see DosProjectionsRow.",
-    )
-
-
-class DosProjectionsRow(ParsedRowHeader, ProjectedDos):
-    """A row of the projected density of states table."""
-
-
-class BandStructureRow(ParsedRowHeader, ElectronicBS):
-    """A row of the band structure table.
-
-    The projections are not a column of the table. They are kept on the
-    row for the convenience of building the row of the projections table from it.
-    """
-
-    projections: ProjectedBS | None = Field(
-        None,
-        exclude=True,
-        description="The site- and spin-orbital-projected band structure. Not "
-        "stored in this table, see BandStructureProjectionsRow.",
-    )
-
-
-class BandStructureProjectionsRow(ParsedRowHeader, ProjectedBS):
-    """A row of the projected band structure table."""
-
-    path_convention: BSPathType = Field(
-        description="High symmetry path convention of the band structure. "
-        "A copy of the column of the band structure table, which partitions both tables."
-    )
-
-
 class SpinMode(ValueEnum):
     """How the spin of a volumetric file is represented, by its number of blocks."""
 
@@ -202,12 +173,25 @@ def _structure_columns(structure: Any) -> dict[str, Any]:
     }
 
 
+class _HasStructure:
+    """Gives a row with a `lattice`, `species` and `frac_coords` a pymatgen structure."""
+
+    lattice: list[list[float]]
+    species: list[str]
+    frac_coords: list[list[float]]
+
+    @property
+    def structure(self) -> Structure:
+        """The structure of the row, as a pymatgen object."""
+        return Structure(self.lattice, self.species, self.frac_coords)
+
+
 def _flat(grid: Any) -> Any:
     """Flatten a grid indexed by `[ix, iy, iz]` in C order, so that z varies fastest."""
     return np.asarray(grid).flatten(order="C")
 
 
-class VolumetricGridRow(ParsedRowHeader):
+class VolumetricGridRow(ParsedRowHeader, _HasStructure):
     """The columns every table of volumetric data (CHGCAR, LOCPOT, ...) has.
 
     A volumetric file is a structure followed by one or more *blocks*, each a value
@@ -263,11 +247,6 @@ class VolumetricGridRow(ParsedRowHeader):
     def to_pmg(self, pmg_cls: Any = None) -> Any:
         """Make the pymatgen object of the file, with the labels pymatgen gives its blocks."""
         raise NotImplementedError
-
-    @property
-    def structure(self) -> Structure:
-        """The structure of the file, as a pymatgen object."""
-        return Structure(self.lattice, self.species, self.frac_coords)
 
     def _grid(self, name: str) -> Any:
         """A block as an array indexed `[ix, iy, iz]`, or None if the row has no such block."""
@@ -722,131 +701,753 @@ class ElectronLocalizationRow(VolumetricGridRow):
         )
 
 
-def _assemble_row(
-    row_cls: type[BaseModel], header: ParsedRowHeader, part: BaseModel, **extra: Any
-) -> Any:
-    """Make a row from an already validated header and part of another model.
+_ELECTRONIC_CONTEXT = {
+    "ispin": ("ISPIN", int),
+    "nelect": ("NELECT", float),
+    "nbands": ("NBANDS", int),
+    "ismear": ("ISMEAR", int),
+    "sigma": ("SIGMA", float),
+    "lorbit": ("LORBIT", int),
+}
+"""The columns that describe how the electronic structure was calculated, by the
+VASP parameter they come from, and its type."""
 
-    The values are not validated again, so their (potentially very large)
-    arrays are shared with `part`, not copied.
+
+def _electronic_context(parameters: Any) -> dict[str, Any]:
+    parameters = parameters or {}
+    return {
+        column: kind(parameters[key])
+        for column, (key, kind) in _ELECTRONIC_CONTEXT.items()
+        if parameters.get(key) is not None
+    }
+
+
+def _electronic_spin_mode(parameters: Any, spins: Sequence[Any]) -> SpinMode:
+    """The spin mode of a DOS or band structure.
+
+    A noncollinear calculation has one set of data, as an unpolarized one does:
+    pymatgen drops the magnetization components, so only the parameters tell them apart.
     """
-    values = {name: getattr(header, name) for name in ParsedRowHeader.model_fields}
-    values.update({name: getattr(part, name) for name in type(part).model_fields})
-    values.update(extra)
-    return row_cls.model_construct(**values)
+    if (parameters or {}).get("LNONCOLLINEAR"):
+        return SpinMode.NONCOLLINEAR
+    return SpinMode.COLLINEAR if len(spins) == 2 else SpinMode.UNPOLARIZED
+
+
+def _spin_columns(name: str, spin_mode: SpinMode, by_spin: dict[Any, Any]) -> dict:
+    """The columns of a quantity: `name`, or `name_up` and `name_down` if collinear."""
+    if spin_mode == SpinMode.COLLINEAR:
+        return {f"{name}_up": by_spin[Spin.up], f"{name}_down": by_spin[Spin.down]}
+    return {name: by_spin[Spin.up]}
+
+
+def _by_spin(row: BaseModel, name: str) -> dict[Any, Any]:
+    """The spin-resolved data of a row, by spin: the inverse of `_spin_columns`."""
+    if (total := getattr(row, name)) is not None:
+        return {Spin.up: total}
+    return {
+        spin: values
+        for spin in Spin
+        if (values := getattr(row, f"{name}_{spin.name}")) is not None
+    }
+
+
+class _SpinBlocks(BaseModel):
+    """Checks that a row has the columns of its spin mode, and no others.
+
+    A quantity with a spin mode of `collinear` is in the columns `<name>_up` and
+    `<name>_down`. For any other mode it is in the column `<name>`.
+    """
+
+    SPIN_BLOCKS: ClassVar[tuple[str, ...]] = ()
+    """The names of the quantities that have a column for each spin."""
+    OPTIONAL_SPIN_BLOCKS: ClassVar[tuple[str, ...]] = ()
+    """Quantities that a row may not have at all."""
+
+    @model_validator(mode="after")
+    def check_spin_columns(self) -> Self:
+        expected = (
+            {"_up", "_down"} if self.spin_mode == SpinMode.COLLINEAR else {""}  # type: ignore[attr-defined]
+        )
+        for name in self.SPIN_BLOCKS:
+            present = {
+                suffix
+                for suffix in ("", "_up", "_down")
+                if getattr(self, f"{name}{suffix}") is not None
+            }
+            if not present and name in self.OPTIONAL_SPIN_BLOCKS:
+                continue
+            if present != expected:
+                raise ValueError(
+                    f"A {self.spin_mode.value} row has "  # type: ignore[attr-defined]
+                    f"the columns {sorted(f'{name}{s}' for s in expected)} for "
+                    f"`{name}`, not {sorted(f'{name}{s}' for s in present)}."
+                )
+        return self
+
+
+class ElectronicStructureRow(ParsedRowHeader, _SpinBlocks, _HasStructure):
+    """The columns of the rows of a DOS and of a band structure table.
+
+    The structure is stored as its lattice, species and fractional coordinates. It is
+    the final structure of the calculation, the one the DOS and the band structure
+    were calculated for. The settings come from the effective `parameters` of the
+    vasprun.xml, which include the defaults.
+
+    Rows with the projections of the same calculation are in their own tables, see
+    `DosProjectionsRow` and `BandStructureProjectionsRow`.
+    """
+
+    spin_mode: SpinMode = Field(
+        description="How the spin is represented. `collinear` has the columns of both "
+        "spins (`_up` and `_down`). `unpolarized` and `noncollinear` have one set of "
+        "columns: pymatgen does not read the magnetization components of a noncollinear "
+        "calculation, so it is not stored."
+    )
+    lattice: list[list[float]] = Field(
+        description="The lattice vectors a, b, c, as rows, in Angstrom."
+    )
+    species: list[str] = Field(
+        description="The element of each site, in the order of the structure."
+    )
+    frac_coords: list[list[float]] = Field(
+        description="The fractional coordinates of each site."
+    )
+    ispin: int | None = Field(None, description="The ISPIN tag.")
+    nelect: float | None = Field(
+        None, description="The number of electrons (NELECT) of the calculation."
+    )
+    nbands: int | None = Field(
+        None,
+        description="The number of bands (NBANDS). For a noncollinear calculation "
+        "these are spinors.",
+    )
+    ismear: int | None = Field(
+        None,
+        description="The ISMEAR tag, the smearing, or -5 for the tetrahedron method.",
+    )
+    sigma: float | None = Field(
+        None, description="The SIGMA tag, the smearing width in eV."
+    )
+    lorbit: int | None = Field(
+        None,
+        description="The LORBIT tag, which decides whether projections are written "
+        "and for which orbitals.",
+    )
+
+
+def _same_length(row: BaseModel, names: Sequence[str], size: int, what: str) -> None:
+    for name in names:
+        if (values := getattr(row, name, None)) is not None and len(values) != size:
+            raise ValueError(
+                f"`{name}` has {len(values)} values, but {what} is {size}."
+            )
+
+
+class DosRow(ElectronicStructureRow):
+    """A row of the total density of states table: the DOS of one calculation.
+
+    `density` is VASP's total DOS in states / eV for the unit cell, on the energies
+    `energies`, which are absolute (the Fermi level is `efermi`). For an unpolarized
+    calculation, it counts both spins. `integrated` is VASP's integrated DOS, the number
+    of electrons below each energy, obtained with the same smearing or tetrahedron method.
+    At the Fermi level it is NELECT, for a calculation which has no states below the
+    energy window. A collinear calculation has `density_up`, `density_down`,
+    `integrated_up` and `integrated_down`.
+
+    The energies and densities are float32, which is exact for the energies, which
+    VASP writes with four decimals.
+    """
+
+    SPIN_BLOCKS: ClassVar[tuple[str, ...]] = ("density", "integrated")
+    OPTIONAL_SPIN_BLOCKS: ClassVar[tuple[str, ...]] = ("integrated",)
+
+    efermi: float = Field(description="The Fermi energy, in eV.")
+    energies: Float32List = Field(
+        description="The energies of the DOS, in eV, ascending."
+    )
+    density: Float32List | None = Field(
+        None, description="The total DOS, in states / eV, counting every spin."
+    )
+    density_up: Float32List | None = Field(None, description="The spin-up DOS.")
+    density_down: Float32List | None = Field(None, description="The spin-down DOS.")
+    integrated: Float32List | None = Field(
+        None, description="The integrated DOS, in electrons, counting every spin."
+    )
+    integrated_up: Float32List | None = Field(
+        None, description="The integrated spin-up DOS."
+    )
+    integrated_down: Float32List | None = Field(
+        None, description="The integrated spin-down DOS."
+    )
+
+    _projections: Any = PrivateAttr(None)
+
+    @model_validator(mode="after")
+    def check_lengths(self) -> Self:
+        names = [
+            f"{name}{suffix}"
+            for name in self.SPIN_BLOCKS
+            for suffix in ("", "_up", "_down")
+        ]
+        _same_length(self, names, len(self.energies), "the number of energies")
+        return self
+
+    @classmethod
+    def from_pmg(
+        cls, dos: Any, idos: Any = None, parameters: Any = None, **kwargs: Any
+    ) -> DosRow:
+        """Make a row from a pymatgen CompleteDos, and the settings of its calculation.
+
+        The row of the projections is made along with it, which `split_dos_row` takes.
+
+        Parameters
+        -----------
+        dos : CompleteDos
+            The DOS, which must have a structure.
+        idos : Dos or None
+            The integrated DOS of the vasprun.xml, `Vasprun.idos`, if wanted.
+        parameters : dict or None
+            The parameters of the calculation, `Vasprun.parameters`.
+        kwargs
+            The columns of the header.
+        """
+        structure = getattr(dos, "structure", None)
+        if structure is None:
+            raise ValueError("The DOS needs a structure, use a CompleteDos.")
+        spins = [spin for spin in Spin if spin in dos.densities]
+        spin_mode = _electronic_spin_mode(parameters, spins)
+
+        def f32(by_spin: dict[Any, Any]) -> dict[Any, Any]:
+            return {
+                spin: np.asarray(v, dtype=np.float32) for spin, v in by_spin.items()
+            }
+
+        columns = {
+            "spin_mode": spin_mode,
+            **_structure_columns(structure),
+            **_electronic_context(parameters),
+            "efermi": float(dos.efermi),
+            "energies": np.asarray(dos.energies, dtype=np.float32),
+            **_spin_columns("density", spin_mode, f32(dos.densities)),
+        }
+        if idos is not None:
+            columns.update(_spin_columns("integrated", spin_mode, f32(idos.densities)))
+        row = cls(**columns, **kwargs)
+        row._projections = DosProjectionsRow.from_pmg(
+            dos, spin_mode=spin_mode, **kwargs
+        )
+        return row
+
+    def to_pmg(self, projections: DosProjectionsRow | None = None) -> Any:
+        """Make a pymatgen object: a Dos, or a CompleteDos if there are projections.
+
+        Parameters
+        -----------
+        projections : DosProjectionsRow or None
+            The row of the projected DOS table with the same identifier, if wanted.
+        """
+        dos = Dos(
+            self.efermi,
+            np.asarray(self.energies, dtype=float),
+            {
+                spin: np.asarray(v, dtype=float)
+                for spin, v in _by_spin(self, "density").items()
+            },
+        )
+        if projections is None:
+            return dos
+        if projections.identifier != self.identifier:
+            raise ValueError(
+                f"The projections of {projections.identifier} do not belong to the "
+                f"DOS of {self.identifier}."
+            )
+        return CompleteDos(
+            self.structure, dos, projections.to_pdos(self.structure, len(self.energies))
+        )
+
+    def take_projections(self) -> DosProjectionsRow | None:
+        """Take the row of the projections made along with this one, which it then does not have."""
+        projections, self._projections = self._projections, None
+        return projections
+
+
+class DosProjectionsRow(ParsedRowHeader, _SpinBlocks):
+    """A row of the projected density of states table.
+
+    `density` is the DOS projected onto each orbital of each site, as written by VASP
+    (within the spheres of the PAW method, so the sum over the orbitals is not the
+    total DOS). It is flattened in C order from an array indexed `[site, orbital, energy]`:
+    rebuild it with `np.reshape(density, shape)`. The sites are those of the structure of
+    the row of the total DOS table with the same identifier, in its order, and the
+    energies are its `energies`.
+    """
+
+    SPIN_BLOCKS: ClassVar[tuple[str, ...]] = ("density",)
+
+    spin_mode: SpinMode = Field(
+        description="How the spin is represented, as in the total DOS table."
+    )
+    orbitals: list[str] = Field(
+        description="The orbital of each index of the second axis, e.g., s, py, pz, px, "
+        "dxy, ... for LORBIT = 11, or s, p, d for LORBIT = 10."
+    )
+    shape: list[int] = Field(
+        description="The shape of the arrays: the number of sites, orbitals and energies."
+    )
+    density: Float32Grid | None = Field(
+        None, description="The projected DOS, which counts every spin."
+    )
+    density_up: Float32Grid | None = Field(
+        None, description="The spin-up projected DOS."
+    )
+    density_down: Float32Grid | None = Field(
+        None, description="The spin-down projected DOS."
+    )
+
+    @model_validator(mode="after")
+    def check_shape(self) -> Self:
+        if len(self.shape) != 3 or self.shape[1] != len(self.orbitals):
+            raise ValueError(
+                f"The shape {self.shape} is not (sites, {len(self.orbitals)} orbitals, energies)."
+            )
+        size = int(np.prod(self.shape))
+        _same_length(
+            self,
+            ["density", "density_up", "density_down"],
+            size,
+            f"the size of the shape {self.shape}",
+        )
+        return self
+
+    @classmethod
+    def from_pmg(
+        cls, dos: Any, spin_mode: SpinMode, **kwargs: Any
+    ) -> DosProjectionsRow | None:
+        """Make a row from the projections of a pymatgen CompleteDos.
+
+        Returns None if the DOS has none. `kwargs` are the columns of the header.
+        """
+        if not dos.pdos:
+            return None
+        structure = dos.structure
+        indices = _get_site_indices(dos.pdos, structure)
+        if sorted(indices) != list(range(len(structure))):
+            raise ValueError("The projected DOS does not have every site once.")
+        orbitals = [[orbital.name for orbital in orbs] for orbs in dos.pdos.values()]
+        if any(names != orbitals[0] for names in orbitals):
+            raise ValueError("The sites of the projected DOS have different orbitals.")
+        num_energies = len(dos.energies)
+        spins = [spin for spin in Spin if spin in dos.densities]
+        grids = {
+            spin: np.empty((len(structure), len(orbitals[0]), num_energies), np.float32)
+            for spin in spins
+        }
+        for index, orbs in zip(indices, dos.pdos.values()):
+            for j, spin_dos in enumerate(orbs.values()):
+                for spin in spins:
+                    grids[spin][index, j] = spin_dos[spin]
+        return cls(
+            spin_mode=spin_mode,
+            orbitals=orbitals[0],
+            shape=list(grids[spins[0]].shape),
+            **_spin_columns(
+                "density", spin_mode, {s: g.ravel(order="C") for s, g in grids.items()}
+            ),
+            **kwargs,
+        )
+
+    def to_pdos(self, structure: Structure, num_energies: int) -> dict[Any, Any]:
+        """The projections as pymatgen has them: `{site: {orbital: {spin: density}}}`."""
+        if self.shape[0] != len(structure) or self.shape[2] != num_energies:
+            raise ValueError(
+                f"The projections have the shape {self.shape}, which does not fit a "
+                f"structure of {len(structure)} sites and {num_energies} energies."
+            )
+        # The names of LORBIT = 10 are those of the types of orbital, which have p
+        orbital_cls = OrbitalType if "p" in self.orbitals else Orbital
+        grids = {
+            spin: np.asarray(v, dtype=float).reshape(self.shape, order="C")
+            for spin, v in _by_spin(self, "density").items()
+        }
+        return {
+            structure[i]: {
+                orbital_cls[name]: {spin: grid[i, j] for spin, grid in grids.items()}
+                for j, name in enumerate(self.orbitals)
+            }
+            for i in range(len(structure))
+        }
+
+
+def _projection_orbitals(count: int) -> list[str]:
+    """The orbitals of the projections of a band structure, by how many there are.
+
+    pymatgen does not keep their names. VASP writes the 9 (s, p, d) or 16 (also f)
+    orbitals of LORBIT = 11 and the 3 or 4 of LORBIT = 10, in the order of pymatgen.
+    """
+    if count in (9, 16):
+        return [Orbital(i).name for i in range(count)]
+    if count in (3, 4):
+        return [OrbitalType(i).name for i in range(count)]
+    raise ValueError(f"The projections have {count} orbitals, which are not known.")
+
+
+class BandStructureRow(ElectronicStructureRow):
+    """A row of the band structure table.
+
+    The bands are `bands`, in eV, flattened in C order from an array indexed
+    `[band, k-point]`: rebuild it with `np.reshape(bands, shape)`. The k-points are
+    `qpoints`, in direct coordinates of the reciprocal lattice. A collinear
+    calculation has `bands_up` and `bands_down`.
+
+    A band structure along a path of k-points has `kpoint_labels`, and no weights.
+    One on a uniform mesh of k-points has `kpoint_weights` (those of the irreducible
+    k-points, which sum to 1) and no labels.
+    """
+
+    SPIN_BLOCKS: ClassVar[tuple[str, ...]] = ("bands",)
+
+    path_convention: BSPathType = Field(
+        description="The high symmetry path the band structure follows: `uniform` for "
+        "a mesh of k-points, which has no path, and `unknown` for a path that could "
+        "not be identified."
+    )
+    kpath: list[str] | None = Field(
+        None, description="The labels of the path in order, if it was identified."
+    )
+    qpoints: list[list[float]] = Field(
+        description="The k-points, in direct coordinates of the reciprocal lattice."
+    )
+    kpoint_labels: list[str | None] | None = Field(
+        None,
+        description="The label of each k-point, null for the k-points that have none. "
+        "Where a path has a break, the end of a segment and the start of the next both "
+        "have a label. Null for a band structure with no labels at all.",
+    )
+    kpoint_weights: list[float] | None = Field(
+        None,
+        description="The weight of each k-point, for a band structure on a mesh of "
+        "k-points. Null for one along a path, whose k-points have no weight.",
+    )
+    reciprocal_lattice: list[list[float]] = Field(
+        description="The reciprocal lattice vectors, as rows, in 1/Angstrom, including the "
+        "factor 2 pi, which is the convention of pymatgen."
+    )
+    efermi: float = Field(
+        description="The Fermi energy, in eV, which the band structure is relative to. "
+        "For a path, pymatgen chooses it from the bands."
+    )
+    band_gap: float | None = Field(
+        None, description="The band gap, in eV, 0 for a metal."
+    )
+    is_direct: bool | None = Field(
+        None, description="Whether the band gap is direct, for a non-zero gap."
+    )
+    shape: list[int] = Field(
+        description="The shape of the bands: the number of bands and k-points."
+    )
+    bands: Float32Grid | None = Field(
+        None, description="The eigenvalues, in eV, of every spin."
+    )
+    bands_up: Float32Grid | None = Field(None, description="The spin-up eigenvalues.")
+    bands_down: Float32Grid | None = Field(
+        None, description="The spin-down eigenvalues."
+    )
+
+    _projections: Any = PrivateAttr(None)
+
+    @model_validator(mode="after")
+    def check_shape(self) -> Self:
+        num_kpoints = len(self.qpoints)
+        if len(self.shape) != 2 or self.shape[1] != num_kpoints:
+            raise ValueError(
+                f"The shape {self.shape} is not (bands, {num_kpoints} k-points)."
+            )
+        _same_length(
+            self,
+            ["bands", "bands_up", "bands_down"],
+            int(np.prod(self.shape)),
+            f"the size of the shape {self.shape}",
+        )
+        _same_length(
+            self,
+            ["kpoint_labels", "kpoint_weights"],
+            num_kpoints,
+            "the number of k-points",
+        )
+        return self
+
+    @classmethod
+    def from_pmg(
+        cls,
+        band_structure: Any,
+        parameters: Any = None,
+        kpoint_weights: Sequence[float] | None = None,
+        path_convention: BSPathType | None = None,
+        **kwargs: Any,
+    ) -> BandStructureRow:
+        """Make a row from a pymatgen band structure, and the settings of its calculation.
+
+        The row of the projections is made along with it, which `split_band_structure_row`
+        takes.
+
+        Parameters
+        -----------
+        band_structure : BandStructure
+            Which must have a structure, as that of a vasprun.xml does.
+        parameters : dict or None
+            The parameters of the calculation, `Vasprun.parameters`.
+        kpoint_weights : sequence of float or None
+            The weight of each k-point of a band structure on a mesh.
+        path_convention : BSPathType or None
+            The path the band structure follows. It is identified from the labels and
+            the structure if not given, which is not wanted for a mesh of k-points
+            (`BSPathType.uniform`), which has no path.
+        kwargs
+            The columns of the header.
+        """
+        structure = band_structure.structure
+        if structure is None:
+            raise ValueError("The band structure needs a structure.")
+        qpoints = [kpt.frac_coords.tolist() for kpt in band_structure.kpoints]
+        labels = {
+            label: kpt.frac_coords.tolist()
+            for label, kpt in (band_structure.labels_dict or {}).items()
+        }
+        kpath = None
+        if path_convention is None:
+            path_convention, kpath, labels = infer_path(structure, qpoints, labels)
+
+        spins = [spin for spin in Spin if spin in band_structure.bands]
+        spin_mode = _electronic_spin_mode(parameters, spins)
+        bands = {
+            spin: np.asarray(v, dtype=np.float32)
+            for spin, v in band_structure.bands.items()
+        }
+        shape = bands[spins[0]].shape
+        if any(b.shape != shape for b in bands.values()):
+            raise ValueError("The spins of the band structure have different shapes.")
+        gap = band_structure.get_band_gap()
+        row = cls(
+            spin_mode=spin_mode,
+            **_structure_columns(structure),
+            **_electronic_context(parameters),
+            path_convention=path_convention,
+            kpath=kpath,
+            qpoints=qpoints,
+            kpoint_labels=_label_kpoints(qpoints, labels),
+            kpoint_weights=(
+                None if kpoint_weights is None else [float(w) for w in kpoint_weights]
+            ),
+            reciprocal_lattice=band_structure.lattice_rec.matrix.tolist(),
+            efermi=float(band_structure.efermi),
+            band_gap=gap["energy"],
+            is_direct=gap["direct"],
+            shape=list(shape),
+            **_spin_columns(
+                "bands", spin_mode, {s: b.ravel(order="C") for s, b in bands.items()}
+            ),
+            **kwargs,
+        )
+        if band_structure.projections:
+            row._projections = BandStructureProjectionsRow.from_pmg(
+                band_structure.projections,
+                spin_mode=spin_mode,
+                path_convention=path_convention,
+                **kwargs,
+            )
+        return row
+
+    def to_pmg(
+        self,
+        projections: BandStructureProjectionsRow | None = None,
+        pmg_cls: Any = None,
+    ) -> Any:
+        """Make a pymatgen band structure.
+
+        Parameters
+        -----------
+        projections : BandStructureProjectionsRow or None
+            The row of the projected band structure table with the same identifier,
+            if wanted.
+        pmg_cls : class or None
+            A `BandStructureSymmLine` if the row has labels, and a `BandStructure`
+            if not, unless it is given.
+        """
+        if projections is not None:
+            if projections.identifier != self.identifier:
+                raise ValueError(
+                    f"The projections of {projections.identifier} do not belong to the "
+                    f"band structure of {self.identifier}."
+                )
+            if projections.shape[:2] != self.shape or projections.shape[3] != len(
+                self.species
+            ):
+                raise ValueError(
+                    f"The projections have the shape {projections.shape}, which does "
+                    f"not fit bands of shape {self.shape} and {len(self.species)} sites."
+                )
+        labels = {
+            label: qpoint
+            for label, qpoint in zip(self.kpoint_labels or [], self.qpoints)
+            if label is not None
+        }
+        if pmg_cls is None:
+            pmg_cls = BandStructureSymmLine if labels else PmgBandStructure
+        return pmg_cls(
+            np.asarray(self.qpoints),
+            {
+                spin: np.asarray(v, dtype=float).reshape(self.shape, order="C")
+                for spin, v in _by_spin(self, "bands").items()
+            },
+            Lattice(self.reciprocal_lattice),
+            self.efermi,
+            labels_dict=labels,
+            coords_are_cartesian=False,
+            structure=self.structure,
+            projections=projections.to_pmg_like() if projections else None,
+        )
+
+    def take_projections(self) -> BandStructureProjectionsRow | None:
+        """Take the row of the projections made along with this one, which it then does not have."""
+        projections, self._projections = self._projections, None
+        return projections
+
+
+def _label_kpoints(
+    qpoints: Sequence[Sequence[float]], labels: dict[str, Sequence[float]]
+) -> list[str | None] | None:
+    """The label of each k-point, in the way pymatgen gives them: by its coordinates.
+
+    A k-point on two labels has the last one. None if no k-point has a label.
+    """
+    if not labels or not len(qpoints):
+        return None
+    names = list(labels)
+    distances = np.linalg.norm(
+        np.asarray(qpoints)[:, None, :] - np.asarray([labels[n] for n in names])[None],
+        axis=-1,
+    )
+    found = [
+        next((names[j] for j in np.flatnonzero(row < 1e-4)[::-1]), None)
+        for row in distances
+    ]
+    return found if any(label is not None for label in found) else None
+
+
+class BandStructureProjectionsRow(ParsedRowHeader, _SpinBlocks):
+    """A row of the projected band structure table.
+
+    `weights` are the projections of the bands onto the orbitals of each site, as written
+    by VASP: the weight of an orbital in a band at a k-point. They are flattened in
+    C order from an array indexed `[band, k-point, orbital, site]`, so that the first
+    two axes are those of the bands of the band structure table: rebuild it with
+    `np.reshape(weights, shape)`. The sites are those of the structure of the row of
+    the band structure table with the same identifier, in its order.
+    """
+
+    SPIN_BLOCKS: ClassVar[tuple[str, ...]] = ("weights",)
+
+    spin_mode: SpinMode = Field(
+        description="How the spin is represented, as in the band structure table."
+    )
+    path_convention: BSPathType = Field(
+        description="High symmetry path convention of the band structure. "
+        "A copy of the column of the band structure table, which partitions both tables."
+    )
+    orbitals: list[str] = Field(
+        description="The orbital of each index of the third axis, e.g., s, py, pz, px, "
+        "dxy, ... for LORBIT = 11, or s, p, d for LORBIT = 10."
+    )
+    shape: list[int] = Field(
+        description="The shape of the weights: the number of bands, k-points, orbitals "
+        "and sites."
+    )
+    weights: Float32Grid | None = Field(
+        None, description="The projections, for every spin."
+    )
+    weights_up: Float32Grid | None = Field(None, description="The spin-up projections.")
+    weights_down: Float32Grid | None = Field(
+        None, description="The spin-down projections."
+    )
+
+    @model_validator(mode="after")
+    def check_shape(self) -> Self:
+        if len(self.shape) != 4 or self.shape[2] != len(self.orbitals):
+            raise ValueError(
+                f"The shape {self.shape} is not (bands, k-points, {len(self.orbitals)} "
+                "orbitals, sites)."
+            )
+        _same_length(
+            self,
+            ["weights", "weights_up", "weights_down"],
+            int(np.prod(self.shape)),
+            f"the size of the shape {self.shape}",
+        )
+        return self
+
+    @classmethod
+    def from_pmg(
+        cls,
+        projections: dict[Any, Any],
+        spin_mode: SpinMode,
+        path_convention: BSPathType,
+        **kwargs: Any,
+    ) -> BandStructureProjectionsRow:
+        """Make a row from the projections of a pymatgen band structure, `{spin: array}`.
+
+        `kwargs` are the columns of the header.
+        """
+        grids = {
+            spin: np.asarray(v, dtype=np.float32) for spin, v in projections.items()
+        }
+        shape = next(iter(grids.values())).shape
+        if any(g.shape != shape for g in grids.values()):
+            raise ValueError("The projections of the spins have different shapes.")
+        return cls(
+            spin_mode=spin_mode,
+            path_convention=path_convention,
+            orbitals=_projection_orbitals(shape[2]),
+            shape=list(shape),
+            **_spin_columns(
+                "weights", spin_mode, {s: g.ravel(order="C") for s, g in grids.items()}
+            ),
+            **kwargs,
+        )
+
+    def to_pmg_like(self) -> dict[Any, Any]:
+        """The projections as pymatgen has them: `{spin: array}`."""
+        return {
+            spin: np.asarray(v, dtype=float).reshape(self.shape, order="C")
+            for spin, v in _by_spin(self, "weights").items()
+        }
 
 
 def split_dos_row(row: DosRow) -> tuple[DosRow, DosProjectionsRow | None]:
-    """Split the projections of a DOS into their own row.
-
-    The projections are removed from the DOS row so they are not held twice.
+    """Take the projections of a DOS, which are in their own table.
 
     Returns
     -----------
     DosRow
-        The row (the same object as the input) with no projections.
+        The row (the same object as the input), which no longer has the projections.
     DosProjectionsRow or None
         None if the DOS has no projections.
     """
-    projections = row.projected_densities
-    row.projected_densities = None
-    if projections is None:
-        return row, None
-    return row, _assemble_row(DosProjectionsRow, row, projections)
+    return row, row.take_projections()
 
 
 def split_band_structure_row(
     row: BandStructureRow,
 ) -> tuple[BandStructureRow, BandStructureProjectionsRow | None]:
-    """Split the projections of a band structure into their own row.
-
-    The projections are removed from the band structure row so they are
-    not held twice.
+    """Take the projections of a band structure, which are in their own table.
 
     Returns
     -----------
     BandStructureRow
-        The row (the same object as the input) with no projections.
+        The row (the same object as the input), which no longer has the projections.
     BandStructureProjectionsRow or None
         None if the band structure has no projections.
     """
-    projections = row.projections
-    row.projections = None
-    if projections is None:
-        return row, None
-    return row, _assemble_row(
-        BandStructureProjectionsRow,
-        row,
-        projections,
-        path_convention=row.path_convention,
-    )
-
-
-def dos_from_rows(
-    dos: DosRow | ElectronicDos, projections: DosProjectionsRow | None = None
-) -> ElectronicDos:
-    """Rebuild a DOS from its row and, optionally, the row of its projections.
-
-    Parameters
-    -----------
-    dos : DosRow
-        The row of the total DOS table.
-    projections : DosProjectionsRow or None
-        The row of the projected DOS table with the same identifier, if the
-        projections are wanted.
-
-    Returns
-    -----------
-    ElectronicDos
-        Which can be converted to a pymatgen object with `.to_pmg()`.
-    """
-    if projections is not None and projections.identifier != getattr(
-        dos, "identifier", None
-    ):
-        raise ValueError(
-            f"The projections of {projections.identifier} do not belong to the "
-            f"DOS of {getattr(dos, 'identifier', None)}."
-        )
-    config = {name: getattr(dos, name) for name in ElectronicDos.model_fields}
-    if projections is not None:
-        config["projected_densities"] = ProjectedDos(
-            **{name: getattr(projections, name) for name in ProjectedDos.model_fields}
-        )
-    return ElectronicDos(**config)
-
-
-def band_structure_from_rows(
-    band_structure: BandStructureRow | ElectronicBS,
-    projections: BandStructureProjectionsRow | None = None,
-) -> ElectronicBS:
-    """Rebuild a band structure from its row and, optionally, its projections row.
-
-    Parameters
-    -----------
-    band_structure : BandStructureRow
-        The row of the band structure table.
-    projections : BandStructureProjectionsRow or None
-        The row of the projected band structure table with the same
-        identifier, if the projections are wanted.
-
-    Returns
-    -----------
-    ElectronicBS
-        Which can be converted to a pymatgen object with `.to_pmg()`.
-    """
-    if projections is not None and projections.identifier != getattr(
-        band_structure, "identifier", None
-    ):
-        raise ValueError(
-            f"The projections of {projections.identifier} do not belong to the "
-            f"band structure of {getattr(band_structure, 'identifier', None)}."
-        )
-    config = {name: getattr(band_structure, name) for name in ElectronicBS.model_fields}
-    if projections is not None:
-        config["projections"] = ProjectedBS(
-            **{name: getattr(projections, name) for name in ProjectedBS.model_fields}
-        )
-    return ElectronicBS(**config)
+    return row, row.take_projections()
 
 
 class ValidationRow(ParsedRowHeader):
@@ -999,8 +1600,8 @@ class TableSpec:
             if not field.exclude
         }
 
-    def _leaf_columns(self) -> list[tuple[str, bool]]:
-        """The leaves of the schema by their path in a Parquet file, and whether they are float32.
+    def _leaf_columns(self) -> list[tuple[str, Any]]:
+        """The leaves of the schema by their path in a Parquet file, and their Arrow type.
 
         Parquet names the elements of lists `element`, whatever their Arrow name
         is. A writer ignores a path which is not in the file, so a path with another name
@@ -1011,7 +1612,7 @@ class TableSpec:
         from emmet.core.arrow import arrowize
 
         schema = pa.schema(arrowize(self.row_model))
-        leaves: list[tuple[str, bool]] = []
+        leaves: list[tuple[str, Any]] = []
 
         def _walk(dtype: Any, path: str) -> None:
             if pa.types.is_list(dtype) or pa.types.is_large_list(dtype):
@@ -1023,7 +1624,7 @@ class TableSpec:
                 _walk(dtype.key_type, f"{path}.key_value.key")
                 _walk(dtype.item_type, f"{path}.key_value.value")
             else:
-                leaves.append((path, pa.types.is_float32(dtype)))
+                leaves.append((path, dtype))
 
         for name in self.ordered_columns:
             if name in schema.names:
@@ -1038,21 +1639,32 @@ class TableSpec:
         encoding than with the default one (24% smaller for a charge density).
         Requires pyarrow.
         """
-        return [path for path, is_float32 in self._leaf_columns() if is_float32]
+        import pyarrow as pa
+
+        return [
+            path for path, dtype in self._leaf_columns() if pa.types.is_float32(dtype)
+        ]
 
     @property
     def parquet_options(self) -> dict[str, Any]:
-        """Keyword arguments for a pyarrow Parquet writer that encode the float32 columns well.
+        """Keyword arguments for a pyarrow Parquet writer that encode the columns well.
 
         BYTE_STREAM_SPLIT is used for the float32 columns, which needs dictionary encoding
         to be off for them: with both, the dictionary is used and BYTE_STREAM_SPLIT is
-        silently ignored. It is wasted on floating point numbers anyway. Dictionary encoding
-        is left on for the rest. Requires pyarrow.
+        silently ignored. A dictionary is no use to floating point numbers of any width,
+        which seldom repeat: it made a list of float64 energies 28% larger. It is used
+        for the rest. Requires pyarrow.
         """
+        import pyarrow as pa
+
         leaves = self._leaf_columns()
         return {
-            "use_byte_stream_split": [path for path, f32 in leaves if f32],
-            "use_dictionary": [path for path, f32 in leaves if not f32],
+            "use_byte_stream_split": [
+                path for path, dtype in leaves if pa.types.is_float32(dtype)
+            ],
+            "use_dictionary": [
+                path for path, dtype in leaves if not pa.types.is_floating(dtype)
+            ],
         }
 
     @property

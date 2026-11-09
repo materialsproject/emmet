@@ -10,7 +10,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.io.pymatgen import Chgcar, Dos, Vasprun
+from emmet.core.io.pymatgen import Chgcar, CompleteDos, Dos, Vasprun
 from emmet.core.testing_utils import DataArchive, assert_nested_close
 from emmet.core.trajectory import RelaxTrajectory
 from emmet.core.types.typing import IdentifierType
@@ -32,8 +32,6 @@ from emmet.core.vasp.parsed import (
     VOLUMETRIC_FILE_TABLES,
     ChargeDensityRow,
     SpinMode,
-    band_structure_from_rows,
-    dos_from_rows,
     split_band_structure_row,
     split_dos_row,
     volumetric_table_name,
@@ -164,19 +162,22 @@ def test_rows_from_pmg(dos, band_structure, volumetric_files):
     assert (dos_row.year, dos_row.month, dos_row.day) == (2020, 3, 11)
     assert dos_row.identifier == "mp-1"
     assert dos_row.run_type == RunType.GGA
-    assert dos_row.spin_up_densities is not None
-    assert dos_row.structure is not None
-    # the projections are held by the row, but are not part of what is stored
-    assert dos_row.projected_densities is not None
-    assert "projected_densities" not in dos_row.model_dump()
+    assert dos_row.density is not None and dos_row.density_up is None
+    assert dos_row.spin_mode == SpinMode.UNPOLARIZED
+    assert dos_row.structure == dos.structure
+    # the projections are made with the row, but are not part of what is stored
+    assert dos_row._projections is not None
+    assert not {"projections", "_projections"} & set(dos_row.model_dump())
 
     bs_row = BandStructureRow.from_pmg(band_structure, **header())
     assert isinstance(bs_row, BandStructureRow)
     assert bs_row.chemsys == "Si"
-    assert bs_row.spin_up_bands is not None
+    # the band structure of this calculation is spin-polarized
+    assert bs_row.spin_mode == SpinMode.COLLINEAR
+    assert bs_row.bands is None and bs_row.bands_up is not None
     assert bs_row.path_convention is not None
-    assert bs_row.projections is not None
-    assert "projections" not in bs_row.model_dump()
+    assert bs_row._projections is not None
+    assert not {"projections", "_projections"} & set(bs_row.model_dump())
 
     chgcar = Chgcar.from_file(volumetric_files["collinear"])
     vol_row = ChargeDensityRow.from_pmg(
@@ -336,19 +337,29 @@ class TestArrow:
         # projections are not columns of the tables of the DOS and band structure
         assert "projected_densities" not in schemas["total-dos"].names
         assert "projections" not in schemas["bandstructures"].names
+        # nor is a pymatgen structure: the structure of every table is its lattice and sites
+        for name in ("total-dos", "bandstructures"):
+            assert {"lattice", "species", "frac_coords"} <= set(schemas[name].names)
+            assert "structure" not in schemas[name].names
 
-        assert schemas["total-dos"].field("spin_up_densities").type == pa.list_(
+        assert schemas["total-dos"].field("energies").type == pa.list_(pa.float32())
+        assert schemas["total-dos"].field("density").type == pa.list_(pa.float32())
+        assert schemas["total-dos"].field("integrated_up").type == pa.list_(
             pa.float32()
         )
-        assert schemas["projected-dos"].field("spin_up_densities").type == pa.list_(
-            pa.list_(pa.float32())
+        assert schemas["projected-dos"].field("density").type == pa.large_list(
+            pa.float32()
         )
-        assert schemas["projected-dos"].field("site_index").type == pa.list_(pa.int64())
-        assert schemas["bandstructures"].field("spin_up_bands").type == pa.list_(
-            pa.list_(pa.float32())
+        assert schemas["projected-dos"].field("orbitals").type == pa.list_(pa.string())
+        assert schemas["projected-dos"].field("shape").type == pa.list_(pa.int64())
+        assert schemas["bandstructures"].field("bands").type == pa.large_list(
+            pa.float32()
+        )
+        assert schemas["bandstructures"].field("kpoint_labels").type == pa.list_(
+            pa.string()
         )
         assert schemas["bandstructures"].field("path_convention").type == pa.string()
-        assert schemas["projected-bandstructures"].field("spin_up").type == (
+        assert schemas["projected-bandstructures"].field("weights").type == (
             pa.large_list(pa.float32())
         )
         # path convention is a column of both band structure tables, as they are
@@ -377,10 +388,14 @@ class TestArrow:
         )
         assert dos_projections is not None and bs_projections is not None
 
-        # a nonmagnetic dos has no spin-down densities, and no projections
+        # a DOS with no integrated DOS and settings, and no projections
         dos_row_nospin = DosRow(
             **header(identifier="mp-2"),
-            spin_up_densities=[0.0, 1.0],
+            spin_mode=SpinMode.UNPOLARIZED,
+            lattice=np.eye(3).tolist(),
+            species=["Si"],
+            frac_coords=[[0.0, 0.0, 0.0]],
+            density=[0.0, 1.0],
             energies=[-1.0, 1.0],
             efermi=0.0,
         )
@@ -440,12 +455,11 @@ class TestArrow:
             return type(row)(**table.to_pylist(maps_as_pydicts="strict")[0])
 
         dos_row, dos_proj = split_dos_row(DosRow.from_pmg(dos, **header()))
-        rebuilt = dos_from_rows(
-            through_arrow(dos_row, "total-dos"),
-            through_arrow(dos_proj, "projected-dos"),
-        ).to_pmg()
+        rebuilt = through_arrow(dos_row, "total-dos").to_pmg(
+            through_arrow(dos_proj, "projected-dos")
+        )
         assert rebuilt.pdos and rebuilt.structure == dos.structure
-        assert np.allclose(rebuilt.energies, dos.energies)
+        assert np.allclose(rebuilt.energies, dos.energies, rtol=1e-6)
         for spin, densities in dos.densities.items():
             assert np.allclose(rebuilt.densities[spin], densities, rtol=1e-6, atol=1e-7)
         assert set(rebuilt.pdos) == set(dos.pdos)
@@ -459,15 +473,15 @@ class TestArrow:
                         atol=1e-7,
                     )
         # without the projections table it is a total DOS
-        assert type(dos_from_rows(through_arrow(dos_row, "total-dos")).to_pmg()) is Dos
+        assert type(through_arrow(dos_row, "total-dos").to_pmg()) is Dos
+        assert isinstance(rebuilt, CompleteDos)
 
         bs_row, bs_proj = split_band_structure_row(
             BandStructureRow.from_pmg(band_structure, **header())
         )
-        rebuilt_bs = band_structure_from_rows(
-            through_arrow(bs_row, "bandstructures"),
-            through_arrow(bs_proj, "projected-bandstructures"),
-        ).to_pmg()
+        rebuilt_bs = through_arrow(bs_row, "bandstructures").to_pmg(
+            through_arrow(bs_proj, "projected-bandstructures")
+        )
         assert rebuilt_bs.projections and set(rebuilt_bs.projections) == set(
             band_structure.projections
         )
@@ -475,9 +489,7 @@ class TestArrow:
             assert np.allclose(rebuilt_bs.projections[spin], proj, rtol=1e-6, atol=1e-7)
         for spin, bands in band_structure.bands.items():
             assert np.allclose(rebuilt_bs.bands[spin], bands, rtol=1e-6, atol=1e-6)
-        assert not band_structure_from_rows(
-            through_arrow(bs_row, "bandstructures")
-        ).projections
+        assert not through_arrow(bs_row, "bandstructures").to_pmg().projections
 
     def test_partitioned_write(self, volumetric_files, tmp_path):
         """Rows are laid out by their partition columns, including awkward run types."""
@@ -538,58 +550,80 @@ class TestArrow:
 class TestProjections:
     def test_split_dos(self, dos):
         row = DosRow.from_pmg(dos, **header())
-        projections_obj = row.projected_densities
+        projections_row = row._projections
         total, projections = split_dos_row(row)
 
-        assert total is row
-        assert total.projected_densities is None
+        assert total is row and projections is projections_row
+        # the row no longer has them
+        assert total.take_projections() is None
         assert isinstance(projections, DosProjectionsRow)
-        # the header is copied, and the data is shared and not copied
+        # the header is the row's
         assert projections.identifier == total.identifier
         assert projections.completed_at == total.completed_at
         assert (projections.year, projections.month, projections.day) == (2020, 3, 11)
         assert projections.run_type == RunType.GGA
         assert projections.chemsys == "Si"
-        assert projections.spin_up_densities is projections_obj.spin_up_densities
-        assert len(projections.orbital) == len(projections.site_index) > 0
+        n_sites = len(dos.structure)
+        assert projections.shape == [
+            n_sites,
+            len(projections.orbitals),
+            len(dos.energies),
+        ]
+        assert len(projections.density) == np.prod(projections.shape)
 
     def test_split_band_structure(self, band_structure):
         row = BandStructureRow.from_pmg(band_structure, **header())
-        projections_obj = row.projections
+        projections_row = row._projections
         bs, projections = split_band_structure_row(row)
 
-        assert bs is row and bs.projections is None
+        assert bs is row and projections is projections_row
+        assert bs.take_projections() is None
         assert isinstance(projections, BandStructureProjectionsRow)
         assert projections.identifier == bs.identifier
         assert projections.run_type == bs.run_type == RunType.GGA
         # the path convention partitions both tables
         assert projections.path_convention == bs.path_convention
         assert isinstance(projections.path_convention, BSPathType)
-        assert projections.spin_up is projections_obj.spin_up
-        assert projections.rank == projections_obj.rank
+        # the first two axes are those of the bands
+        assert projections.shape[:2] == bs.shape
+        assert projections.shape[3] == len(bs.species)
 
     def test_no_projections(self, dos):
-        row = DosRow(**header(), spin_up_densities=[1.0], energies=[0.0], efermi=0.0)
+        row = DosRow(
+            **header(),
+            spin_mode=SpinMode.UNPOLARIZED,
+            lattice=np.eye(3).tolist(),
+            species=["Si"],
+            frac_coords=[[0.0, 0.0, 0.0]],
+            density=[1.0],
+            energies=[0.0],
+            efermi=0.0,
+        )
         total, projections = split_dos_row(row)
         assert projections is None and total is row
 
         row = BandStructureRow(
             **header(),
+            spin_mode=SpinMode.UNPOLARIZED,
+            lattice=np.eye(3).tolist(),
+            species=["Si"],
+            frac_coords=[[0.0, 0.0, 0.0]],
+            path_convention=BSPathType.uniform,
             qpoints=[(0.0, 0.0, 0.0)],
             reciprocal_lattice=np.eye(3).tolist(),
             efermi=0.0,
+            shape=[1, 1],
+            bands=[0.0],
         )
         bs, projections = split_band_structure_row(row)
         assert projections is None and bs is row
 
     def test_rebuild_requires_matching_identifiers(self, dos, band_structure):
         dos_row, dos_proj = split_dos_row(DosRow.from_pmg(dos, **header()))
-        other_dos, other_proj = split_dos_row(
-            DosRow.from_pmg(dos, **header(identifier="mp-2"))
-        )
+        _, other_proj = split_dos_row(DosRow.from_pmg(dos, **header(identifier="mp-2")))
         with pytest.raises(ValueError, match="do not belong"):
-            dos_from_rows(dos_row, other_proj)
-        assert dos_from_rows(dos_row, dos_proj).projected_densities is not None
+            dos_row.to_pmg(other_proj)
+        assert isinstance(dos_row.to_pmg(dos_proj), CompleteDos)
 
         bs_row, bs_proj = split_band_structure_row(
             BandStructureRow.from_pmg(band_structure, **header())
@@ -598,8 +632,8 @@ class TestProjections:
             BandStructureRow.from_pmg(band_structure, **header(identifier="mp-2"))
         )
         with pytest.raises(ValueError, match="do not belong"):
-            band_structure_from_rows(bs_row, other_bs_proj)
-        assert band_structure_from_rows(bs_row, bs_proj).projections is not None
+            bs_row.to_pmg(other_bs_proj)
+        assert bs_row.to_pmg(bs_proj).projections
 
 
 class TestManifest:

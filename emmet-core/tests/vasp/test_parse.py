@@ -39,8 +39,6 @@ from emmet.core.vasp.parsed import (
     DosRow,
     ParseOutcome,
     ChargeDensityRow,
-    band_structure_from_rows,
-    dos_from_rows,
 )
 
 if ARROW_COMPATIBLE:
@@ -253,26 +251,30 @@ class TestParseCalculation:
 
         # nothing about projections is stored with the total DOS and band structure
         by_table = dict(rows)
-        assert by_table["total-dos"].projected_densities is None
-        assert by_table["bandstructures"].projections is None
+        assert by_table["total-dos"].take_projections() is None
+        assert by_table["bandstructures"].take_projections() is None
         assert by_table["projected-bandstructures"].path_convention == (
             by_table["bandstructures"].path_convention
         )
         # a band structure on a mesh follows no path, which is not an unknown path
         assert by_table["bandstructures"].path_convention == BSPathType.uniform
-        assert by_table["bandstructures"].labels_dict == {}
+        assert by_table["bandstructures"].kpoint_labels is None
+        # the weights of the irreducible k-points of a mesh are kept, and make up the zone
+        weights = by_table["bandstructures"].kpoint_weights
+        assert len(weights) == len(by_table["bandstructures"].qpoints)
+        assert sum(weights) == pytest.approx(1.0)
 
         # the objects are those of the vasprun
         vasprun = Vasprun(directory / "vasprun.xml.gz", parse_projected_eigen=True)
-        dos = dos_from_rows(by_table["total-dos"], by_table["projected-dos"]).to_pmg()
+        dos = by_table["total-dos"].to_pmg(by_table["projected-dos"])
         assert dos.structure == vasprun.complete_dos.structure
         for spin, densities in vasprun.complete_dos.densities.items():
-            assert np.allclose(dos.densities[spin], densities)
+            assert np.allclose(dos.densities[spin], densities, rtol=1e-6)
         assert set(dos.pdos) == set(vasprun.complete_dos.pdos)
 
-        band_structure = band_structure_from_rows(
-            by_table["bandstructures"], by_table["projected-bandstructures"]
-        ).to_pmg()
+        band_structure = by_table["bandstructures"].to_pmg(
+            by_table["projected-bandstructures"]
+        )
         pmg_bs = vasprun.get_band_structure(efermi="smart")
         assert np.allclose(band_structure.efermi, pmg_bs.efermi)
         for spin, bands in pmg_bs.bands.items():
@@ -1070,16 +1072,18 @@ class TestSCFLine:
             BSPathType.unknown,
             BSPathType.uniform,
         )
-        assert band_structure.labels_dict
+        assert any(rows["bandstructures"].kpoint_labels)
         assert rows["projected-bandstructures"].path_convention == (
             band_structure.path_convention
         )
 
     def test_projections_are_of_the_path(self, scf_line):
         _, _, rows = scf_line
-        n_bands, n_kpts, _, _ = rows["projected-bandstructures"].rank
+        n_bands, n_kpts, _, _ = rows["projected-bandstructures"].shape
+        assert (n_bands, n_kpts) == tuple(rows["bandstructures"].shape)
         assert n_kpts == len(rows["bandstructures"].qpoints)
-        assert n_bands == len(rows["bandstructures"].spin_up_bands)
+        # the path has no weights, its k-points have none
+        assert rows["bandstructures"].kpoint_weights is None
 
     def test_reading_all_of_the_k_points_is_not_the_band_structure(self, scf_line):
         """Without the SCF Line handling, the mesh and path are mixed, and the path is not found."""
