@@ -1,6 +1,6 @@
 import inspect
 from abc import abstractmethod
-from typing import Any
+from typing import Annotated, Any, get_args, get_origin
 from collections.abc import Callable
 
 from fastapi.params import Query
@@ -10,7 +10,56 @@ from pydantic.fields import FieldInfo
 
 from emmet.api.query_operator import QueryOperator
 from emmet.api.utils import STORE_PARAMS
+from emmet.core.types.typing import IdDisplayFormat
 from emmet.core.utils import dynamic_import
+
+
+def _find_id_marker(annotation: Any) -> IdDisplayFormat | None:
+    """Find the `IdDisplayFormat` marker of an (optionally nullable) identifier type.
+
+    Identifier types, e.g. `IdentifierType`, are `Annotated` unions carrying an
+    `IdDisplayFormat` marker, so they are not plain `str` annotations.
+    """
+    if get_origin(annotation) is Annotated:
+        inner, *metadata = get_args(annotation)
+        for meta in metadata:
+            if isinstance(meta, IdDisplayFormat):
+                return meta
+        return _find_id_marker(inner)
+
+    # `X | None` / `Optional[X]` / other unions
+    for arg in get_args(annotation):
+        if arg is not type(None) and (marker := _find_id_marker(arg)):
+            return marker
+    return None
+
+
+def _id_variants(value: str, marker: IdDisplayFormat) -> list[str]:
+    """All stored forms an identifier may take: as given, legacy and AlphaID.
+
+    The database may hold identifiers in either form (legacy `mp-149`, or
+    `mp-aaaaaaft`), so queries must match both whichever form the client uses.
+    The formatters are fault-tolerant: unparsable values are returned as-is.
+    """
+    value = value.strip()
+    variants = [value]
+    for legacy in (True, False):
+        formatted = marker.formatter(value, legacy=legacy)
+        if isinstance(formatted, str) and formatted not in variants:
+            variants.append(formatted)
+    return variants
+
+
+def _id_csv_variants(values: str, marker: IdDisplayFormat) -> list[str]:
+    """`_id_variants` for each entry of a comma-separated string, de-duplicated."""
+    variants: list[str] = []
+    for entry in values.split(","):
+        if not entry.strip():
+            continue
+        for variant in _id_variants(entry, marker):
+            if variant not in variants:
+                variants.append(variant)
+    return variants
 
 
 class DynamicQueryOperator(QueryOperator):
@@ -206,7 +255,12 @@ class NumericQuery(DynamicQueryOperator):
 
 
 class StringQueryOperator(DynamicQueryOperator):
-    """Query Operator to enable searching on numeric fields."""
+    """Query Operator to enable searching on string and identifier fields.
+
+    Identifier fields (e.g. `IdentifierType`) are exposed as string query
+    parameters. Their values are matched against both the legacy (`mp-149`)
+    and AlphaID (`mp-aaaaaaft`) forms, since either may be stored.
+    """
 
     def field_to_operator(
         self, name: str, field: FieldInfo
@@ -219,11 +273,60 @@ class StringQueryOperator(DynamicQueryOperator):
         and callable to convert it into a query dict.
         """
         ops = []
+        title: str = name
         field_type: type = field.annotation  # type: ignore
 
-        if field_type in [str, str | None]:
-            title: str = name
+        if marker := _find_id_marker(field_type):
+            id_type: Any = str | None
 
+            return [
+                (
+                    f"{title}",
+                    id_type,
+                    Query(
+                        default=None,
+                        description=f"Query for {title} being equal to a value",
+                    ),
+                    lambda val, title=title, marker=marker: {
+                        f"{title}": {"$in": _id_variants(val, marker)}
+                    },
+                ),
+                (
+                    f"{title}_not_eq",
+                    id_type,
+                    Query(
+                        default=None,
+                        description=f"Query for {title} being not equal to a value",
+                    ),
+                    lambda val, title=title, marker=marker: {
+                        f"{title}": {"$nin": _id_variants(val, marker)}
+                    },
+                ),
+                (
+                    f"{title}_eq_any",
+                    str,
+                    Query(
+                        default=None,
+                        description=f"Query for {title} being any of these values. Provide a comma separated list.",
+                    ),
+                    lambda val, title=title, marker=marker: {
+                        f"{title}": {"$in": _id_csv_variants(val, marker)}
+                    },
+                ),
+                (
+                    f"{title}_neq_any",
+                    str,
+                    Query(
+                        default=None,
+                        description=f"Query for {title} being not any of these values. Provide a comma separated list",
+                    ),
+                    lambda val, title=title, marker=marker: {
+                        f"{title}": {"$nin": _id_csv_variants(val, marker)}
+                    },
+                ),
+            ]
+
+        if field_type in [str, str | None]:
             ops = [
                 (
                     f"{title}",

@@ -453,6 +453,54 @@ async def test_substrates_ids(mock_database):
     assert res.json()["data"][0] == {"film_id": "mp-149", "sub_id": "mp-13"}
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "film_id, sub_id",
+    [
+        ("mp-6930", "mp-772125"),  # legacy, as currently stored in production
+        ("mp-aaaaakgo", "mp-aaabryfd"),  # AlphaID
+    ],
+)
+async def test_substrates_id_query_params(mock_database, film_id, sub_id):
+    """`film_id` / `sub_id` filters work whichever form the ids are stored in."""
+    collection = mock_database["substrates"]
+    await collection.insert_many(
+        [
+            {"film_id": film_id, "sub_id": sub_id, "sub_form": "SiO2"},
+            {"film_id": "mp-999999", "sub_id": "mp-888888", "sub_form": "Si"},
+        ]
+    )
+    resource = substrates_resource(CollectionWithKey(collection, "film_id"))
+    client = _client(resource)
+
+    openapi = client.get("/openapi.json").json()
+    declared = {
+        p["name"] for p in openapi["paths"]["/substrates/"]["get"]["parameters"]
+    }
+    for name in ("film_id", "sub_id"):
+        assert {name, f"{name}_not_eq", f"{name}_eq_any", f"{name}_neq_any"} <= declared
+
+    def search(**params) -> list[tuple[str, str]]:
+        res = client.get("/substrates/", params={**params, "id_format": "legacy"})
+        assert res.status_code == 200, res.text
+        return sorted((d["film_id"], d["sub_id"]) for d in res.json()["data"])
+
+    match = [("mp-6930", "mp-772125")]
+    other = [("mp-999999", "mp-888888")]
+
+    # either form of the identifier finds the document
+    for given in ("mp-6930", "mp-aaaaakgo"):
+        assert search(film_id=given) == match
+        assert search(film_id_not_eq=given) == other
+        assert search(film_id_eq_any=f"{given}, mp-aaacexhn") == sorted(match + other)
+        assert search(film_id_neq_any=given) == other
+    for given in ("mp-772125", "mp-aaabryfd"):
+        assert search(sub_id=given) == match
+        assert search(sub_id_not_eq=given) == other
+        assert search(sub_id_eq_any=given) == match
+        assert search(sub_id_neq_any=f"{given}, mp-888888") == []
+
+
 def _task_docs() -> list[dict]:
     """Real task documents, stored the way production does: bare alpha task ids."""
     with zopen(
