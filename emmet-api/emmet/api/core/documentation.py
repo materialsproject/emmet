@@ -107,10 +107,20 @@ tags_meta = [
     },
     {
         "name": "Materials Phonon",
-        "description": "**Under construction** Route providing computed phonon data for a material following the \
-            methodology discussed by [Petretto *et al.*](https://doi.org/10.1038/sdata.2018.65) \
+        "description": "Route providing computed phonon data for a material. Data computed with \
+            density-functional perturbation theory (`phonon_method=dfpt`) follows the methodology discussed by \
+            [Petretto *et al.*](https://doi.org/10.1038/sdata.2018.65), and data computed with the Pheasy method \
+            (`phonon_method=pheasy`) follows the methodology discussed by \
+            [Sahasrabuddhe *et al.*](https://doi.org/10.26434/chemrxiv.15004632). \
             Note that phonon data has not been calculated for all materials in the Materials \
-            Project database. See the `PhononBSDOSDoc` schema for a full list of fields returned by this route.",
+            Project database. See the `PhononBSDOSTask` schema for a full list of fields returned by this route. \
+            Phonon band structures, densities of states, and force constants are not served by this route. \
+            They are available as Delta Lake tables in the public `materialsproject-parsed` bucket \
+            (AWS Open Data, e.g. `aws s3 ls --no-sign-request s3://materialsproject-parsed/phonon/`), keyed by \
+            `identifier` and `phonon_method`: band structures at \
+            `s3://materialsproject-parsed/phonon/electronic-structure/bandstructures/`, densities of states at \
+            `s3://materialsproject-parsed/phonon/electronic-structure/dos/`, and force constants at \
+            `s3://materialsproject-parsed/phonon/force-constants/`.",
         "externalDocs": {
             "description": "For a more detailed description",
             "url": "https://docs.materialsproject.org/methodology/phonons",
