@@ -17,13 +17,13 @@ from emmet.api.routes.materials.phonon.query_operators import (
     MultiPhononIDQuery,
     PhononMethodQuery,
 )
-from emmet.core.phonon import PhononBSDOSDoc
+from emmet.core.phonon import PhononBSDOSTask
 
 
 def phonon_bsdos_resource(phonon_bs_store):
     resource = ReadOnlyResource(
         phonon_bs_store,
-        PhononBSDOSDoc,
+        PhononBSDOSTask,
         query_operators=[
             MultiPhononIDQuery(),
             FormulaQuery(),
@@ -31,12 +31,12 @@ def phonon_bsdos_resource(phonon_bs_store):
             ElementsQuery(),
             SymmetryQuery(),
             PhononMethodQuery(),
-            NumericQuery(model=PhononBSDOSDoc, excluded_fields=["composition"]),
+            NumericQuery(model=PhononBSDOSTask, excluded_fields=["composition"]),
             PaginationQuery(),
             SparseFieldsQuery(
-                PhononBSDOSDoc, default_fields=["identifier", "last_updated"]
+                PhononBSDOSTask, default_fields=["identifier", "last_updated"]
             ),
-            IdFormatQuery(model=PhononBSDOSDoc),
+            IdFormatQuery(model=PhononBSDOSTask),
         ],
         header_processor=GlobalHeaderProcessor(),
         tags=["Materials Phonon"],

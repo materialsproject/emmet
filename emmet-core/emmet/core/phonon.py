@@ -565,7 +565,12 @@ class ThermalDisplacementData(BaseModel):
 
 
 class PhononBSDOSTask(StructureMetadata):
-    """Phonon band structures and density of states data."""
+    """Phonon calculation metadata and scalar/tensor properties.
+
+    Includes, e.g., dielectric tensors, Born charges and sum-rule checks.
+    Phonon band structures, densities of states, and force constants are
+    stored separately, see `PhononBSDOSDoc`.
+    """
 
     identifier: TaskIdentifierType | None = Field(
         None, description="The identifier of this phonon analysis task."
@@ -682,7 +687,7 @@ class PhononBSDOSTask(StructureMetadata):
 
 
 class PhononBSDOSDoc(PhononBSDOSTask):
-    """Built data version of PhononBSDOSTask."""
+    """`PhononBSDOSTask` plus the phonon band structure, density of states, and force constants."""
 
     phonon_bandstructure: PhononBS | None = Field(
         None,
@@ -805,7 +810,7 @@ class PhononBSDOSDoc(PhononBSDOSTask):
         **kwargs,
     ) -> Self:
         """
-        Create a PhononBSDOSTask from a list of explicit Phonopy/Pheasy file paths.
+        Create a PhononBSDOSDoc from a list of explicit Phonopy/Pheasy file paths.
         """
 
         try:
