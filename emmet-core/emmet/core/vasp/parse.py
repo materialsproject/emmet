@@ -168,8 +168,8 @@ class ParsePolicy(BaseModel):
     average_locpot: bool = Field(
         True,
         description="Whether the task keeps the averages of the LOCPOT along the "
-        "axes of the crystal. This reads the LOCPOT once, and reading it again "
-        "to keep the LOCPOT as an object is not avoided.",
+        "axes of the crystal. The LOCPOT is read once for the averages and for "
+        "its row, which is held until its row is made if the policy keeps it.",
     )
 
     @field_validator("volumetric_types", mode="before")
@@ -355,6 +355,8 @@ class ParsedCalculation:
     _vasprun: Vasprun | None = field(default=None, repr=False)
     _bandstructure_input: _BandStructureInput | None = field(default=None, repr=False)
     _parameters: dict[str, Any] = field(default_factory=dict, repr=False)
+    _locpot: Any = field(default=None, repr=False)
+    """The LOCPOT which was read for its averages, if its row is to be made from it."""
     _tables: list[str] = field(default_factory=list, repr=False)
     _started: bool = field(default=False, repr=False)
 
@@ -481,12 +483,16 @@ class ParsedCalculation:
                     yield self._yielded("projected-bandstructures", projections)
                 del bandstructure, projections
 
+        held_locpot, self._locpot = self._locpot, None
         for file_type, path in _volumetric_files(files):
             if not policy.wants_volumetric(file_type):
                 continue
             table = volumetric_table_name(path.name)
             try:
-                pmg_vol = VOLUMETRIC_PARSERS[file_type].from_file(str(path))
+                if file_type == "LOCPOT" and held_locpot is not None:
+                    pmg_vol, held_locpot = held_locpot, None
+                else:
+                    pmg_vol = VOLUMETRIC_PARSERS[file_type].from_file(str(path))
                 volumetric = VOLUMETRIC_FILE_MODELS[file_type].from_pmg(
                     pmg_vol,
                     parameters=self._parameters,
@@ -679,15 +685,24 @@ def _parse_calculation(
         raise FileNotFoundError(f"The calculation has no {', '.join(missing)}.")
 
     kwargs: dict[str, Any] = files.to_calculation_kwargs(resolve=False)
-    if not policy.average_locpot:
-        kwargs.pop("volumetric_files", None)
+    # The LOCPOT is read here, once, for its averages and for its row, and not by the
+    # calculation, which would read it again
+    kwargs.pop("volumetric_files", None)
     calc_doc, _, vasprun = Calculation._from_vasp_files(
         files.directory,
         source.calc_suffix,
         **kwargs,
-        average_locpot=policy.average_locpot,
+        average_locpot=False,
         store_trajectory=StoreTrajectoryOption.NO,
     )
+
+    locpot = None
+    if policy.average_locpot and (locpot_path := files.volumetric.get("LOCPOT")):
+        locpot = VOLUMETRIC_PARSERS["LOCPOT"].from_file(str(locpot_path))
+        assert calc_doc.output is not None
+        calc_doc.output.locpot = {
+            str(i): locpot.get_average_along_axis(i).tolist() for i in range(3)
+        }
 
     transformations, icsd_id, transformation_tags, _ = _parse_transformations_file(
         files.workflow.get("transformations.json")
@@ -734,6 +749,9 @@ def _parse_calculation(
             for key in (*_VOLUMETRIC_PARAMETERS, *_ELECTRONIC_PARAMETERS)
             if key in vasprun.parameters
         }
+        # the LOCPOT is kept until its row is made, only if it is going to be
+        if locpot is not None and policy.wants_volumetric("LOCPOT"):
+            parsed._locpot = locpot
         # keep only what the large objects need. The band structure is read from
         # the file again, so it does not need the Vasprun, which can be freed first
         if policy.wants_dos(header.task_type):

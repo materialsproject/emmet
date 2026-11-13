@@ -788,6 +788,135 @@ class TestLaziness:
 @pytest.mark.skipif(
     not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
 )
+class TestLocpotIsReadOnce:
+    """The LOCPOT is read for the averages of the task and for its row, which share one read."""
+
+    @pytest.fixture
+    def reads(self, monkeypatch):
+        """The names of the files read as volumetric data, by whichever class reads them.
+
+        Every reader, including the subclasses of emmet, ends up in the `__init__` of
+        `VolumetricData` after reading, so this counts the files read, not who read them.
+        """
+        from pymatgen.io.vasp import Locpot
+
+        calls: list[str] = []
+        original = Locpot.from_file.__func__
+
+        def counted(cls_, filename, *args, **kwargs):
+            calls.append(os.path.basename(str(filename)))
+            return original(cls_, filename, *args, **kwargs)
+
+        monkeypatch.setattr(Locpot, "from_file", classmethod(counted))
+        return calls
+
+    @pytest.fixture
+    def directory(self, extract):
+        return extract("magnetic_static_volumetric")
+
+    def locpot_reads(self, calls):
+        return [c for c in calls if c.startswith("LOCPOT")]
+
+    def test_the_averages_and_the_row_are_from_one_read(self, directory, reads):
+        parsed, rows = parse(directory)
+        assert "local-potential" in tables(rows)
+        assert parsed.task.output.locpot is not None
+        assert self.locpot_reads(reads) == ["LOCPOT.gz"]
+
+    def test_the_averages_only(self, directory, reads):
+        """The policy does not keep the LOCPOT as a row, so what was read is not kept."""
+        policy = ParsePolicy(volumetric_types=("CHGCAR",))
+        (source,) = sources(directory)
+        parsed = parse_calculation(source, ID_1, policy)
+        assert parsed.task.output.locpot is not None
+        # it is not held for a row that will not be made
+        assert parsed._locpot is None
+        rows = list(parsed.objects())
+        assert "local-potential" not in tables(rows)
+        assert self.locpot_reads(reads) == ["LOCPOT.gz"]
+
+    def test_the_row_only(self, directory, reads):
+        parsed, rows = parse(directory, policy=ParsePolicy(average_locpot=False))
+        assert "local-potential" in tables(rows)
+        assert parsed.task.output.locpot is None
+        assert self.locpot_reads(reads) == ["LOCPOT.gz"]
+
+    def test_neither(self, directory, reads):
+        policy = ParsePolicy(average_locpot=False, volumetric_types=("CHGCAR",))
+        parsed, rows = parse(directory, policy=policy)
+        assert parsed.task.output.locpot is None and self.locpot_reads(reads) == []
+
+    def test_a_skipped_calculation_keeps_nothing(self, directory, reads, mark):
+        mark(has_vasp_completed=TaskState.FAILED)
+        (source,) = sources(directory)
+        parsed = parse_calculation(source, ID_1)
+        assert parsed.outcome == ParseOutcome.SKIPPED_FAILED
+        assert parsed._locpot is None and list(parsed.objects()) == []
+        assert self.locpot_reads(reads) == ["LOCPOT.gz"]
+
+    def test_the_averages_are_those_of_the_calculation(self, directory):
+        """What `Calculation.from_vasp_files` gives, which reads the file for itself."""
+        parsed, _ = parse(directory)
+        (source,) = sources(directory)
+        calc, _ = Calculation.from_vasp_files(
+            directory,
+            "standard",
+            vasprun_file="vasprun.xml.gz",
+            outcar_file="OUTCAR.gz",
+            contcar_file="CONTCAR.gz",
+            volumetric_files=["LOCPOT.gz"],
+        )
+        assert parsed.task.output.locpot == calc.output.locpot
+        # the averages are of the spin-up potential
+        up = VOLUMETRIC_PARSERS["LOCPOT"].from_file(str(directory / "LOCPOT.gz"))
+        np.testing.assert_allclose(
+            parsed.task.output.locpot["0"], up.data["spin_up"].mean(axis=(1, 2))
+        )
+        assert not np.allclose(
+            parsed.task.output.locpot["0"], up.data["spin_down"].mean(axis=(1, 2))
+        )
+
+    def test_the_row_is_the_same_as_that_of_a_read_of_its_own(self, directory):
+        _, shared = parse(directory)
+        _, own = parse(directory, policy=ParsePolicy(average_locpot=False))
+        assert tables(shared) == tables(own)
+        a, b = dict(shared)["local-potential"], dict(own)["local-potential"]
+        assert a.model_dump() == b.model_dump()
+
+    def test_the_rows_come_in_their_usual_order(self, directory):
+        _, shared = parse(directory)
+        _, own = parse(directory, policy=ParsePolicy(average_locpot=False))
+        assert tables(shared) == tables(own)
+        assert tables(shared).index("total-dos") < tables(shared).index(
+            "local-potential"
+        )
+
+    def test_it_is_released_after_its_row_is_made(self, directory, monkeypatch):
+        refs: list[weakref.ref] = []
+        cls = VOLUMETRIC_PARSERS["LOCPOT"]
+
+        class Recording(cls):  # type: ignore[valid-type, misc]
+            @classmethod
+            def from_file(cls_, filename, *args, **kwargs):
+                pmg_object = super().from_file(filename, *args, **kwargs)
+                refs.append(weakref.ref(pmg_object))
+                return pmg_object
+
+        monkeypatch.setitem(VOLUMETRIC_PARSERS, "LOCPOT", Recording)
+        (source,) = sources(directory)
+        parsed = parse_calculation(source, ID_1)
+        # held until its row is made
+        gc.collect()
+        assert len(refs) == 1 and refs[0]() is not None
+        objects = parsed.objects()
+        for table, row in objects:
+            if table == "local-potential":
+                break
+        del row
+        gc.collect()
+        assert refs[0]() is None
+
+
 def test_rows_fit_their_tables(extract):
     """Every row can be written to the table it was made for, and read back."""
     directories = [extract("Si_uniform"), extract("Si_static")]

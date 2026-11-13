@@ -730,7 +730,10 @@ class CoreCalculationOutput(BaseModel):
     )
     is_metal: bool | None = Field(None, description="Whether the system is metallic")
     locpot: dict[str, list[float]] | None = Field(
-        None, description="Average of the local potential along the crystal axes"
+        None,
+        description="Average of the local potential along each crystal axis "
+        "(pymatgen's `VolumetricData.get_average_along_axis`). For a spin-polarized "
+        "calculation, this is the average of the spin-up potential.",
     )
     mag_density: float | None = Field(
         None,
