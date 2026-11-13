@@ -25,7 +25,7 @@ from emmet.core.vasp.calculation import Calculation
 from emmet.core.vasp.models import VOLUMETRIC_PARSERS, Pot
 from emmet.core.vasp.parse import (
     DEFAULT_VOLUMETRIC_TYPES,
-    MP_PRODUCTION,
+    DEFAULT_POLICY,
     NOT_PARSED_BY_DEFAULT_VOLUMETRIC_TYPES,
     DirectorySource,
     ParsePolicy,
@@ -68,7 +68,7 @@ def sources(directory):
     return DirectorySource.from_directory(directory)
 
 
-def parse(directory, identifier=ID_1, policy=MP_PRODUCTION, **kwargs):
+def parse(directory, identifier=ID_1, policy=DEFAULT_POLICY, **kwargs):
     """Parse the only calculation of a directory and all of its objects."""
     (source,) = sources(directory)
     parsed = parse_calculation(source, identifier, policy, **kwargs)
@@ -108,15 +108,17 @@ class TestPolicy:
             "NSCF Line",
             "SCF Line",
         }
-        assert MP_PRODUCTION.wants_dos(task_type) is wanted
-        assert MP_PRODUCTION.wants_bandstructure(task_type) is wanted
+        assert DEFAULT_POLICY.wants_dos(task_type) is wanted
+        assert DEFAULT_POLICY.wants_bandstructure(task_type) is wanted
 
     def test_mp_production(self):
-        assert MP_PRODUCTION == ParsePolicy()
-        assert MP_PRODUCTION.volumetric_types == DEFAULT_VOLUMETRIC_TYPES
-        assert not MP_PRODUCTION.include_failed
-        assert MP_PRODUCTION.require_known_task_type
-        assert MP_PRODUCTION.dos_projections and MP_PRODUCTION.bandstructure_projections
+        assert DEFAULT_POLICY == ParsePolicy()
+        assert DEFAULT_POLICY.volumetric_types == DEFAULT_VOLUMETRIC_TYPES
+        assert not DEFAULT_POLICY.include_failed
+        assert DEFAULT_POLICY.require_known_task_type
+        assert (
+            DEFAULT_POLICY.dos_projections and DEFAULT_POLICY.bandstructure_projections
+        )
         # every volumetric type except CHG, which duplicates the CHGCAR, and POT,
         # a restart file whose potential is in the LOCPOT
         not_parsed = {"CHG", "POT"}
@@ -124,12 +126,12 @@ class TestPolicy:
         assert not_parsed == set(NOT_PARSED_BY_DEFAULT_VOLUMETRIC_TYPES)
         assert set(DEFAULT_VOLUMETRIC_TYPES) == set(VOLUMETRIC_PARSERS) - not_parsed
         for file_type in VOLUMETRIC_PARSERS:
-            assert MP_PRODUCTION.wants_volumetric(file_type) is (
+            assert DEFAULT_POLICY.wants_volumetric(file_type) is (
                 file_type not in not_parsed
             )
         # the files which are the point of the potential and the charge density are
-        assert MP_PRODUCTION.wants_volumetric("LOCPOT")
-        assert MP_PRODUCTION.wants_volumetric("CHGCAR")
+        assert DEFAULT_POLICY.wants_volumetric("LOCPOT")
+        assert DEFAULT_POLICY.wants_volumetric("CHGCAR")
 
     def test_task_types_can_be_configured(self):
         everything = ParsePolicy(dos_task_types=None, bandstructure_task_types=None)
@@ -143,7 +145,7 @@ class TestPolicy:
         assert custom.wants_dos(TaskType.Deformation)
         assert not custom.wants_dos(TaskType.Static)
         # a calculation with no type is not any type
-        assert not MP_PRODUCTION.wants_dos(None) and everything.wants_dos(None)
+        assert not DEFAULT_POLICY.wants_dos(None) and everything.wants_dos(None)
 
     def test_volumetric_types(self):
         policy = ParsePolicy(volumetric_types=("chgcar", "LOCPOT"))
@@ -309,7 +311,7 @@ class TestParseCalculation:
             parse_calculation(source, "not an identifier!")
 
     def test_calculation_not_a_static_run_has_only_volumetric_data(self, extract):
-        """A structure optimization is not given electronic structure by MP's policy."""
+        """A structure optimization is not given electronic structure by the default policy."""
         directory = extract("Si_static")
         parsed, rows = parse(directory)
 
@@ -421,7 +423,7 @@ class TestParseCalculation:
             "magnetization",
         ]
 
-    def test_legacy_directory(self, extract):
+    def test_multi_calculation_directory(self, extract):
         """Each calculation of a directory is parsed by itself, and has its own row."""
         directory = extract("Si_old_double_relax")
         sources_ = sources(directory)
@@ -457,7 +459,7 @@ class TestParseCalculation:
         assert {m.dir_name for m in manifests} == {relax1.dir_name}
         assert [m.calc_suffix for m in manifests] == ["relax1", "relax2"]
 
-        # relaxations have no electronic structure in MP's policy, but can
+        # relaxations have no electronic structure in the default policy, but can
         for p in parsed:
             assert list(p.objects()) == []
         for source, ident in zip(sources_, (ID_1, ID_2)):
@@ -841,7 +843,7 @@ class TestCoreTaskDoc:
         for field in ("input", "output", "orig_inputs", "task_type", "run_type"):
             assert getattr(doc, field) == getattr(parsed.task, field)
 
-    def test_legacy_directory_needs_a_suffix(self, extract):
+    def test_multi_calculation_directory_needs_a_suffix(self, extract):
         directory = extract("Si_old_double_relax")
         with pytest.raises(ValueError, match="calc_suffix") as error:
             CoreTaskDoc.from_directory(directory)
@@ -1109,7 +1111,7 @@ class TestSCFLine:
     def test_the_calculations_own_kpoints_is_used(self, scf_line):
         """pymatgen looks for a file named KPOINTS; the one discovery chose may be named otherwise."""
         directory, _, rows = scf_line
-        # the files of a calculation which has a suffix, as in a legacy directory
+        # the files of a calculation which has a suffix, as in a multi-calculation directory
         for path in directory.iterdir():
             parts = path.name.split(".")
             if parts[0] in {

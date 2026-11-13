@@ -385,7 +385,7 @@ class CoreTaskDoc(_FinalStructure, BaseTaskDoc):
     """Calculation-level details about VASP calculations that power the Materials Project.
 
     A document describes a single calculation. A directory with several
-    calculations, such as the legacy double relaxations, has one document
+    calculations, such as a double relaxation with suffixed files, has one document
     for each, which share a `dir_name` and are told apart by `calc_suffix`.
     """
 

@@ -39,8 +39,8 @@ MODERN_FILES = [
     "vasprun.xml",
 ]
 
-# The files of a double-relax launcher from the legacy layout
-LEGACY_FILES = [
+# The files of a double-relax launcher with suffixed files
+DOUBLE_RELAX_FILES = [
     *[
         f"{name}.{suffix}.gz"
         for suffix in ("relax1", "relax2")
@@ -253,8 +253,8 @@ def test_modern_layout(tmp_path):
     assert "vasp.out" not in all_names
 
 
-def test_legacy_layout(tmp_path):
-    make_files(tmp_path, LEGACY_FILES)
+def test_suffixed_layout(tmp_path):
+    make_files(tmp_path, DOUBLE_RELAX_FILES)
 
     calcs = discover_calculations(tmp_path)
     assert [loc.modifier for loc in calcs] == ["relax1", "relax2"]
@@ -548,7 +548,7 @@ def test_symlinks_are_resolved_only_when_asked(tmp_path):
 
 class TestCompatibility:
     def test_find_vasp_files(self, tmp_path):
-        make_files(tmp_path, LEGACY_FILES)
+        make_files(tmp_path, DOUBLE_RELAX_FILES)
         task_files = _find_vasp_files(tmp_path)
         assert list(task_files) == ["relax1", "relax2"]
         assert (
@@ -623,7 +623,7 @@ class TestCompatibility:
         make_files(
             tmp_path / "launcher_1", ["INCAR", "vasprun.xml", "PARCHG", "POTCAR"]
         )
-        make_files(tmp_path / "launcher_2", LEGACY_FILES)
+        make_files(tmp_path / "launcher_2", DOUBLE_RELAX_FILES)
         calcs = recursive_discover_vasp_files(tmp_path)
         assert {(loc.path.name, loc.modifier) for loc in calcs} == {
             ("launcher_1", "standard"),
@@ -687,7 +687,7 @@ class TestCheckVaspFileName:
 
 class TestFilePaths:
     def test_all_files_of_a_calculation(self, tmp_path):
-        make_files(tmp_path, LEGACY_FILES)
+        make_files(tmp_path, DOUBLE_RELAX_FILES)
         relax1, relax2 = discover_calculations(tmp_path).values()
         paths_1, paths_2 = relax1.file_paths(), relax2.file_paths()
 
@@ -731,7 +731,7 @@ class TestFilePaths:
 class TestRecursiveDiscoverCalculations:
     def test_layouts(self, tmp_path):
         make_files(tmp_path / "launcher_1", ["INCAR", "vasprun.xml", "POTCAR"])
-        make_files(tmp_path / "launcher_2", LEGACY_FILES)
+        make_files(tmp_path / "launcher_2", DOUBLE_RELAX_FILES)
         make_files(tmp_path / "launcher_3" / "relax1", ["vasprun.xml.gz", "INCAR"])
         make_files(tmp_path / "launcher_3" / "relax2", ["vasprun.xml.gz", "INCAR"])
         calcs = recursive_discover_calculations(tmp_path)
@@ -776,7 +776,7 @@ class TestRecursiveDiscoverCalculations:
         make_files(tmp_path / "inputs_only", ["INCAR", "KPOINTS", "POSCAR", "POTCAR"])
         # a double relax which only ran once
         make_files(
-            tmp_path / "legacy",
+            tmp_path / "multi_calc",
             ["INCAR.relax1", "vasprun.xml.relax1", "INCAR.relax2", "POTCAR"],
         )
         # only workflow files
@@ -784,14 +784,14 @@ class TestRecursiveDiscoverCalculations:
 
         strict = recursive_discover_calculations(tmp_path)
         assert {(loc.path.name, loc.modifier) for loc in strict} == {
-            ("legacy", "relax1")
+            ("multi_calc", "relax1")
         }
 
         lenient = recursive_discover_calculations(tmp_path, require_vasprun=False)
         assert {(loc.path.name, loc.modifier) for loc in lenient} == {
             ("inputs_only", "standard"),
-            ("legacy", "relax1"),
-            ("legacy", "relax2"),
+            ("multi_calc", "relax1"),
+            ("multi_calc", "relax2"),
         }
 
     def test_unsuffixed_files_are_shared_with_suffixed_calculations(self, tmp_path):

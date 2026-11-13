@@ -97,7 +97,7 @@ class TestOptic:
         np.testing.assert_array_equal(stored.imaginary, imaginary)
 
     def test_the_values_are_per_cm(self, optic):
-        """An insulator absorbs up to 1e5 to 1e7 per cm: the legacy values were 3e10 times that."""
+        """An insulator absorbs up to 1e5 to 1e7 per cm."""
         coefficient = np.array(optic[0].task.output.optical_absorption_coeff)
         assert len(coefficient) == 2001 and coefficient[0] == 0.0
         assert 1e5 < coefficient.max() < 1e8
@@ -217,8 +217,8 @@ def directory_of(fixture):
 class TestSpinPolarizedLine:
     """A non-self-consistent band structure along a path, of a spin-polarized calculation with a gap.
 
-    It is one sodium atom in a cube of 7 A, which is close to an isolated atom with one unpaired
-    electron: its gap is that between atomic-like levels, and it has one site.
+    Calculation fixture is one sodium atom in a cube of 7 A, which is close to an isolated atom with
+    one unpaired electron: its gap is that between atomic-like levels, and it has one site.
     """
 
     def test_the_task_is_read_along_its_path(self, spin_line):
@@ -310,7 +310,7 @@ class TestSpinPolarizedLine:
 
 
 class TestMagneticStatic:
-    """A static calculation of EuO, magnetic, with every volumetric file the policy keeps."""
+    """Fixture is a static calculation of EuO, magnetic, with every volumetric file the policy keeps."""
 
     @pytest.fixture(scope="class")
     def references(self):
@@ -399,7 +399,7 @@ class TestMagneticStatic:
         )
 
     def test_the_all_electron_density_has_one_block(self, magnetic_static, references):
-        """AECCAR2 has the total density only, also for a calculation with -7 mu_B."""
+        """AECCAR2 has the total density only."""
         valence = magnetic_static[1]["valence-density"]
         assert list(references["aeccar2"].data) == ["total"]
         assert valence.spin_mode == SpinMode.UNPOLARIZED
@@ -480,7 +480,7 @@ class TestMagneticStatic:
 
 
 class TestHse:
-    """An HSE06 static on a uniform mesh."""
+    """Fixture is an HSE06 static on a uniform mesh."""
 
     def test_the_run_type(self, hse):
         parsed, rows = hse
@@ -618,7 +618,7 @@ class TestMagneticRelaxation:
 
 
 class TestTripleRelaxation:
-    """A legacy directory of three calculations: two relaxations, with a static between them."""
+    """Fixture is a directory of three calculations: two relaxations, with a static between them."""
 
     def test_the_calculations(self, triple):
         assert list(triple) == ["relax1", "relax2", "relax3"]
@@ -637,10 +637,7 @@ class TestTripleRelaxation:
         assert steps == {"relax1": 3, "relax2": 1, "relax3": 60}
 
     def test_the_scan_calculation_is_nonmagnetic(self, triple):
-        """Its moments are zero at all 60 steps, which is a value and not a missing one.
-
-        The moments of calculations that have them are tested on `magnetic_relax`.
-        """
+        """Its moments are zero at all 60 steps, which is a value and not a missing one."""
         trajectory = triple["relax3"][0].trajectory
         assert trajectory.magmoms is not None and len(trajectory.magmoms) == 60 * 7
         assert np.allclose(trajectory.magmoms, 0.0)

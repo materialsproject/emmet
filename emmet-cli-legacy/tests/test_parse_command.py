@@ -35,8 +35,8 @@ def in_process_cluster(monkeypatch):
 def github(monkeypatch, tmp_path):
     """The group logs in to GitHub with --run, and tracks the command in an issue.
 
-    That is how production is tracked, and is not what is tested here, so
-    GitHub is replaced with a mock, which is returned to see what was tracked.
+    Tracking is not what is tested here, so GitHub is replaced with a mock,
+    which is returned to see what was tracked.
     """
     from unittest.mock import MagicMock
 
@@ -196,8 +196,8 @@ def test_identifier_file(launchers, tmp_path):
         json.dumps(
             {
                 "launcher_single": "mp-10",
-                "launcher_legacy/relax1": "mp-20",
-                "launcher_legacy/relax2": "mp-21",
+                "launcher_double_relax/relax1": "mp-20",
+                "launcher_double_relax/relax2": "mp-21",
             }
         )
     )

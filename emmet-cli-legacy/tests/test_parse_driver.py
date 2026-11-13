@@ -52,7 +52,7 @@ class TestDiscovery:
             for p in discover_launchers(launchers)
         ]
         assert found == [
-            "block_1/launcher_legacy",
+            "block_1/launcher_double_relax",
             "block_1/launcher_single",
             "block_2/launcher_broken",
         ]
@@ -61,7 +61,7 @@ class TestDiscovery:
         def find(**kwargs):
             return [Path(p).name for p in discover_launchers(launchers, **kwargs)]
 
-        assert find(pattern="block_1") == ["launcher_legacy", "launcher_single"]
+        assert find(pattern="block_1") == ["launcher_double_relax", "launcher_single"]
         assert find(pattern="block_2/launcher_*") == ["launcher_broken"]
         assert find(pattern="block_*/launcher_s*") == ["launcher_single"]
         assert find(pattern="nothing_*") == []
@@ -204,8 +204,8 @@ class TestPlan:
             "aaaaaaae",
         ]
         assert [(Path(i.launcher).name, i.calc_suffix) for i in plan.items] == [
-            ("launcher_legacy", "relax1"),
-            ("launcher_legacy", "relax2"),
+            ("launcher_double_relax", "relax1"),
+            ("launcher_double_relax", "relax2"),
             ("launcher_single", "standard"),
             ("launcher_broken", "standard"),
         ]
@@ -230,20 +230,20 @@ class TestPlan:
         assert "no calculation with a vasprun.xml" in "\n".join(plan.report())
 
     def test_subdirectory_layout(self, launchers):
-        legacy = launchers / "block_1" / "launcher_legacy"
+        double_relax = launchers / "block_1" / "launcher_double_relax"
         for suffix in ("relax1", "relax2"):
-            (legacy / suffix).mkdir()
-            for path in list(legacy.glob(f"*.{suffix}.gz")):
+            (double_relax / suffix).mkdir()
+            for path in list(double_relax.glob(f"*.{suffix}.gz")):
                 stem = path.name.replace(f".{suffix}", "")
-                path.rename(legacy / suffix / stem)
-        plan = plan_parse([legacy])
+                path.rename(double_relax / suffix / stem)
+        plan = plan_parse([double_relax])
         assert plan.layouts == {"subdirectory": 1}
         assert [i.calc_suffix for i in plan.items] == ["relax1", "relax2"]
 
     def test_suffixes(self, launchers):
         plan = plan_parse(discover_launchers(launchers), suffixes=("relax2",))
-        legacy = [i for i in plan.items if "legacy" in i.launcher]
-        assert [i.calc_suffix for i in legacy] == ["relax2"]
+        double_relax = [i for i in plan.items if "double_relax" in i.launcher]
+        assert [i.calc_suffix for i in double_relax] == ["relax2"]
 
     def test_report(self, launchers):
         report = "\n".join(plan_parse(discover_launchers(launchers)).report())
@@ -283,16 +283,16 @@ class TestPlan:
                 discover_launchers(launchers),
                 task_ids={
                     "launcher_single": "mp-10",
-                    "launcher_legacy/relax1": "mp-20",
-                    "launcher_legacy/relax2": "mp-21",
+                    "launcher_double_relax/relax1": "mp-20",
+                    "launcher_double_relax/relax2": "mp-21",
                 },
             )
             assert {
                 (Path(i.launcher).name, i.calc_suffix): i.identifier for i in plan.items
             } == {
                 ("launcher_single", "standard"): normalize_identifier(10),
-                ("launcher_legacy", "relax1"): normalize_identifier(20),
-                ("launcher_legacy", "relax2"): normalize_identifier(21),
+                ("launcher_double_relax", "relax1"): normalize_identifier(20),
+                ("launcher_double_relax", "relax2"): normalize_identifier(21),
             }
             # launchers which are not in the file are not parsed
             assert plan.unassigned == ["launcher_broken/standard"]
@@ -371,11 +371,11 @@ class TestParseChunk:
             "aaaaaaad",
         ]
 
-        # the legacy launcher has a row for each calculation, which share a directory
-        legacy = [t for t in tasks if t["calc_suffix"] in ("relax1", "relax2")]
-        assert len({t["dir_name"] for t in legacy}) == 1
-        relax1 = next(t for t in legacy if t["calc_suffix"] == "relax1")
-        relax2 = next(t for t in legacy if t["calc_suffix"] == "relax2")
+        # the double-relax launcher has a row for each calculation, which share a directory
+        double_relax = [t for t in tasks if t["calc_suffix"] in ("relax1", "relax2")]
+        assert len({t["dir_name"] for t in double_relax}) == 1
+        relax1 = next(t for t in double_relax if t["calc_suffix"] == "relax1")
+        relax2 = next(t for t in double_relax if t["calc_suffix"] == "relax2")
         assert relax1["orig_inputs"] is not None and relax2["orig_inputs"] is None
 
         # the electronic structure of the NSCF calculation is split from its projections
@@ -420,7 +420,7 @@ class TestParseChunk:
     def test_statistics_are_written_for_the_columns_which_have_them(
         self, items, tmp_path
     ):
-        """Checked in the files: the 4 kB JSON strings of the tasks have no min and max."""
+        """Checked in the files: the JSON strings of the tasks have no min and max."""
         output = tmp_path / "out"
         parse_chunk(items, output)
 
@@ -451,7 +451,7 @@ class TestParseChunk:
         )
 
     def test_a_calculation_without_stress_is_parsed(self, launchers, tmp_path):
-        """ISIF = 0 calculations have no stress, and used to fail as a whole."""
+        """ISIF = 0 calculations have no stress, and are parsed."""
         with DataArchive.extract(TEST_FILES_DIR / "vasp" / "defect_run.json.gz") as d:
             shutil.copytree(d, launchers / "block_3" / "launcher_fixed_cell")
         items = plan_parse(discover_launchers(launchers)).items

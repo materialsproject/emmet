@@ -580,7 +580,7 @@ class TestStatistics:
         ]
 
     def test_a_json_string_has_no_statistics_when_written(self):
-        """The minimum and maximum of a string of 4 kB are kept in every page and in the footer."""
+        """The minimum and maximum of a string are kept in every page and in the footer."""
         spec = PARSED_TABLES["tasks"]
         schema = pa.schema(arrowize(spec.row_model))
         schema = pa.schema([schema.field(c) for c in spec.ordered_columns])

@@ -200,7 +200,7 @@ def test_to_core_task_doc(archive_of, unfinished_archive):
         archive_to_core_task_doc(unfinished_archive(), ID)
 
 
-def test_calculations_of_a_legacy_directory(tmp_path, extract):
+def test_calculations_of_a_multi_calculation_directory(tmp_path, extract):
     """Each calculation of a directory is archived, and read back, on its own."""
     directory = extract("Si_old_double_relax")
     archives = RawArchive.from_directory(directory)

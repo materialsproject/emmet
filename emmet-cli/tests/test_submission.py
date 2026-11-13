@@ -346,12 +346,12 @@ def test_shared_files_are_in_every_calculation(tmp_path):
 def test_calculations_without_output_are_found(tmp_path):
     make_files(tmp_path / "not_run", ["INCAR", "POSCAR", "KPOINTS", "POTCAR"])
     make_files(
-        tmp_path / "legacy", ["INCAR.relax1", "vasprun.xml.relax1", "INCAR.relax2"]
+        tmp_path / "multi_calc", ["INCAR.relax1", "vasprun.xml.relax1", "INCAR.relax2"]
     )
     submission = Submission.from_paths([tmp_path])
     assert {
         (locator.path.name, locator.modifier) for locator, _ in submission.calculations
-    } == {("not_run", "standard"), ("legacy", "relax1"), ("legacy", "relax2")}
+    } == {("not_run", "standard"), ("multi_calc", "relax1"), ("multi_calc", "relax2")}
 
 
 class TestAddingFiles:

@@ -115,8 +115,7 @@ be parsed by asking for them: `ParsePolicy(volumetric_types=(..., "CHG", "POT"))
 class ParsePolicy(BaseModel):
     """Which of the large objects of a calculation to parse.
 
-    The default is the policy of the Materials Project production pipeline,
-    which is `MP_PRODUCTION`:
+    The default is `DEFAULT_POLICY`:
 
     - Every kind of volumetric data except CHG and POT is kept, whatever the type of
         the calculation. A CHG file is the CHGCAR's charge density at a lower precision
@@ -210,8 +209,8 @@ class ParsePolicy(BaseModel):
         return ParseOutcome.PARSED  # type: ignore[return-value]
 
 
-MP_PRODUCTION = ParsePolicy()
-"""The policy of the Materials Project production pipeline."""
+DEFAULT_POLICY = ParsePolicy()
+"""The default policy: `ParsePolicy()`."""
 
 
 class CalculationSource(Protocol):
@@ -539,7 +538,7 @@ def _volumetric_files(files: CalculationFiles) -> list[tuple[str, Path]]:
 def parse_calculation(
     source: CalculationSource,
     identifier: str,
-    policy: ParsePolicy = MP_PRODUCTION,
+    policy: ParsePolicy = DEFAULT_POLICY,
     *,
     batch_id: str | None = None,
     tags: Sequence[str] = (),
@@ -562,7 +561,7 @@ def parse_calculation(
         the identifier of every row made from the calculation. It can be given in any
         of the forms of `IdentifierType`.
     policy : ParsePolicy
-        Which large objects to parse, `MP_PRODUCTION` by default.
+        Which large objects to parse, `DEFAULT_POLICY` by default.
     batch_id : str or None
         The batch identifier of the task.
     tags : sequence of str

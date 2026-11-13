@@ -1,4 +1,4 @@
-"""Test the schema of the tasks table: what CoreTaskDoc holds and no longer holds."""
+"""Test the schema of the tasks table: what CoreTaskDoc holds."""
 
 from types import SimpleNamespace
 
@@ -93,8 +93,8 @@ class TestFields:
             is None
         )
 
-    def test_old_documents_still_validate(self, task):
-        """Documents written with the fields that were dropped have them ignored."""
+    def test_fields_not_in_the_model_are_ignored(self, task):
+        """Fields that are not in the model are ignored."""
         old = {
             **task.model_dump(),
             "structure": task.output.structure.as_dict(),
@@ -137,7 +137,7 @@ class TestFields:
 
 class TestKpoints:
     def test_explicit_kpoints_are_floats(self):
-        """pymatgen has floats for explicit k-points; the column was integers, which truncated."""
+        """pymatgen has floats for explicit k-points."""
         annotation = TypedKpointsDict.__annotations__["kpoints"]
         assert annotation == list[list[float]]
 
@@ -275,7 +275,7 @@ class TestFrequencyDependentDielectric:
 
 
 def test_a_pymatgen_whose_coefficient_needs_a_density_block(monkeypatch):
-    """Some versions of pymatgen raise a KeyError for the coefficient of a vasprun with no dielectric function."""
+    """Before pymatgen-core 2026.10.31, `Vasprun.optical_absorption_coeff` raises a KeyError if the vasprun has no density-density block."""
 
     def older(self):
         data = self.dielectric_data

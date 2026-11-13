@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from emmet.archival.base import Archiver
 from emmet.archival.vasp.metadata import ArchiveMetadata
 from emmet.archival.vasp.raw import RawArchive
-from emmet.core.vasp.parse import MP_PRODUCTION, ParsePolicy, parse_calculation
+from emmet.core.vasp.parse import DEFAULT_POLICY, ParsePolicy, parse_calculation
 from emmet.core.vasp.utils import discover_calculations
 
 if TYPE_CHECKING:
@@ -148,7 +148,7 @@ class ArchiveSource:
 def parse_archive(
     archive_path: FSPathType,
     identifier: str,
-    policy: ParsePolicy = MP_PRODUCTION,
+    policy: ParsePolicy = DEFAULT_POLICY,
     *,
     group_key: str | None = None,
     zarr_store: MutableMapping | None = None,

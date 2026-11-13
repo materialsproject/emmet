@@ -225,7 +225,6 @@ def test_table_registry():
         "charge-density-chg",
         "local-potential-pot",
     }
-    # the names of the DOS and band structure tables are those in production
     assert (
         set(PARSED_TABLES)
         == {
@@ -262,7 +261,7 @@ def test_table_registry():
     )
     assert PARSED_TABLES["total-dos"].partition_by == ("run_type",)
     assert PARSED_TABLES["projected-dos"].partition_by == ("run_type",)
-    # the order is that of the tables in production: run type, then path convention
+    # partitioned by run type, then path convention
     for name in ("bandstructures", "projected-bandstructures"):
         assert PARSED_TABLES[name].partition_by == ("run_type", "path_convention")
     assert PARSED_TABLES["validation"].partition_by == ()

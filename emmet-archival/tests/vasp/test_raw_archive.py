@@ -115,7 +115,7 @@ def _file_metas(directory: Path, names: list[str]) -> list[FileMetadata]:
         ("INCAR.gz", "input/INCAR"),
         ("INCAR.orig", "input/INCAR.orig"),
         ("INCAR.orig.relax1.gz", "input/INCAR.orig"),
-        # an uncompressed vasprun.xml used to be dropped
+        # an uncompressed vasprun.xml is kept
         ("vasprun.xml", "output/vasprun.xml"),
         ("vasprun.xml.relax1.gz", "output/vasprun.xml"),
         ("vaspout.h5", "output/vaspout.h5"),
@@ -228,7 +228,7 @@ class TestFileChecks:
         assert set(archive.file_paths) == {"input/INCAR", "output/vasprun.xml"}
 
 
-def _legacy_directory(root: Path) -> Path:
+def _multi_calculation_directory(root: Path) -> Path:
     spec = '[{"titel": "PAW_PBE Si 05Jan2001"}]'
     return _make_files(
         root,
@@ -248,11 +248,11 @@ def _legacy_directory(root: Path) -> Path:
 
 
 def test_one_archive_per_calculation(tmp_path):
-    calc_dir = _legacy_directory(tmp_path)
+    calc_dir = _multi_calculation_directory(tmp_path)
     relax1, relax2 = RawArchive.from_directory(calc_dir)
     assert (relax1.calc_suffix, relax2.calc_suffix) == ("relax1", "relax2")
 
-    # every calculation keeps its own vasprun, they no longer overwrite each other
+    # every calculation keeps its own vasprun
     assert relax1.file_paths["output/vasprun.xml"].path.name == "vasprun.xml.relax1"
     assert relax2.file_paths["output/vasprun.xml"].path.name == "vasprun.xml.relax2"
 
@@ -289,7 +289,7 @@ def test_subdirectory_layout(tmp_path):
 
 
 def test_file_attributes_round_trip(tmp_path):
-    calc_dir = _legacy_directory(tmp_path / "calc")
+    calc_dir = _multi_calculation_directory(tmp_path / "calc")
     relax2 = RawArchive.from_directory(calc_dir)[1]
     archive_name = str(tmp_path / "archive.h5")
     relax2.to_archive(archive_name, archive_metadata())

@@ -59,7 +59,7 @@ class VolumetricLabel(ValueEnum):
         noncollinear CHGCAR-like file. pymatgen also adds a derived
         scalar `diff` to noncollinear data, so DIFF may accompany these.
     - SPIN_UP / SPIN_DOWN: the spin-resolved blocks of LOCPOT and ELFCAR files
-        (pymatgen >= 2026.10 no longer labels these total / diff).
+        (pymatgen >= 2026.10 labels these spin_up / spin_down).
     """
 
     TOTAL = "total"

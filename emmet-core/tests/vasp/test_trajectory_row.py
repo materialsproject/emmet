@@ -252,7 +252,7 @@ class TestIncompleteSteps:
 
 
 class TestFixedCell:
-    """ISIF = 0 calculations have no stress, which used to fail the whole calculation."""
+    """ISIF = 0 calculations have no stress, so the stress column is null."""
 
     def test_the_calculation_is_parsed(self, fixed_cell):
         parsed, vasprun, rows = fixed_cell
@@ -427,7 +427,7 @@ class TestConvergence:
     def test_energy_convergence_is_what_the_old_trajectory_computed(
         self, relax, kind, old_key
     ):
-        """The columns the website reads were |E_last - E| over the SCF steps of the run."""
+        """|E_last - E| over the SCF steps of the run."""
         parsed, _, _ = relax
         with DataArchive.extract(
             TEST_FILES_DIR / "vasp" / "r2scan_relax.json.gz"

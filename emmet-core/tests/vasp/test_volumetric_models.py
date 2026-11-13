@@ -164,7 +164,7 @@ class TestPot:
     def test_spin_polarized_blocks_are_spin_up_and_down(self, volumetric_files):
         path = volumetric_files["pot_collinear"]
 
-        # pymatgen's CHGCAR reader gets the physical meaning of the blocks wrong
+        # pymatgen's Chgcar reader labels the blocks of a POT `total` and `diff`
         assert set(Chgcar.from_file(path).data) == {"total", "diff"}
 
         pot = Pot.from_file(path)

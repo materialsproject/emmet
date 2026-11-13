@@ -44,7 +44,7 @@ import pyarrow.parquet as pq
 from emmet.core.arrow import arrowize
 from emmet.core.mpid import AlphaID
 from emmet.core.vasp.parse import (
-    MP_PRODUCTION,
+    DEFAULT_POLICY,
     DirectorySource,
     ParsedCalculation,
     ParsePolicy,
@@ -67,7 +67,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("emmet")
 
 ID_PADLEN = 8
-"""The length of identifiers, which is that of the tasks already in production."""
+"""The length of identifiers."""
 
 SMALL_TABLES = ("tasks", "trajectories", "manifest")
 """Tables of small rows, which are buffered. The other tables have a row group for each row."""
@@ -226,7 +226,7 @@ def max_identifier(
     manifest. This is 0, which is the identifier before the first, if there are none
     in either, or if neither exists. That is how a new collection of tasks is begun.
 
-    The identifiers must be AlphaIDs of the same length, as they are in production.
+    The identifiers must be AlphaIDs of the same length.
 
     Parameters
     -----------
@@ -574,7 +574,7 @@ def _write_calculation(
 def parse_chunk(
     items: Sequence[WorkItem],
     output_dir: str | Path,
-    policy: ParsePolicy = MP_PRODUCTION,
+    policy: ParsePolicy = DEFAULT_POLICY,
     run_id: str = "run",
     chunk_id: int = 0,
     batch_id: str | None = None,
@@ -706,7 +706,7 @@ def make_client(
 def run_parse(
     items: Sequence[WorkItem],
     output_dir: str | Path,
-    policy: ParsePolicy = MP_PRODUCTION,
+    policy: ParsePolicy = DEFAULT_POLICY,
     *,
     client: Client | None = None,
     chunk_size: int = 20,

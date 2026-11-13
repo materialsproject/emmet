@@ -4,12 +4,15 @@ from numpy.testing import assert_almost_equal
 from emmet.core.io.pymatgen import MigrationGraph
 
 from emmet.builders.utils import (
+    _parse_kpoints,
     chemsys_permutations,
     get_hop_cutoff,
     get_potcar_stats,
     maximal_spanning_non_intersecting_subsets,
 )
 from emmet.core.settings import EmmetSettings
+from emmet.core.testing_utils import DataArchive
+from emmet.core.vasp.parse import DirectorySource, parse_calculation
 
 
 def test_maximal_spanning_non_intersecting_subsets():
@@ -103,3 +106,21 @@ def test_get_potcar_stats(method: str, tmp_path):
             potcar_stats[calc_type] == new_potcar_stats[calc_type]
             for calc_type in potcar_stats
         )
+
+
+@pytest.mark.parametrize(
+    "fixture, num_kpoints",
+    [("magnetic_relax", 8 * 8 * 6), ("magnetic_static_volumetric", 22**3)],
+)
+def test_parse_kpoints_of_a_mesh(test_dir, fixture, num_kpoints):
+    """The number of k-points of a mesh is the product of the divisions in `input.kpoints`.
+
+    These calculations have no KPOINTS file: `input.kpoints` is the Gamma centered mesh
+    that VASP made of KSPACING.
+    """
+    with DataArchive.extract(test_dir / "vasp" / f"{fixture}.json.gz") as directory:
+        parsed = parse_calculation(
+            DirectorySource.from_directory(directory)[0], "aaaaaaab"
+        )
+    assert parsed.errors == []
+    assert _parse_kpoints(parsed.task) == num_kpoints

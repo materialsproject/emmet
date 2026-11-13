@@ -97,13 +97,7 @@ def _optional_datetime(v: Any) -> datetime | None:
 
 
 class ParsedRowHeader(BaseModel):
-    """Top-level columns shared by the rows of every table of large VASP objects.
-
-    These are stored on each row, rather than found by joining on the tasks
-    table, so that tables can be partitioned, sorted, and filtered on their own.
-    The calculation directory and suffix are not repeated here: they are
-    stored once in the tasks table, which can be joined on `identifier`.
-    """
+    """Top-level columns shared by the rows of every table of large VASP objects."""
 
     identifier: TaskIdentifierType = Field(
         description="The identifier of the calculation. Joins to the task_id "
@@ -503,8 +497,7 @@ class AllElectronDensityRow(VolumetricGridRow):
     `n(r) * V_cell`. Charge partitioning, e.g., a Bader analysis, uses the core
     density plus the valence density.
 
-    The files have a single block, also for a spin-polarized calculation (checked on
-    the AECCAR0, 1 and 2 of an ISPIN = 2 calculation with VASP 6.1.1), so such a row is
+    The files have a single block, also for a spin-polarized calculation, so such a row is
     `unpolarized`. `magnetization` is there for a second block, if a version of VASP
     writes one.
     """
@@ -1970,7 +1963,7 @@ class TableSpec:
         """The float32 leaves of the schema, by their path in a Parquet file.
 
         Floating point numbers compress better when written with the BYTE_STREAM_SPLIT
-        encoding than with the default one (24% smaller for a charge density).
+        encoding than with the default one.
         Requires pyarrow.
         """
         import pyarrow as pa
@@ -2002,10 +1995,7 @@ class TableSpec:
         """The leaves of the schema that Parquet statistics (min and max) are written for.
 
         Statistics are of use for the leaves that are filtered on, and not inside a list or
-        map, or a document held as a string. They were not for the rest: a value of a
-        list has no meaningful range, and the minimum and maximum of a JSON string of
-        4 kB is 8 kB in every page header and in the footer (it was 24% of the size of
-        a task row). Requires pyarrow.
+        map, or a document held as a string. Requires pyarrow.
         """
         json_columns = set(self.json_string_columns)
         return [
@@ -2023,8 +2013,7 @@ class TableSpec:
         BYTE_STREAM_SPLIT is used for the float32 columns, which needs dictionary encoding
         to be off for them: with both, the dictionary is used and BYTE_STREAM_SPLIT is
         silently ignored. A dictionary is no use to floating point numbers of any width,
-        which seldom repeat: it made a list of float64 energies 28% larger. It is used
-        for the rest. Statistics are only written for `statistics_columns`.
+        which seldom repeat. Statistics are only written for `statistics_columns`.
         Requires pyarrow.
         """
         import pyarrow as pa
@@ -2113,9 +2102,6 @@ PARSED_TABLES: dict[str, TableSpec] = {
     },
 }
 """The tables of the parsed tier of large objects, by name.
-
-The names of the DOS and band structure tables, and the order of their
-partitions, are those of the tables already in production.
 
 The volumetric files are in tables of the kind of data they hold, each with its own
 model (`ChargeDensityRow`, `PartialChargeDensityRow`, `AllElectronDensityRow`,

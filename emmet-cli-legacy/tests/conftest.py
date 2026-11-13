@@ -12,13 +12,13 @@ def launcher_template(tmp_path_factory) -> Path:
     """A tree of launchers, made once and copied for each test:
 
     block_1/launcher_single   one calculation, with no suffix (NSCF uniform)
-    block_1/launcher_legacy   a double relaxation: relax1 and relax2
+    block_1/launcher_double_relax   a double relaxation: relax1 and relax2
     block_2/launcher_broken   a calculation with no OUTCAR
     """
     root = tmp_path_factory.mktemp("template")
     for launcher, fixture in (
         ("block_1/launcher_single", "Si_uniform"),
-        ("block_1/launcher_legacy", "Si_old_double_relax"),
+        ("block_1/launcher_double_relax", "Si_old_double_relax"),
         ("block_2/launcher_broken", "Si_uniform"),
     ):
         with DataArchive.extract(TEST_FILES_DIR / "vasp" / f"{fixture}.json.gz") as d:

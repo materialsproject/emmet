@@ -28,7 +28,7 @@ DEFAULT_CALC_SUFFIXES: tuple[str, ...] = (
     *(f"relax{i + 1}" for i in range(9)),
     "static",
 )
-"""The suffixes of the calculations in a legacy multi-calculation directory.
+"""The suffixes of the calculations in a multi-calculation directory.
 
 The order matters: it is the order in which the calculations were run. The
 first calculation is the one which `.orig` input files describe, and the last
@@ -626,7 +626,7 @@ def discover_calculations(
     suffixes : sequence of str
         The suffixes of the calculations, in the order that the calculations
         were run, not in alphabetical order. The default is the known suffixes
-        used by MP, `DEFAULT_CALC_SUFFIXES`.
+        `DEFAULT_CALC_SUFFIXES`.
     require_vasprun : bool = True
         Whether a calculation needs a vasprun.xml to be returned. If False,
         calculations which have not been run, or did not finish, are returned
