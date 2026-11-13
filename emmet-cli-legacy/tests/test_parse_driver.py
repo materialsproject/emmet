@@ -23,6 +23,7 @@ from emmet.cli.legacy.parse_driver import (
     run_parse,
 )
 from emmet.core.testing_utils import TEST_FILES_DIR, DataArchive
+from emmet.core.arrow import arrowize
 from emmet.core.vasp.parse import ParsePolicy
 from emmet.core.vasp.parsed import PARSED_TABLES, ParseOutcome, TrajectoryRow
 
@@ -602,6 +603,191 @@ class TestParseChunk:
         before = snapshot(launchers)
         parse_chunk(items, tmp_path / "out")
         assert snapshot(launchers) == before
+
+
+class TestRealCalculations:
+    """Calculations of real runs, written to Parquet and read back from the files."""
+
+    @pytest.fixture(scope="class")
+    def written(self, tmp_path_factory):
+        root = tmp_path_factory.mktemp("real")
+        launchers = root / "launchers"
+        for name, fixture in (
+            ("block_1/launcher_static", "magnetic_static_volumetric"),
+            ("block_1/launcher_line", "spin_nscf_line"),
+            ("block_2/launcher_triple", "scan_triple_relax"),
+        ):
+            with DataArchive.extract(
+                TEST_FILES_DIR / "vasp" / f"{fixture}.json.gz"
+            ) as d:
+                shutil.copytree(d, launchers / name)
+        output = root / "out"
+        plan = plan_parse(discover_launchers(launchers))
+        manifests = parse_chunk(plan.items, output)
+        by_launcher = {Path(m.dir_name).name: [] for m in manifests}
+        for manifest in manifests:
+            by_launcher[Path(manifest.dir_name).name].append(manifest)
+        return output, by_launcher
+
+    def rows(self, output, table, launcher, written_by):
+        identifiers = {m.identifier for m in written_by[launcher]}
+        return [
+            r
+            for r in read_table(output, table).to_pylist()
+            if r.get("identifier", r.get("task_id")) in identifiers
+        ]
+
+    def test_everything_is_parsed(self, written):
+        _, by_launcher = written
+        assert {k: len(v) for k, v in by_launcher.items()} == {
+            "launcher_static": 1,
+            "launcher_line": 1,
+            "launcher_triple": 3,
+        }
+        for manifests in by_launcher.values():
+            for manifest in manifests:
+                assert manifest.outcome == ParseOutcome.PARSED
+                assert manifest.errors == []
+        assert set(by_launcher["launcher_static"][0].tables) == {
+            "total-dos",
+            "projected-dos",
+            "bandstructures",
+            "charge-density",
+            "valence-density",
+            "local-potential",
+            "electron-localization",
+        }
+
+    def test_the_files_have_the_schemas_and_encodings_of_their_tables(self, written):
+        output, _ = written
+        for table in output.iterdir():
+            spec = PARSED_TABLES[table.name]
+            expected = pa.schema(arrowize(spec.row_model))
+            expected = pa.schema([expected.field(n) for n in spec.ordered_columns])
+            options = spec.parquet_options
+            for file in table.glob("*.parquet"):
+                assert pq.read_schema(file).equals(expected, check_metadata=False)
+                group = pq.ParquetFile(file).metadata.row_group(0)
+                split = {
+                    group.column(i).path_in_schema
+                    for i in range(group.num_columns)
+                    if "BYTE_STREAM_SPLIT" in group.column(i).encodings
+                }
+                assert split == set(options["use_byte_stream_split"]), table.name
+        # the grids are among them, as are the bands
+        for table, column in (
+            ("charge-density", "total.list.element"),
+            ("charge-density", "magnetization.list.element"),
+            ("local-potential", "spin_up.list.element"),
+            ("electron-localization", "elf_down.list.element"),
+        ):
+            group = pq.ParquetFile(
+                next((output / table).glob("*.parquet"))
+            ).metadata.row_group(0)
+            encodings = {
+                group.column(i).path_in_schema: group.column(i).encodings
+                for i in range(group.num_columns)
+            }
+            assert "BYTE_STREAM_SPLIT" in encodings[column], (table, column)
+
+    def test_the_magnetization_is_that_of_the_outcar(self, written):
+        """What is read back from the file integrates to the total magnetization of the OUTCAR."""
+        output, by_launcher = written
+        (row,) = self.rows(output, "charge-density", "launcher_static", by_launcher)
+        cells = row["grid_shape"][0] * row["grid_shape"][1] * row["grid_shape"][2]
+        assert len(row["magnetization"]) == cells == 64**3
+        assert sum(row["magnetization"]) / cells == pytest.approx(-6.9975, abs=1e-3)
+        assert sum(row["total"]) / cells == pytest.approx(23.0, abs=1e-3)
+
+    def test_the_spins_of_the_files_are_in_their_columns(self, written):
+        """Up is up: what is in the file is pymatgen's block for each spin, which are not equal."""
+        from emmet.core.io.pymatgen import Elfcar, Locpot, Vasprun, Spin
+
+        output, by_launcher = written
+        (potential,) = self.rows(
+            output, "local-potential", "launcher_static", by_launcher
+        )
+        (elf,) = self.rows(
+            output, "electron-localization", "launcher_static", by_launcher
+        )
+        assert potential["spin_mode"] == elf["spin_mode"] == "collinear"
+        with DataArchive.extract(
+            TEST_FILES_DIR / "vasp" / "magnetic_static_volumetric.json.gz"
+        ) as d:
+            locpot = Locpot.from_file(d / "LOCPOT.gz")
+            elfcar = Elfcar.from_file(d / "ELFCAR.gz")
+            vasprun = Vasprun(
+                d / "vasprun.xml.gz",
+                parse_potcar_file=False,
+                parse_projected_eigen=False,
+            )
+        for column, spin in (("spin_up", "spin_up"), ("spin_down", "spin_down")):
+            assert potential[column] == pytest.approx(
+                locpot.data[spin].ravel().tolist(), rel=1e-6
+            )
+        for column, spin in (("elf_up", "spin_up"), ("elf_down", "spin_down")):
+            assert elf[column] == pytest.approx(
+                elfcar.data[spin].ravel().tolist(), rel=1e-6
+            )
+        assert (
+            max(
+                abs(u - d) for u, d in zip(potential["spin_up"], potential["spin_down"])
+            )
+            > 20
+        )
+        # and the density of states, which is up and down of the eigenvalues
+        (dos,) = self.rows(output, "total-dos", "launcher_static", by_launcher)
+        up = vasprun.complete_dos.densities[Spin.up]
+        down = vasprun.complete_dos.densities[Spin.down]
+        assert dos["density_up"] == pytest.approx(up.tolist(), rel=1e-5, abs=1e-6)
+        assert dos["density_down"] == pytest.approx(down.tolist(), rel=1e-5, abs=1e-6)
+        assert max(abs(u - d) for u, d in zip(up, down)) > 1.0
+
+    def test_the_path_of_the_line(self, written):
+        output, by_launcher = written
+        (bands,) = self.rows(output, "bandstructures", "launcher_line", by_launcher)
+        assert bands["path_convention"] == "setyawan_curtarolo"
+        assert bands["shape"] == [64, 75]
+        assert sum(label is not None for label in bands["kpoint_labels"]) == 12
+        (trajectory,) = self.rows(output, "trajectories", "launcher_line", by_launcher)
+        assert trajectory["magmoms"] == pytest.approx([0.114])
+
+    def test_the_calculations_of_a_directory(self, written):
+        output, by_launcher = written
+        tasks = {
+            t["calc_suffix"]: t
+            for t in self.rows(output, "tasks", "launcher_triple", by_launcher)
+        }
+        assert sorted(tasks) == ["relax1", "relax2", "relax3"]
+        assert len({t["dir_name"] for t in tasks.values()}) == 1
+        # the original inputs are those of the first calculation
+        assert tasks["relax1"]["orig_inputs"] is not None
+        assert tasks["relax2"]["orig_inputs"] is None
+        assert tasks["relax3"]["orig_inputs"] is None
+        # a trajectory is told from the others by its identifier, which the manifest has
+        # with the suffix: the trajectories table has no suffix of its own
+        suffix_of = {
+            m.identifier: m.calc_suffix for m in by_launcher["launcher_triple"]
+        }
+        steps = {
+            suffix_of[t["identifier"]]: len(t["energy"])
+            for t in self.rows(output, "trajectories", "launcher_triple", by_launcher)
+        }
+        assert steps == {"relax1": 3, "relax2": 1, "relax3": 60}
+        # the moments of relax1 are those of each of its steps in the OUTCAR, which change
+        by_suffix = {
+            suffix_of[t["identifier"]]: t
+            for t in self.rows(output, "trajectories", "launcher_triple", by_launcher)
+        }
+        assert by_suffix["relax1"]["total_magnetization"] == pytest.approx(
+            [-0.2593305, -0.2607894, -0.2605008]
+        )
+        assert by_suffix["relax1"]["magmoms"][:7] == pytest.approx(
+            [0.049, -0.044, -0.049, -0.044, -0.049, -0.044, -0.044]
+        )
+        assert by_suffix["relax1"]["magmoms"][7:14] == pytest.approx(
+            [0.045, -0.044, -0.049, -0.044, -0.049, -0.044, -0.044]
+        )
 
 
 class TestRun:
