@@ -12,7 +12,6 @@ from pydantic import TypeAdapter, ValidationError
 from emmet.core import ARROW_COMPATIBLE
 from emmet.core.io.pymatgen import Chgcar, CompleteDos, Dos, Vasprun
 from emmet.core.testing_utils import DataArchive, assert_nested_close
-from emmet.core.trajectory import RelaxTrajectory
 from emmet.core.types.typing import IdentifierType
 from emmet.core.vasp.calc_types.enums import RunType, TaskType
 from emmet.core.vasp.models import VOLUMETRIC_PARSERS
@@ -709,66 +708,6 @@ class TestManifest:
         assert restored[1].completed_at is None
 
 
-class TestTrajectoryRow:
-    @pytest.fixture(scope="class")
-    def trajectory(self, test_dir):
-        from emmet.core.vasp.parse import DirectorySource, parse_calculation
-
-        with DataArchive.extract(
-            test_dir / "vasp" / "Si_old_double_relax.json.gz"
-        ) as d:
-            source = DirectorySource.from_directory(d)[0]
-            parsed = parse_calculation(source, "aaaaaaab")
-        return parsed.trajectory
-
-    def test_from_trajectory(self, trajectory):
-        row = TrajectoryRow.from_trajectory(trajectory)
-        assert row.identifier == "aaaaaaab"
-        assert row.run_type == trajectory.run_type
-        assert row.has_full_output == trajectory.has_full_output
-        convergence = trajectory.convergence_data
-        for name in ("energy", "e_fr_energy", "e_wo_entrp", "forces"):
-            assert getattr(row, f"{name}_convergence") == convergence.get(name)
-        assert row.energy == trajectory.energy
-        assert row.num_ionic_steps == trajectory.num_ionic_steps
-
-    def test_columns(self):
-        spec = PARSED_TABLES["trajectories"]
-        columns = spec.ordered_columns
-        # the order of the trajectories already in production
-        assert columns[:4] == ["has_full_output", "identifier", "run_type", "task_type"]
-        assert columns[4:] == sorted(columns[4:])
-        assert set(columns) == spec.columns
-        assert {
-            "energy_convergence",
-            "e_fr_energy_convergence",
-            "e_wo_entrp_convergence",
-            "forces_convergence",
-            "has_full_output",
-        } <= set(columns)
-        # the properties which are not stored are not columns
-        assert "ionic_step_properties" not in columns
-
-    @pytest.mark.skipif(
-        not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
-    )
-    def test_arrow_roundtrip(self, trajectory):
-        spec = PARSED_TABLES["trajectories"]
-        schema = pa.schema(arrowize(TrajectoryRow))
-        row = TrajectoryRow.from_trajectory(trajectory)
-        table = pa.Table.from_pylist([row.model_dump()], schema=schema).select(
-            spec.ordered_columns
-        )
-        assert table.column_names == spec.ordered_columns
-        assert table["has_full_output"].type == pa.bool_()
-        assert table["energy_convergence"].type == pa.list_(pa.float64())
-        # trajectories are not downcast to float32
-        assert table["energy"].type == pa.list_(pa.float64())
-
-        restored = TrajectoryRow(**table.to_pylist(maps_as_pydicts="strict")[0])
-        assert_nested_close(restored, row)
-
-
 @pytest.mark.skipif(
     not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
 )
@@ -791,10 +730,9 @@ def test_tasks_table(test_dir):
 
 
 def test_importing_the_tables_does_not_warn():
-    """The trajectory row stores properties of its parent as columns, which pydantic warns about.
+    """The models of the tables do not raise warnings when they are defined.
 
-    That is intended, and is silenced for that field only. This runs in a new
-    interpreter, as the warning is only raised when the class is defined.
+    This runs in a new interpreter, as pydantic warns when a class is defined.
     """
     result = subprocess.run(
         [
@@ -808,12 +746,3 @@ def test_importing_the_tables_does_not_warn():
         text=True,
     )
     assert result.returncode == 0, result.stderr
-    assert "shadows an attribute" not in result.stderr
-
-
-def test_the_row_stores_the_value_of_the_property():
-    """The field shadows RelaxTrajectory.has_full_output, and the two must agree."""
-    assert "has_full_output" in TrajectoryRow.model_fields
-    assert isinstance(
-        RelaxTrajectory.__dict__["has_full_output"], property
-    ), "the parent defines it as a property: this is the shadowing which is silenced"

@@ -45,7 +45,6 @@ and not by dumping an existing model and validating that dump again.
 
 from __future__ import annotations
 
-import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Annotated, ClassVar, Literal
@@ -56,7 +55,6 @@ from pydantic import BaseModel, BeforeValidator, Field, PrivateAttr, model_valid
 
 from emmet.core.band_theory import BSPathType, _get_site_indices, infer_path
 from emmet.core.tasks import CoreTaskDoc
-from emmet.core.trajectory import RelaxTrajectory
 from emmet.core.types.enums import ValueEnum
 from emmet.core.types.typing import TaskIdentifierType
 from emmet.core.utils import convert_datetime, utcnow
@@ -74,8 +72,9 @@ from emmet.core.io.pymatgen import (
     OrbitalType,
     Spin,
     Structure,
+    Trajectory as PmgTrajectory,
 )
-from emmet.core.types.arrow_annotations import Float32Grid, Float32List
+from emmet.core.types.arrow_annotations import Float32Grid, Float32List, Float64Grid
 from emmet.core.vasp.models import volumetric_file_type
 
 if TYPE_CHECKING:
@@ -222,7 +221,10 @@ class VolumetricGridRow(ParsedRowHeader, _HasStructure):
     )
     grid_shape: list[int] = Field(
         description="The number of grid points along each lattice vector: "
-        "(NGXF, NGYF, NGZF), the fine FFT grid. All blocks of a file have it."
+        "(NGXF, NGYF, NGZF) of the file, which is the fine FFT grid for the densities and "
+        "the potential. The ELFCAR is written on the coarse grid (NGX, NGY, NGZ), so "
+        "its grid is not that of the other files of the calculation. All blocks of a "
+        "file have it."
     )
     lattice: list[list[float]] = Field(
         description="The lattice vectors a, b, c, as rows, in Angstrom."
@@ -500,6 +502,11 @@ class AllElectronDensityRow(VolumetricGridRow):
     relaxation, their structures can differ. The values have the units of a CHGCAR:
     `n(r) * V_cell`. Charge partitioning, e.g., a Bader analysis, uses the core
     density plus the valence density.
+
+    The files have a single block, also for a spin-polarized calculation (checked on
+    the AECCAR0, 1 and 2 of an ISPIN = 2 calculation with VASP 6.1.1), so such a row is
+    `unpolarized`. `magnetization` is there for a second block, if a version of VASP
+    writes one.
     """
 
     BLOCK_COLUMNS: ClassVar[tuple[str, ...]] = ("total", "magnetization")
@@ -1462,57 +1469,342 @@ class ValidationRow(ParsedRowHeader):
     )
 
 
-# The convergence data is computed by RelaxTrajectory, as properties, and is stored as
-# columns of the trajectory table by the row. That the row's fields have the names of
-# those properties is intended, and pydantic warns about it. Only that is silenced.
-with warnings.catch_warnings():
-    warnings.filterwarnings(
-        "ignore",
-        message=r'Field name "has_full_output" in "TrajectoryRow" shadows an attribute',
-        category=UserWarning,
+class TrajectoryRow(ParsedRowHeader):
+    """A row of the trajectory table: the ionic steps of one calculation.
+
+    The arrays are flat lists of float64 in C order, with their shape implied by
+    `num_ionic_steps` and the number of sites, `len(species)`. They are doubles because
+    the energies of a trajectory have to be told apart at the precision of the
+    convergence of a calculation, which float32 does not have.
+
+    A quantity of the ionic steps is stored only if every step has it, and is null
+    otherwise (for example, a calculation that does not relax the cell has no stress).
+    Energies are in eV, forces in eV/Angstrom, stress in kbar, and moments in mu_B.
+
+    The energies are VASP's: `energy` is the energy extrapolated to zero smearing (the
+    `e_0_energy` of the vasprun.xml, and what a task reports), `free_energy` is the free
+    energy the forces derive from (`e_fr_energy`), and `energy_wo_entropy` is the energy
+    without the entropy term (`e_wo_entrp`). Each has a value for every electronic
+    (SCF) step too, in `scf_energy`, `scf_free_energy` and `scf_energy_wo_entropy`, which
+    are all of the steps one after the other: split them with `num_scf_steps`.
+
+    `magmoms` are the moments of the atoms, and `total_magnetization` is that of the
+    cell, at the end of each step. The moments are projected on spheres around the atoms,
+    so do not add up to the total. They are only in the OUTCAR, which has them
+    for LORBIT >= 10 or RWIGS (and not for an unpolarized calculation).
+    """
+
+    spin_mode: SpinMode = Field(
+        description="How the spin is represented. `collinear` has the moments with one "
+        "value for each atom, `noncollinear` with three (x, y, z)."
     )
+    species: list[str] = Field(description="The element of each site.")
+    num_ionic_steps: int = Field(description="The number of ionic steps.")
+    lattice: Float64Grid = Field(
+        description="The lattice vectors of each step, as rows, in Angstrom: "
+        "`(step, 3, 3)`. For every step, also if the cell did not change."
+    )
+    frac_coords: Float64Grid = Field(
+        description="The fractional coordinates of the sites at each step: "
+        "`(step, site, 3)`."
+    )
+    forces: Float64Grid | None = Field(
+        None,
+        description="The Cartesian forces on the sites at each step: `(step, site, 3)`.",
+    )
+    stress: Float64Grid | None = Field(
+        None, description="The stress tensor at each step: `(step, 3, 3)`."
+    )
+    selective_dynamics: list[list[bool]] | None = Field(
+        None,
+        description="Whether each site is free to move along each axis `(site, 3)`, if "
+        "the calculation fixed any. The forces of fixed components are not zero.",
+    )
+    energy: list[float] | None = Field(
+        None,
+        description="The energy at each ionic step, extrapolated to zero smearing.",
+    )
+    free_energy: list[float] | None = Field(
+        None, description="The free energy at each ionic step."
+    )
+    energy_wo_entropy: list[float] | None = Field(
+        None, description="The energy at each ionic step without the entropy term."
+    )
+    max_force: list[float] | None = Field(
+        None,
+        description="The largest force on an atom at each ionic step, as the norm of its "
+        "force. Components fixed by selective dynamics are left out, as VASP does "
+        "when it tests the convergence of a relaxation (EDIFFG < 0).",
+    )
+    num_scf_steps: list[int] = Field(
+        description="The number of electronic (SCF) steps of each ionic step."
+    )
+    scf_energy: list[float] | None = Field(
+        None, description="`energy` at each SCF step of every ionic step."
+    )
+    scf_free_energy: list[float] | None = Field(
+        None, description="`free_energy` at each SCF step of every ionic step."
+    )
+    scf_energy_wo_entropy: list[float] | None = Field(
+        None, description="`energy_wo_entropy` at each SCF step of every ionic step."
+    )
+    total_magnetization: list[float] | None = Field(
+        None,
+        description="The total magnetization of the cell at each ionic step, from the "
+        "OUTCAR: `(step,)`, or `(step, 3)` for a noncollinear calculation.",
+    )
+    magmoms: Float64Grid | None = Field(
+        None,
+        description="The magnetic moment of every atom at each ionic step, from the "
+        "OUTCAR: `(step, site)`, or `(step, site, 3)` for a noncollinear calculation.",
+    )
+    ediff: float | None = Field(None, description="The EDIFF tag.")
+    ediffg: float | None = Field(None, description="The EDIFFG tag.")
+    nelm: int | None = Field(None, description="The NELM tag.")
+    nsw: int | None = Field(None, description="The NSW tag.")
+    ibrion: int | None = Field(None, description="The IBRION tag.")
+    isif: int | None = Field(None, description="The ISIF tag.")
+    potim: float | None = Field(None, description="The POTIM tag.")
 
-    class TrajectoryRow(RelaxTrajectory):
-        """A row of the trajectory table: a trajectory with its convergence data.
-
-        The convergence data of a trajectory is computed from it, and computed
-        properties are not columns of a table, so they are stored here. They are
-        columns of the trajectories already in production, which are partitioned
-        by run type.
-        """
-
-        has_full_output: bool = Field(
-            description="Whether the trajectory has all structures and SCF convergence data."
-        )
-        energy_convergence: list[float] | None = Field(
-            None, description="Convergence of the energy, see `convergence_data`."
-        )
-        e_fr_energy_convergence: list[float] | None = Field(
-            None, description="Convergence of the free energy, see `convergence_data`."
-        )
-        e_wo_entrp_convergence: list[float] | None = Field(
-            None,
-            description="Convergence of the energy without entropy, see `convergence_data`.",
-        )
-        forces_convergence: list[float] | None = Field(
-            None, description="Convergence of the forces, see `convergence_data`."
-        )
-
-        @classmethod
-        def from_trajectory(cls, trajectory: RelaxTrajectory) -> TrajectoryRow:
-            """Make a row from a trajectory, computing its convergence data."""
-            values = {
-                name: getattr(trajectory, name) for name in RelaxTrajectory.model_fields
-            }
-            convergence = trajectory.convergence_data
-            return cls(
-                **values,
-                has_full_output=trajectory.has_full_output,
-                **{
-                    f"{name}_convergence": convergence.get(name)
-                    for name in ("energy", "e_fr_energy", "e_wo_entrp", "forces")
-                },
+    @model_validator(mode="after")
+    def check_shapes(self) -> Self:
+        steps, sites = self.num_ionic_steps, len(self.species)
+        sizes = {
+            "lattice": steps * 9,
+            "frac_coords": steps * sites * 3,
+            "forces": steps * sites * 3,
+            "stress": steps * 9,
+            "magmoms": steps
+            * sites
+            * (3 if self.spin_mode == SpinMode.NONCOLLINEAR else 1),
+        }
+        for name, size in sizes.items():
+            _same_length(
+                self, [name], size, f"the size of {steps} steps of {sites} sites"
             )
+        _same_length(
+            self,
+            [
+                "energy",
+                "free_energy",
+                "energy_wo_entropy",
+                "max_force",
+                "num_scf_steps",
+            ],
+            steps,
+            "the number of ionic steps",
+        )
+        _same_length(
+            self,
+            ["total_magnetization"],
+            steps * (3 if self.spin_mode == SpinMode.NONCOLLINEAR else 1),
+            "the size of the total magnetization of every step",
+        )
+        scf_steps = sum(self.num_scf_steps)
+        _same_length(
+            self,
+            ["scf_energy", "scf_free_energy", "scf_energy_wo_entropy"],
+            scf_steps,
+            "the number of SCF steps",
+        )
+        return self
+
+    @classmethod
+    def from_ionic_steps(
+        cls,
+        ionic_steps: Sequence[Any],
+        parameters: Any = None,
+        magnetization: Any = None,
+        selective_dynamics: Any = None,
+        **kwargs: Any,
+    ) -> TrajectoryRow:
+        """Make a row from the ionic steps of a calculation.
+
+        Parameters
+        -----------
+        ionic_steps : sequence of IonicStep
+            The `ionic_steps` of the output of a `Calculation`, which have a structure.
+        parameters : dict or None
+            The parameters of the calculation, `Vasprun.parameters`.
+        magnetization : StepMagnetization or None
+            What the OUTCAR has for each ionic step, see `read_step_magnetization`. It
+            is ignored if it does not have an item for each ionic step.
+        selective_dynamics : array-like of bool or None
+            Whether each site is free to move along each axis, `(site, 3)`, if the
+            calculation fixed any. By default it is that of the structure of the
+            first ionic step, which the vasprun.xml does not always have.
+        kwargs
+            The columns of the header.
+        """
+        if not ionic_steps:
+            raise ValueError("The calculation has no ionic steps.")
+        structures = [step.structure for step in ionic_steps]
+        if any(structure is None for structure in structures):
+            raise ValueError("An ionic step has no structure.")
+        species = [site.species_string for site in structures[0]]
+        if any([s.species_string for s in st] != species for st in structures):
+            raise ValueError("The sites of the ionic steps are not the same.")
+        steps = len(ionic_steps)
+
+        parameters = parameters or {}
+        spin_mode = (
+            SpinMode.NONCOLLINEAR
+            if parameters.get("LNONCOLLINEAR")
+            else (
+                SpinMode.COLLINEAR
+                if parameters.get("ISPIN") == 2
+                else SpinMode.UNPOLARIZED
+            )
+        )
+
+        def per_step(name: str) -> list[Any] | None:
+            values = [getattr(step, name, None) for step in ionic_steps]
+            return None if any(value is None for value in values) else values
+
+        forces = per_step("forces")
+        stress = per_step("stress")
+        dynamics = (
+            selective_dynamics
+            if selective_dynamics is not None
+            else structures[0].site_properties.get("selective_dynamics")
+        )
+        free = np.asarray(dynamics, dtype=bool) if dynamics is not None else None
+
+        max_force = None
+        if forces is not None:
+            force_arrays = np.asarray(forces, dtype=float)
+            if free is not None:
+                force_arrays = np.where(free[None], force_arrays, 0.0)
+            max_force = np.linalg.norm(force_arrays, axis=2).max(axis=1).tolist()
+
+        def scf(name: str) -> list[float] | None:
+            values = [
+                getattr(estep, name)
+                for step in ionic_steps
+                for estep in (step.electronic_steps or [])
+            ]
+            return None if not values or any(v is None for v in values) else values
+
+        columns: dict[str, Any] = {
+            "spin_mode": spin_mode,
+            "species": species,
+            "num_ionic_steps": steps,
+            "lattice": np.asarray([s.lattice.matrix for s in structures]).ravel(),
+            "frac_coords": np.asarray([s.frac_coords for s in structures]).ravel(),
+            "forces": None if forces is None else np.asarray(forces, float).ravel(),
+            "stress": None if stress is None else np.asarray(stress, float).ravel(),
+            "selective_dynamics": None if free is None else free.tolist(),
+            "energy": per_step("e_0_energy"),
+            "free_energy": per_step("e_fr_energy"),
+            "energy_wo_entropy": per_step("e_wo_entrp"),
+            "max_force": max_force,
+            "num_scf_steps": [len(step.electronic_steps or []) for step in ionic_steps],
+            "scf_energy": scf("e_0_energy"),
+            "scf_free_energy": scf("e_fr_energy"),
+            "scf_energy_wo_entropy": scf("e_wo_entrp"),
+            **{
+                column: kind(parameters[key])
+                for column, (key, kind) in _TRAJECTORY_SETTINGS.items()
+                if parameters.get(key) is not None
+            },
+        }
+        if magnetization is not None and magnetization.num_ionic_steps == steps:
+            if all(m is not None for m in magnetization.magmoms):
+                columns["magmoms"] = np.asarray(magnetization.magmoms, float).ravel()
+            if all(t is not None for t in magnetization.total):
+                columns["total_magnetization"] = (
+                    np.asarray(magnetization.total, float).ravel().tolist()
+                )
+        return cls(**columns, **kwargs)
+
+    def _array(self, name: str, *shape: int) -> Any:
+        values = getattr(self, name)
+        return None if values is None else np.asarray(values, float).reshape(shape)
+
+    @property
+    def structures(self) -> list[Structure]:
+        """The structure of each ionic step."""
+        steps, sites = self.num_ionic_steps, len(self.species)
+        lattice = self._array("lattice", steps, 3, 3)
+        coords = self._array("frac_coords", steps, sites, 3)
+        magmoms = self._array(
+            "magmoms",
+            *(
+                (steps, sites, 3)
+                if self.spin_mode == SpinMode.NONCOLLINEAR
+                else (steps, sites)
+            ),
+        )
+        properties: list[dict[str, Any]] = []
+        for i in range(steps):
+            props: dict[str, Any] = {}
+            if magmoms is not None:
+                props["magmom"] = magmoms[i].tolist()
+            if self.selective_dynamics is not None:
+                props["selective_dynamics"] = self.selective_dynamics
+            properties.append(props)
+        return [
+            Structure(
+                lattice[i], self.species, coords[i], site_properties=properties[i]
+            )
+            for i in range(steps)
+        ]
+
+    def energy_convergence(self, kind: str = "energy") -> list[float] | None:
+        """How far the energy of each step is from that of the last, in eV.
+
+        This is `abs(E_last - E)` for the energy of every SCF step of the calculation
+        in a row, which is how the convergence of the calculation is shown. If a row
+        has no SCF steps, it is for each ionic step.
+
+        Parameters
+        -----------
+        kind : str
+            `energy`, `free_energy` or `energy_wo_entropy`.
+
+        Returns
+        -----------
+        list of float or None
+            None if the row does not have that energy.
+        """
+        if kind not in ("energy", "free_energy", "energy_wo_entropy"):
+            raise ValueError(f"Unknown kind of energy: {kind}.")
+        values = getattr(self, f"scf_{kind}") or getattr(self, kind)
+        if values is None:
+            return None
+        values = np.asarray(values, dtype=float)
+        return np.abs(values[-1] - values).tolist()
+
+    def to_pmg(self) -> Any:
+        """Make a pymatgen Trajectory, with the energies, forces and stress of each step."""
+        steps, sites = self.num_ionic_steps, len(self.species)
+        frame_properties: list[dict[str, Any]] = [{} for _ in range(steps)]
+        forces = self._array("forces", steps, sites, 3)
+        stress = self._array("stress", steps, 3, 3)
+        for name, array in (("forces", forces), ("stress", stress)):
+            if array is not None:
+                for i in range(steps):
+                    frame_properties[i][name] = array[i].tolist()
+        for name in ("energy", "free_energy", "energy_wo_entropy"):
+            if (values := getattr(self, name)) is not None:
+                for i in range(steps):
+                    frame_properties[i][name] = values[i]
+        return PmgTrajectory.from_structures(
+            self.structures, constant_lattice=False, frame_properties=frame_properties
+        )
+
+
+_TRAJECTORY_SETTINGS = {
+    "ediff": ("EDIFF", float),
+    "ediffg": ("EDIFFG", float),
+    "nelm": ("NELM", int),
+    "nsw": ("NSW", int),
+    "ibrion": ("IBRION", int),
+    "isif": ("ISIF", int),
+    "potim": ("POTIM", float),
+}
+"""The columns that describe how the trajectory was calculated, by the
+VASP parameter they come from, and its type."""
 
 
 class ParseOutcome(ValueEnum):
@@ -1565,6 +1857,48 @@ class ManifestRow(BaseModel):
     errors: list[str] = Field(
         [], description="The problems which occurred while parsing the calculation."
     )
+
+
+def _json_string_paths(
+    info: Any, path: str, type_overrides: dict[str, Any] | None = None
+) -> list[str]:
+    """The paths of the fields which are JSON documents as strings, in a field of a model.
+
+    `info` is the pydantic `FieldInfo`. The paths are those of a Parquet file.
+    """
+    from pydantic.functional_serializers import WrapSerializer
+
+    from emmet.core.types.introspection import Kind, classify
+    from emmet.core.types.typing import _ser_json_like
+
+    name = path.rsplit(".", 1)[-1]
+    if (type_overrides or {}).get(name) is str:
+        return [path]
+    if any(
+        isinstance(meta, WrapSerializer) and meta.func is _ser_json_like
+        for meta in info.metadata
+    ):
+        return [path]
+
+    shape = classify(info.annotation)
+    suffix = ""
+    while shape.kind in (Kind.ANNOTATED, Kind.UNION, Kind.SEQUENCE):
+        if len(shape.args) != 1:
+            return []
+        if shape.kind is Kind.SEQUENCE:
+            suffix += ".list.element"
+        shape = shape.child(shape.args[0])
+    if shape.kind is not Kind.MODEL:
+        return []
+    overrides = getattr(shape.origin, "type_overrides", {})
+    return [
+        found
+        for child_name, child in shape.origin.model_fields.items()
+        if not child.exclude
+        for found in _json_string_paths(
+            child, f"{path}{suffix}.{child_name}", overrides
+        )
+    ]
 
 
 @dataclass(frozen=True)
@@ -1646,6 +1980,43 @@ class TableSpec:
         ]
 
     @property
+    def json_string_columns(self) -> list[str]:
+        """The columns which hold a JSON document as a string, by their path in a Parquet file.
+
+        These are fields declared as `JsonDictType`/`JsonListType`, or given a `str`
+        type with `type_override`, anywhere in the row model.
+        """
+        return [
+            path
+            for name in self.ordered_columns
+            if name in self.row_model.model_fields
+            for path in _json_string_paths(
+                self.row_model.model_fields[name],
+                name,
+                getattr(self.row_model, "type_overrides", {}),
+            )
+        ]
+
+    @property
+    def statistics_columns(self) -> list[str]:
+        """The leaves of the schema that Parquet statistics (min and max) are written for.
+
+        Statistics are of use for the leaves that are filtered on, and not inside a list or
+        map, or a document held as a string. They were not for the rest: a value of a
+        list has no meaningful range, and the minimum and maximum of a JSON string of
+        4 kB is 8 kB in every page header and in the footer (it was 24% of the size of
+        a task row). Requires pyarrow.
+        """
+        json_columns = set(self.json_string_columns)
+        return [
+            path
+            for path, _ in self._leaf_columns()
+            if ".list." not in path
+            and ".key_value." not in path
+            and path not in json_columns
+        ]
+
+    @property
     def parquet_options(self) -> dict[str, Any]:
         """Keyword arguments for a pyarrow Parquet writer that encode the columns well.
 
@@ -1653,7 +2024,8 @@ class TableSpec:
         to be off for them: with both, the dictionary is used and BYTE_STREAM_SPLIT is
         silently ignored. A dictionary is no use to floating point numbers of any width,
         which seldom repeat: it made a list of float64 energies 28% larger. It is used
-        for the rest. Requires pyarrow.
+        for the rest. Statistics are only written for `statistics_columns`.
+        Requires pyarrow.
         """
         import pyarrow as pa
 
@@ -1665,6 +2037,7 @@ class TableSpec:
             "use_dictionary": [
                 path for path, dtype in leaves if not pa.types.is_floating(dtype)
             ],
+            "write_statistics": self.statistics_columns,
         }
 
     @property
@@ -1684,18 +2057,6 @@ class TableSpec:
 
 
 _VOLUMETRIC_PARTITION = ("year", "month", "day", "run_type")
-
-# the order of the columns of the trajectories in production: the columns they are
-# found by first, then the rest alphabetically
-_TRAJECTORY_PRIORITY = ("has_full_output", "identifier", "run_type", "task_type")
-_TRAJECTORY_COLUMNS = (
-    *_TRAJECTORY_PRIORITY,
-    *sorted(
-        name
-        for name, field in TrajectoryRow.model_fields.items()
-        if name not in _TRAJECTORY_PRIORITY and not field.exclude
-    ),
-)
 
 _VOLUMETRIC_TABLE_MODELS: dict[str, type[VolumetricGridRow]] = {
     "charge-density": ChargeDensityRow,
@@ -1744,10 +2105,7 @@ PARSED_TABLES: dict[str, TableSpec] = {
     "manifest": TableSpec("manifest", ManifestRow),
     "tasks": TableSpec("tasks", CoreTaskDoc, zorder_by=("task_id",)),
     "trajectories": TableSpec(
-        "trajectories",
-        TrajectoryRow,
-        partition_by=("run_type",),
-        column_order=_TRAJECTORY_COLUMNS,
+        "trajectories", TrajectoryRow, partition_by=("run_type",)
     ),
     **{
         name: TableSpec(name, row_model, partition_by=_VOLUMETRIC_PARTITION)

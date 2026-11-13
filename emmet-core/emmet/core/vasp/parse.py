@@ -49,15 +49,16 @@ from emmet.core.vasp.calc_types.enums import TaskType
 from emmet.core.vasp.calculation import (
     Calculation,
     _parse_bandstructure_file,
-    get_trajectories_from_calculations,
 )
 from emmet.core.vasp.models import VOLUMETRIC_PARSERS
+from emmet.core.vasp.outcar import read_step_magnetization
 from emmet.core.vasp.parsed import (
     BandStructureRow,
     DosRow,
     ManifestRow,
     ParsedRowHeader,
     ParseOutcome,
+    TrajectoryRow,
     VOLUMETRIC_FILE_MODELS,
     _ELECTRONIC_CONTEXT,
     split_band_structure_row,
@@ -78,7 +79,6 @@ if TYPE_CHECKING:
     from typing import Any
 
     from emmet.core.io.pymatgen import Vasprun
-    from emmet.core.trajectory import RelaxTrajectory
 
 logger = logging.getLogger(__name__)
 
@@ -346,7 +346,7 @@ class ParsedCalculation:
     calc_suffix: str
     completed_at: datetime | None
     task: CoreTaskDoc | None = None
-    trajectory: RelaxTrajectory | None = None
+    trajectory: TrajectoryRow | None = None
     header: ParsedRowHeader | None = None
     errors: list[str] = field(default_factory=list)
     exception: Exception | None = None
@@ -600,6 +600,64 @@ def _safe(get: Any, default: Any) -> Any:
         return default
 
 
+def _parse_trajectory(
+    parsed: ParsedCalculation,
+    calc_doc: Calculation,
+    files: CalculationFiles,
+    header: ParsedRowHeader,
+) -> TrajectoryRow | None:
+    """Make the trajectory row of a calculation, recording what could not be read.
+
+    A trajectory which cannot be made is an error of the calculation, which is otherwise
+    parsed. The magnetic moments of the ionic steps are the OUTCAR's, and not having
+    them, or not as many as there are steps, is an error that leaves them out.
+    """
+    assert calc_doc.input is not None and calc_doc.output is not None
+    ionic_steps = calc_doc.output.ionic_steps or []
+    parameters = calc_doc.input.parameters or {}
+
+    magnetization = None
+    if files.outcar is not None and (
+        parameters.get("ISPIN") == 2 or parameters.get("LNONCOLLINEAR")
+    ):
+        try:
+            magnetization = read_step_magnetization(files.outcar)
+            if magnetization.num_ionic_steps != len(ionic_steps):
+                raise ValueError(
+                    f"the OUTCAR has {magnetization.num_ionic_steps} ionic steps, "
+                    f"but the vasprun.xml has {len(ionic_steps)}"
+                )
+        except Exception as exc:
+            parsed._record_error("the magnetic moments of the ionic steps", exc)
+            magnetization = None
+
+    try:
+        return TrajectoryRow.from_ionic_steps(
+            ionic_steps,
+            parameters=parameters,
+            magnetization=magnetization,
+            selective_dynamics=(
+                calc_doc.output.structure.site_properties.get("selective_dynamics")
+                if calc_doc.output.structure is not None
+                else None
+            ),
+            **{
+                name: getattr(header, name)
+                for name in (
+                    "identifier",
+                    "completed_at",
+                    "run_type",
+                    "task_type",
+                    "formula_pretty",
+                    "chemsys",
+                )
+            },
+        )
+    except Exception as exc:
+        parsed._record_error("the trajectory", exc)
+        return None
+
+
 def _parse_calculation(
     source: CalculationSource,
     identifier: str,
@@ -647,10 +705,6 @@ def _parse_calculation(
         batch_id=batch_id,
         tags=[*tags, *transformation_tags],
     )
-    trajectory = get_trajectories_from_calculations([calc_doc], identifier=identifier)[
-        0
-    ]
-
     assert task.run_type is not None and task.task_type is not None
     header = ParsedRowHeader(
         identifier=identifier,
@@ -668,11 +722,11 @@ def _parse_calculation(
         calc_suffix=source.calc_suffix,
         completed_at=completed_at,
         task=task,
-        trajectory=trajectory,
         header=header,
         _policy=policy,
         _files=files,
     )
+    parsed.trajectory = _parse_trajectory(parsed, calc_doc, files, header)
     if parsed.outcome == ParseOutcome.PARSED:
         # the settings of the calculation that explain the large objects. These are the
         # effective parameters of the vasprun.xml, which include the defaults

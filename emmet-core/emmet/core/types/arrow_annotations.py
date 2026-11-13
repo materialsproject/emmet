@@ -73,3 +73,17 @@ in a column chunk can exceed the 2**31 - 1 limit of 32-bit list offsets.
 
 Float32Matrix = Annotated[list[list[float]], ArrowType(_float32_matrix)]
 """Nested list of floats stored as float32 in arrow."""
+
+
+def _float64_grid() -> pa.DataType:
+    import pyarrow as pa
+
+    return pa.large_list(pa.float64())
+
+
+Float64Grid = Annotated[list[float], ArrowType(_float64_grid)]
+"""Flattened list of floats stored as float64 with 64-bit offsets in arrow.
+
+The doubles counterpart of `Float32Grid`, for arrays that need the precision, such as
+the energies, coordinates and forces of a trajectory.
+"""

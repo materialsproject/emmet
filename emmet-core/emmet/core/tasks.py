@@ -60,6 +60,7 @@ from emmet.core.vasp.calc_types import (
 from emmet.core.vasp.calculation import (
     Calculation,
     CalculationInput,
+    CoreCalculationInput,
     CoreCalculationOutput,
     PotcarSpec,
     RunStatistics,
@@ -295,9 +296,13 @@ class AnalysisDoc(BaseModel):
         )
 
 
-@type_override({"transformations": str, "vasp_objects": str})
+@type_override({"transformations": str})
 class BaseTaskDoc(StructureMetadata):
-    """Fields shared by the models of VASP tasks: CoreTaskDoc and TaskDoc."""
+    """Fields shared by the models of VASP tasks: CoreTaskDoc, TaskDoc and ValidationTaskDoc.
+
+    The final structure of the task is `output.structure`. `TaskDoc` also has it as
+    a field of its own, and the others as the property `structure`.
+    """
 
     batch_id: str | None = Field(
         None,
@@ -313,14 +318,14 @@ class BaseTaskDoc(StructureMetadata):
     icsd_id: int | None = Field(
         None, description="Inorganic Crystal Structure Database id of the structure"
     )
-    input: CalculationInput | None = Field(
+    input: CoreCalculationInput | None = Field(
         None,
         description="VASP calculation inputs",
     )
     last_updated: DateTimeType = Field(
         description="Timestamp for the most recent calculation for this task document",
     )
-    orig_inputs: CalculationInput | None = Field(
+    orig_inputs: CoreCalculationInput | None = Field(
         None,
         description="The exact set of input parameters used to generate the current task document.",
     )
@@ -330,9 +335,6 @@ class BaseTaskDoc(StructureMetadata):
     )
     run_type: RunType | None = Field(
         None, description="The functional used in the calculation."
-    )
-    structure: StructureType | None = Field(
-        None, description="Final output structure from the task"
     )
     tags: list[str] | None = Field(
         None, title="tag", description="Metadata tagged to a given task."
@@ -349,12 +351,6 @@ class BaseTaskDoc(StructureMetadata):
         description="Information on the structural transformations, parsed from a "
         "transformations.json file",
     )
-    vasp_objects: Annotated[
-        dict[VaspObject, Any] | None,
-        BeforeValidator(_deser_json_like),
-        WrapSerializer(_ser_json_like),
-    ] = Field(None, description="Vasp objects associated with this task")
-
     vasp_version: str | None = Field(
         None, description="The version of VASP used for this task."
     )
@@ -374,7 +370,18 @@ class BaseTaskDoc(StructureMetadata):
         return batch_id
 
 
-class CoreTaskDoc(BaseTaskDoc):
+class _FinalStructure:
+    """Gives a task document without a field for its final structure a `structure`."""
+
+    output: Any
+
+    @property
+    def structure(self) -> StructureType | None:
+        """The final structure of the task, which is `output.structure`."""
+        return self.output.structure if self.output is not None else None
+
+
+class CoreTaskDoc(_FinalStructure, BaseTaskDoc):
     """Calculation-level details about VASP calculations that power the Materials Project.
 
     A document describes a single calculation. A directory with several
@@ -393,7 +400,6 @@ class CoreTaskDoc(BaseTaskDoc):
     def from_calculation(
         cls,
         calc_doc: Calculation,
-        vasp_objects: dict[VaspObject, Any] | None = None,
         *,
         dir_name: str,
         calc_suffix: str = STANDARD_CALC_SUFFIX,
@@ -411,8 +417,6 @@ class CoreTaskDoc(BaseTaskDoc):
         ----------
         calc_doc
             The calculation, with its input and output.
-        vasp_objects
-            VASP objects parsed with the calculation, if any.
         dir_name
             The directory the calculation was parsed from, as a URI like
             the output of :obj:`get_uri`.
@@ -449,21 +453,19 @@ class CoreTaskDoc(BaseTaskDoc):
             completed_at=completed_at or calc_doc.completed_at,
             dir_name=dir_name,
             icsd_id=icsd_id,
-            input=calc_doc.input,
+            input=_core_input(calc_doc.input),
             meta_structure=calc_doc.output.structure,
-            orig_inputs=orig_inputs,
+            orig_inputs=_core_input(orig_inputs),
             output=CoreCalculationOutput(
                 **calc_doc.output.model_dump(
                     include=set(CoreCalculationOutput.model_fields)
                 )
             ),
             run_type=calc_doc.run_type,
-            structure=calc_doc.output.structure,
             tags=list(tags),
             task_id=task_id,
             task_type=calc_doc.task_type,
             transformations=transformations,
-            vasp_objects=vasp_objects,
             vasp_version=calc_doc.vasp_version,
         )
 
@@ -529,7 +531,7 @@ class CoreTaskDoc(BaseTaskDoc):
             )
         files = calculations[calc_suffix]
 
-        calc_doc, vasp_objects = Calculation.from_vasp_files(
+        calc_doc, _ = Calculation.from_vasp_files(
             files.directory,
             calc_suffix,
             **files.to_calculation_kwargs(resolve=False),  # type: ignore[arg-type]
@@ -540,7 +542,6 @@ class CoreTaskDoc(BaseTaskDoc):
         )
         task_doc = cls.from_calculation(
             calc_doc,
-            vasp_objects,
             dir_name=get_uri(dir_name),
             calc_suffix=calc_suffix,
             orig_inputs=_parse_orig_input_files(files.orig_inputs),
@@ -555,7 +556,7 @@ class CoreTaskDoc(BaseTaskDoc):
         return (task_doc, trajectory)
 
 
-class ValidationTaskDoc(BaseTaskDoc):
+class ValidationTaskDoc(_FinalStructure, BaseTaskDoc):
     """
     Wrapper for TaskDoc to ensure compatiblity with validation checks
     in MaterialsDoc.from_tasks(...) if validation builder is skipped
@@ -564,9 +565,26 @@ class ValidationTaskDoc(BaseTaskDoc):
     is_valid: bool = Field(True)
 
 
-@type_override({"additional_json": str})
+@type_override({"additional_json": str, "vasp_objects": str})
 class TaskDoc(BaseTaskDoc, extra="allow"):
     """Flexible wrapper around CoreTaskDoc"""
+
+    input: CalculationInput | None = Field(  # type: ignore[assignment]
+        None,
+        description="VASP calculation inputs",
+    )
+    orig_inputs: CalculationInput | None = Field(  # type: ignore[assignment]
+        None,
+        description="The exact set of input parameters used to generate the current task document.",
+    )
+    structure: StructureType | None = Field(
+        None, description="Final output structure from the task"
+    )
+    vasp_objects: Annotated[
+        dict[VaspObject, Any] | None,
+        BeforeValidator(_deser_json_like),
+        WrapSerializer(_ser_json_like),
+    ] = Field(None, description="Vasp objects associated with this task")
 
     additional_json: JsonDictType = Field(
         None, description="Additional json loaded from the calculation directory"
@@ -1026,6 +1044,20 @@ class EntryDoc(BaseModel):
     entry: ComputedStructureEntryType | None = Field(
         None,
         description="Computed structure entry for the calculation associated with the task doc.",
+    )
+
+
+def _core_input(
+    calculation_input: CoreCalculationInput | None,
+) -> CoreCalculationInput | None:
+    """The core fields of a calculation's input: a `CalculationInput` without `lattice_rec`."""
+    if calculation_input is None:
+        return None
+    return CoreCalculationInput(
+        **{
+            name: getattr(calculation_input, name)
+            for name in CoreCalculationInput.model_fields
+        }
     )
 
 

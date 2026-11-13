@@ -14,7 +14,7 @@ from emmet.core.tasks import CoreTaskDoc, TaskDoc
 from emmet.core.types.enums import DeprecationMessage
 from emmet.core.types.typing import DateTimeType, IdentifierType
 from emmet.core.vasp.calc_types.enums import CalcType, TaskType
-from emmet.core.vasp.calculation import CoreCalculationOutput
+from emmet.core.vasp.calculation import CoreCalculationInput, CoreCalculationOutput
 from emmet.core.vasp.task_valid import TaskDocument
 
 if TYPE_CHECKING:
@@ -94,6 +94,7 @@ class ValidationDoc(EmmetBaseModel, extra="allow"):
         run_type = task_doc.run_type
         chemsys = task_doc.chemsys
 
+        inputs: CoreCalculationInput | dict[str, Any] | None
         if isinstance(task_doc, (TaskDoc, TaskDocument)):
             inputs = task_doc.orig_inputs
             assert task_doc.calcs_reversed is not None

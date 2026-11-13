@@ -200,8 +200,11 @@ class PotcarSpec(BaseModel):
 
 
 @type_override({"incar": str, "parameters": str})
-class CalculationInput(CalculationBaseModel):
-    """Document defining VASP calculation inputs.
+class CoreCalculationInput(CalculationBaseModel):
+    """Document defining the core VASP calculation inputs.
+
+    `CalculationInput` adds the fields which can be derived from these, and
+    which are not worth storing for every task.
 
     Note that the following fields were formerly top-level fields on InputDoc,
     but are now properties of `CalculationInput`:
@@ -227,9 +230,6 @@ class CalculationInput(CalculationBaseModel):
         None, description="List of POTCAR functional types."
     )
     parameters: JsonDictType = Field(None, description="Parameters from vasprun")
-    lattice_rec: LatticeType | None = Field(
-        None, description="Reciprocal lattice of the structure"
-    )
     structure: StructureType | None = Field(
         None, description="Input structure for the calculation"
     )
@@ -389,6 +389,14 @@ class CalculationInput(CalculationBaseModel):
         """Report initial magnetic moments assigned to each atom."""
         return (self.parameters or self.incar or {}).get("MAGMOM", None)
 
+
+class CalculationInput(CoreCalculationInput):
+    """Document defining VASP calculation inputs."""
+
+    lattice_rec: LatticeType | None = Field(
+        None, description="Reciprocal lattice of the structure"
+    )
+
     @classmethod
     def from_vasprun(
         cls, vasprun: Vasprun, potcar_spec: list[PotcarSpec] | None = None
@@ -515,9 +523,16 @@ class FrequencyDependentDielectric(BaseModel):
         return data
 
     @classmethod
-    def from_vasprun(cls, vasprun: Vasprun) -> Self:
+    def from_vasprun(cls, vasprun: Vasprun) -> Self | None:
         """
         Create a frequency-dependent dielectric calculation document from a vasprun.
+
+        The dielectric function stored is the one that `Vasprun.optical_absorption_coeff`
+        derives the absorption coefficient from: the BSE one if there is one, otherwise the
+        density-density one. A coefficient and the dielectric function it comes from are
+        therefore always of the same data. The inverse macroscopic dielectric tensor, which
+        some calculations write instead, is the inverse of a dielectric function, and is not
+        stored as one.
 
         Parameters
         ----------
@@ -526,10 +541,15 @@ class FrequencyDependentDielectric(BaseModel):
 
         Returns
         -------
-        FrequencyDependentDielectric
-            A frequency-dependent dielectric document.
+        FrequencyDependentDielectric or None
+            A frequency-dependent dielectric document, None if the vasprun has no
+            dielectric function.
         """
-        energy, real, imag = vasprun.dielectric
+        data = vasprun.dielectric_data
+        dielectric = data.get("freq_dependent") or data.get("density")
+        if not dielectric:
+            return None
+        energy, real, imag = dielectric
         return cls(real=real, imaginary=imag, energy=energy)
 
 
@@ -670,13 +690,6 @@ class CoreCalculationOutput(BaseModel):
         None,
         description="The conduction band minimum in eV (if system is not metallic)",
     )
-    density: float | None = Field(
-        None, description="Density of final structure in units of g/cc."
-    )
-    dielectric_properties: DielectricProperties | None = Field(
-        None,
-        description="Dielectric, piezoelectric, and other electromechanical properties.",
-    )
     direct_gap: float | None = Field(
         None, description="Direct band gap in eV (if system is not metallic)"
     )
@@ -742,7 +755,21 @@ class CoreCalculationOutput(BaseModel):
 
 
 class CalculationOutput(CoreCalculationOutput):
-    """Wrapper for CoreCalculationOutput for parsing and storing larger fields."""
+    """Wrapper for CoreCalculationOutput for parsing and storing larger fields.
+
+    It has two fields which `CoreCalculationOutput` does not: the density, which is
+    that of the structure, and the dielectric properties, which are the keys of the
+    OUTCAR of its dielectric, piezoelectric and Born charge tensors, so
+    they are in `outcar` too.
+    """
+
+    density: float | None = Field(
+        None, description="Density of final structure in units of g/cc."
+    )
+    dielectric_properties: DielectricProperties | None = Field(
+        None,
+        description="Dielectric, piezoelectric, and other electromechanical properties.",
+    )
 
     elph_displaced_structures: ElectronPhononDisplacedStructures | None = Field(
         None,
@@ -827,11 +854,7 @@ class CalculationOutput(CoreCalculationOutput):
                 logger.warning("VASP doesn't properly output efermi for IBRION == 1")
             electronic_output = {}
 
-        freq_dependent_diel: FrequencyDependentDielectric | None = None
-        try:
-            freq_dependent_diel = FrequencyDependentDielectric.from_vasprun(vasprun)
-        except KeyError:
-            pass
+        freq_dependent_diel = FrequencyDependentDielectric.from_vasprun(vasprun)
 
         locpot_avg = None
         if locpot:
@@ -932,6 +955,11 @@ class CalculationOutput(CoreCalculationOutput):
             energy_per_atom=vasprun.final_energy / len(structure),
             mag_density=mag_density,
             frequency_dependent_dielectric=freq_dependent_diel,
+            # Not asked for without a dielectric function: before pymatgen-core 2026.10.31, the
+            # property raises a KeyError if the vasprun has no density-density block
+            optical_absorption_coeff=(
+                vasprun.optical_absorption_coeff if freq_dependent_diel else None
+            ),
             elph_displaced_structures=elph_structures,
             dos_properties=dosprop_dict,
             ionic_steps=(
@@ -1691,8 +1719,17 @@ def _calculation_to_trajectory_dict(
         ionic_steps = calc.output.ionic_steps or []
         props.update(
             {
-                k: [getattr(ionic_step, remap.get(k, k)) for ionic_step in ionic_steps]
+                k: values
                 for k in {"structure", "energy", *ionic_step_props}
+                # a quantity VASP did not calculate is None at every step, e.g., the
+                # stress for ISIF = 0, and is left out
+                if (
+                    values := [
+                        getattr(ionic_step, remap.get(k, k))
+                        for ionic_step in ionic_steps
+                    ]
+                )
+                and (k == "structure" or any(v is not None for v in values))
             }
         )
 

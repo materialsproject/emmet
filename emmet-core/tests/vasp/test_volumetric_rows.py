@@ -57,6 +57,21 @@ def written_encodings(table, **options):
     }
 
 
+def written_statistics(table, **options):
+    """Whether each column of a Parquet file written from a table has its min and max."""
+    buffer = io.BytesIO()
+    pq.write_table(table, buffer, compression="zstd", **options)
+    metadata = pq.ParquetFile(io.BytesIO(buffer.getvalue())).metadata
+    group = metadata.row_group(0)
+    return {
+        group.column(i).path_in_schema: bool(
+            group.column(i).statistics is not None
+            and group.column(i).statistics.has_min_max
+        )
+        for i in range(metadata.num_columns)
+    }
+
+
 def block_columns(row):
     """The names of the block columns which have data."""
     return [c for c in row.BLOCK_COLUMNS if getattr(row, c) is not None]
@@ -498,3 +513,107 @@ class TestTableLayout:
             c.startswith(("efermi", "qpoints", "lattice", "frac_coords"))
             for c in PARSED_TABLES[table].byte_stream_split_columns
         )
+
+
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
+class TestStatistics:
+    """Min and max are written for the columns that are filtered on, and not for the rest."""
+
+    @pytest.mark.parametrize("table", sorted(PARSED_TABLES))
+    def test_statistics_are_requested_for_leaves_of_the_file_only(self, table):
+        """A writer ignores paths that are not in the file, without an error."""
+        spec = PARSED_TABLES[table]
+        schema = pa.schema(arrowize(spec.row_model))
+        schema = pa.schema([schema.field(c) for c in spec.ordered_columns])
+        written = written_statistics(
+            pa.Table.from_pylist([{f.name: None for f in schema}], schema=schema),
+            **spec.parquet_options,
+        )
+        wanted = set(spec.statistics_columns)
+        assert wanted and wanted <= set(written)
+        # nothing inside a list or map, and no JSON string, has a minimum
+        for path in wanted:
+            assert ".list." not in path and ".key_value." not in path, path
+            assert path not in spec.json_string_columns, path
+
+    def test_the_json_strings_of_the_tasks_table(self):
+        assert set(PARSED_TABLES["tasks"].json_string_columns) == {
+            "input.incar",
+            "input.parameters",
+            "orig_inputs.incar",
+            "orig_inputs.parameters",
+            "transformations",
+        }
+        for table, spec in PARSED_TABLES.items():
+            if table != "tasks":
+                assert spec.json_string_columns == []
+
+    def test_json_strings_are_found_by_either_declaration(self):
+        """A field typed as JSON, or one that is overridden to be a string, anywhere in a model."""
+        from pydantic import BaseModel
+
+        from emmet.core.types.typing import JsonDictType
+        from emmet.core.utils import type_override
+        from emmet.core.vasp.parsed import TableSpec
+
+        @type_override({"overridden": str})
+        class Inner(BaseModel):
+            typed: JsonDictType = None
+            overridden: dict | None = None
+            plain: str | None = None
+
+        class Outer(BaseModel):
+            inner: Inner | None = None
+            many: list[Inner] | None = None
+            typed: JsonDictType = None
+            text: str | None = None
+
+        spec = TableSpec("synthetic", Outer)
+        assert sorted(spec.json_string_columns) == [
+            "inner.overridden",
+            "inner.typed",
+            "many.list.element.overridden",
+            "many.list.element.typed",
+            "typed",
+        ]
+
+    def test_a_json_string_has_no_statistics_when_written(self):
+        """The minimum and maximum of a string of 4 kB are kept in every page and in the footer."""
+        spec = PARSED_TABLES["tasks"]
+        schema = pa.schema(arrowize(spec.row_model))
+        schema = pa.schema([schema.field(c) for c in spec.ordered_columns])
+        record = {f.name: None for f in schema}
+        record["task_id"] = "aaaaaaab"
+        record["input"] = {"parameters": '{"A":' + "1" * 2000 + "}", "incar": "{}"}
+        record["calc_suffix"] = "standard"
+        table = pa.Table.from_pylist([record], schema=schema)
+
+        statistics = written_statistics(table, **spec.parquet_options)
+        assert statistics["task_id"] and statistics["calc_suffix"]
+        assert not statistics["input.parameters"] and not statistics["input.incar"]
+        # every leaf has them if the rule is not applied
+        assert written_statistics(table)["input.parameters"]
+        assert len(_written_size(table, **spec.parquet_options)) < len(
+            _written_size(table)
+        )
+
+    def test_the_other_options_are_kept(self):
+        """Statistics are an option of the writer next to the encodings, and do not replace them."""
+        options = PARSED_TABLES["charge-density"].parquet_options
+        assert set(options) == {
+            "use_byte_stream_split",
+            "use_dictionary",
+            "write_statistics",
+        }
+        assert "total.list.element" in options["use_byte_stream_split"]
+        assert "total.list.element" not in options["write_statistics"]
+        assert "identifier" in options["write_statistics"]
+        assert "grid_shape.list.element" not in options["write_statistics"]
+
+
+def _written_size(table, **options):
+    buffer = io.BytesIO()
+    pq.write_table(table, buffer, compression="zstd", **options)
+    return buffer.getvalue()

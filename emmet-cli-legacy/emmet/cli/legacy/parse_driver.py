@@ -54,7 +54,6 @@ from emmet.core.vasp.parsed import (
     PARSED_TABLES,
     ManifestRow,
     ParseOutcome,
-    TrajectoryRow,
 )
 from emmet.core.vasp.utils import DEFAULT_CALC_SUFFIXES, STANDARD_CALC_SUFFIX
 
@@ -566,7 +565,7 @@ def _write_calculation(
     if parsed.task is not None:
         writers.write("tasks", parsed.task)
     if parsed.trajectory is not None:
-        writers.write("trajectories", TrajectoryRow.from_trajectory(parsed.trajectory))
+        writers.write("trajectories", parsed.trajectory)
     for table, row in parsed.objects():
         writers.write(table, row)
     return parsed.manifest_row()

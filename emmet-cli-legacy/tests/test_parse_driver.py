@@ -413,10 +413,59 @@ class TestParseChunk:
                     expected, check_metadata=False
                 ), table.name
 
-        # the trajectories have the columns and order of those in production
         assert pq.read_schema(
             next((output / "trajectories").glob("*.parquet"))
         ).names == (PARSED_TABLES["trajectories"].ordered_columns)
+
+    def test_statistics_are_written_for_the_columns_which_have_them(
+        self, items, tmp_path
+    ):
+        """Checked in the files: the 4 kB JSON strings of the tasks have no min and max."""
+        output = tmp_path / "out"
+        parse_chunk(items, output)
+
+        for table in output.iterdir():
+            spec = PARSED_TABLES[table.name]
+            wanted = set(spec.statistics_columns)
+            for file in table.glob("*.parquet"):
+                metadata = pq.ParquetFile(file).metadata
+                for group in range(metadata.num_row_groups):
+                    for i in range(metadata.num_columns):
+                        column = metadata.row_group(group).column(i)
+                        has = bool(
+                            column.statistics is not None
+                            and column.statistics.has_min_max
+                        )
+                        if column.path_in_schema not in wanted:
+                            assert not has, (table.name, column.path_in_schema)
+        group = pq.ParquetFile(
+            next((output / "tasks").glob("*.parquet"))
+        ).metadata.row_group(0)
+        by_path = {
+            group.column(i).path_in_schema: group.column(i)
+            for i in range(group.num_columns)
+        }
+        assert by_path["task_id"].statistics.has_min_max
+        assert by_path["input.parameters"].statistics is None or not (
+            by_path["input.parameters"].statistics.has_min_max
+        )
+
+    def test_a_calculation_without_stress_is_parsed(self, launchers, tmp_path):
+        """ISIF = 0 calculations have no stress, and used to fail as a whole."""
+        with DataArchive.extract(TEST_FILES_DIR / "vasp" / "defect_run.json.gz") as d:
+            shutil.copytree(d, launchers / "block_3" / "launcher_fixed_cell")
+        items = plan_parse(discover_launchers(launchers)).items
+
+        output = tmp_path / "out"
+        manifests = parse_chunk(items, output)
+        fixed = next(m for m in manifests if "launcher_fixed_cell" in m.dir_name)
+        assert fixed.outcome == ParseOutcome.PARSED and fixed.errors == []
+        trajectories = read_table(output, "trajectories").to_pylist()
+        row = TrajectoryRow(
+            **next(t for t in trajectories if t["identifier"] == fixed.identifier)
+        )
+        assert row.stress is None and row.forces is not None and row.isif == 0
+        assert fixed.identifier in read_table(output, "tasks")["task_id"].to_pylist()
 
     def test_float32_columns_are_written_with_byte_stream_split(
         self, items, launchers, tmp_path
