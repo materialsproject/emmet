@@ -11,7 +11,9 @@ TypedKpointsDict = TypedDict(
         "comment": str,
         "coord_type": str,
         "generation_style": str,
-        "kpoints": list[list[int]],
+        # pymatgen has integers for the mesh of an automatic style and floats for
+        # explicit k-points, and a column has one type. A float holds both exactly.
+        "kpoints": list[list[float]],
         "kpts_weights": list[float],
         "labels": list[str],
         "nkpoints": int,
@@ -23,6 +25,9 @@ TypedKpointsDict = TypedDict(
         "usershift": list[float],
     },
 )
+
+_MESH_STYLES = ("Gamma", "Monkhorst", "Automatic")
+"""The generation styles whose k-points are the divisions of a mesh (or its density)."""
 
 KpointsTypeVar = TypeVar("KpointsTypeVar", Kpoints, TypedKpointsDict)
 
@@ -37,6 +42,17 @@ def kpoints_deserializer(kpoints: KpointsTypeVar):
             del kpoints["sym_weight"]
             del kpoints["tet_vertices"]
 
+        if kpoints.get("generation_style") in _MESH_STYLES:
+            # k-points of the styles with a mesh are integers, and would be written
+            # to a KPOINTS file as such
+            as_ints: dict[str, Any] = {
+                **kpoints,
+                "kpoints": [
+                    tuple(int(x) if float(x).is_integer() else x for x in kpt)
+                    for kpt in kpoints.get("kpoints") or []
+                ],
+            }
+            return Kpoints.from_dict(as_ints)
         return Kpoints.from_dict(kpoints)  # type: ignore[arg-type]
 
     return kpoints
