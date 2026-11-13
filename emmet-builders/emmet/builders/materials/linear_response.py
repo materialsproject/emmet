@@ -131,14 +131,35 @@ def obtain_blessed_linear_builder_input(
         - input.kpoints
         - input.structure
         - orig_inputs.kpoints
-        - output.outcar
+        - output.outcar (piezo_tensor and piezo_ionic_tensor)
         - output.bandgap
         - output.epsilon_ionic
         - output.epsilon_static
-    CoreTaskDocs need to have non-null bandgap
+
+    CoreTaskDocs need to have a nonzero bandgap, and the epsilon (dielectric) or
+    the piezoelectric tensors of the property being built.
+
+    Raises
+    ------
+    ValueError
+        If no task has them.
     """
-    relevant_tasks = [
-        {
+    needed = {
+        "dielectric": ("epsilon_static", "epsilon_ionic"),
+        "piezoelectric": ("piezo_static", "piezo_ionic"),
+    }[property_name]
+
+    relevant_tasks = []
+    for task in tasks:
+        if (
+            task.input is None
+            or task.output is None
+            or task.output.bandgap is None
+            or task.output.bandgap <= 0.0
+            or task.output.outcar is None
+        ):
+            continue
+        candidate = {
             "structure": task.input.structure,
             "task_id": task.task_id,
             "nkpoints": _parse_kpoints(task),
@@ -149,23 +170,21 @@ def obtain_blessed_linear_builder_input(
                     "epsilon_ionic",
                 )
             },
-            **{
-                k: task.output.outcar.get(k)
-                for k in (
-                    "piezo_static",
-                    "piezo_ionic",
-                )
-            },
+            # the piezoelectric tensors are the OUTCAR's: with the ionic contribution
+            # (piezo_ionic_tensor), and without (piezo_tensor)
+            "piezo_static": task.output.outcar.get("piezo_tensor"),
+            "piezo_ionic": task.output.outcar.get("piezo_ionic_tensor"),
             "is_hubbard": int(task.input.is_hubbard),
             "task_last_updated": task.last_updated,
         }
-        for task in tasks
-        if task.input is not None
-        and task.output is not None
-        and task.output.bandgap is not None
-        and task.output.outcar is not None
-        and task.output.bandgap > 0.0
-    ]
+        if all(candidate[k] is not None for k in needed):
+            relevant_tasks.append(candidate)
+
+    if not relevant_tasks:
+        raise ValueError(
+            f"None of the tasks has what a {property_name} document is built from "
+            f"({' and '.join('output.' + k for k in needed)}), with a nonzero band gap."
+        )
 
     best_task = sorted(
         relevant_tasks,
