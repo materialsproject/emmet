@@ -829,8 +829,8 @@ class TestLocpotIsReadOnce:
         (source,) = sources(directory)
         parsed = parse_calculation(source, ID_1, policy)
         assert parsed.task.output.locpot is not None
-        # it is not held for a row that will not be made
-        assert parsed._locpot is None
+        # no row is made, or held, for a policy which does not keep it
+        assert parsed._locpot_row is None
         rows = list(parsed.objects())
         assert "local-potential" not in tables(rows)
         assert self.locpot_reads(reads) == ["LOCPOT.gz"]
@@ -851,7 +851,7 @@ class TestLocpotIsReadOnce:
         (source,) = sources(directory)
         parsed = parse_calculation(source, ID_1)
         assert parsed.outcome == ParseOutcome.SKIPPED_FAILED
-        assert parsed._locpot is None and list(parsed.objects()) == []
+        assert parsed._locpot_row is None and list(parsed.objects()) == []
         assert self.locpot_reads(reads) == ["LOCPOT.gz"]
 
     def test_the_averages_are_those_of_the_calculation(self, directory):
@@ -891,7 +891,8 @@ class TestLocpotIsReadOnce:
             "local-potential"
         )
 
-    def test_it_is_released_after_its_row_is_made(self, directory, monkeypatch):
+    def test_the_file_is_released_once_its_row_is_made(self, directory, monkeypatch):
+        """What is read is freed when the task is made, and a row, which is smaller, is held."""
         refs: list[weakref.ref] = []
         cls = VOLUMETRIC_PARSERS["LOCPOT"]
 
@@ -905,16 +906,84 @@ class TestLocpotIsReadOnce:
         monkeypatch.setitem(VOLUMETRIC_PARSERS, "LOCPOT", Recording)
         (source,) = sources(directory)
         parsed = parse_calculation(source, ID_1)
-        # held until its row is made
         gc.collect()
-        assert len(refs) == 1 and refs[0]() is not None
-        objects = parsed.objects()
-        for table, row in objects:
+        assert len(refs) == 1 and refs[0]() is None
+        assert parsed._locpot_row is not None
+        # the row is yielded in its usual place, and is not held after
+        for table, row in parsed.objects():
             if table == "local-potential":
                 break
+        assert parsed._locpot_row is None
         del row
-        gc.collect()
-        assert refs[0]() is None
+
+    def test_the_row_is_not_held_by_the_generator_after_it_is_yielded(
+        self, directory, monkeypatch
+    ):
+        """The LOCPOT row is not in memory while the files after it are read."""
+        # files are in the order of their names, so these come after LOCPOT
+        shutil.copy(directory / "CHGCAR.gz", directory / "PARCHG.gz")
+        shutil.copy(directory / "CHGCAR.gz", directory / "PARCHG.ALLB.0001.gz")
+        (source,) = sources(directory)
+        parsed = parse_calculation(source, ID_1)
+        locpot_ref: list[weakref.ref] = []
+        alive_when_reading: list[bool] = []
+        for file_type, cls in list(VOLUMETRIC_PARSERS.items()):
+
+            class Recording(cls):  # type: ignore[valid-type, misc]
+                @classmethod
+                def from_file(cls_, filename, *args, **kwargs):
+                    if locpot_ref:
+                        gc.collect()
+                        alive_when_reading.append(locpot_ref[0]() is not None)
+                    return super().from_file(filename, *args, **kwargs)
+
+            monkeypatch.setitem(VOLUMETRIC_PARSERS, file_type, Recording)
+        order = []
+        for table, row in parsed.objects():
+            order.append(table)
+            if table == "local-potential":
+                locpot_ref.append(weakref.ref(row))
+            del row
+        assert "local-potential" in order
+        # something is read after it, and the row is gone by then
+        assert alive_when_reading == [False] * len(alive_when_reading)
+        assert order.index("local-potential") < len(order) - 1
+        assert len(alive_when_reading) == len(order) - 1 - order.index(
+            "local-potential"
+        )
+
+    def test_the_row_held_is_smaller_than_the_file_read(self, directory):
+        """4 bytes a value, where the pymatgen object has 8 for each block."""
+        (source,) = sources(directory)
+        parsed = parse_calculation(source, ID_1)
+        row = parsed._locpot_row
+        blocks = [row.spin_up, row.spin_down]
+        pmg_bytes = sum(
+            block.nbytes
+            for block in VOLUMETRIC_PARSERS["LOCPOT"]
+            .from_file(str(directory / "LOCPOT.gz"))
+            .data.values()
+        )
+        assert sum(block.nbytes for block in blocks) * 2 == pmg_bytes
+
+    def test_a_locpot_that_cannot_be_made_a_row_is_recorded_once(
+        self, directory, monkeypatch
+    ):
+        """The task has its averages, the error is recorded when the row is not made, and it is not retried."""
+        from emmet.core.vasp.parsed import LocalPotentialRow
+
+        def fail(*args, **kwargs):
+            raise ValueError("no row")
+
+        monkeypatch.setattr(LocalPotentialRow, "from_pmg", classmethod(fail))
+        (source,) = sources(directory)
+        parsed = parse_calculation(source, ID_1)
+        assert parsed.task.output.locpot is not None
+        assert len(parsed.errors) == 1 and "LOCPOT" in parsed.errors[0]
+        rows = list(parsed.objects())
+        assert "local-potential" not in tables(rows)
+        assert len(parsed.errors) == 1
+        assert parsed.manifest_row().errors == parsed.errors
 
 
 def test_rows_fit_their_tables(extract):

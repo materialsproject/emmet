@@ -41,7 +41,6 @@ import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
-from emmet.core.arrow import arrowize
 from emmet.core.mpid import AlphaID
 from emmet.core.vasp.parse import (
     DEFAULT_POLICY,
@@ -471,15 +470,11 @@ class _TableWriters:
         self.rows_written: Counter = Counter()
         self._schemas: dict[str, pa.Schema] = {}
         self._writers: dict[str, pq.ParquetWriter] = {}
-        self._buffers: dict[str, list[dict]] = {}
+        self._buffers: dict[str, list[BaseModel]] = {}
 
     def _schema(self, table: str) -> pa.Schema:
         if table not in self._schemas:
-            spec = PARSED_TABLES[table]
-            schema = pa.schema(arrowize(spec.row_model))
-            self._schemas[table] = pa.schema(
-                [schema.field(name) for name in spec.ordered_columns]
-            )
+            self._schemas[table] = PARSED_TABLES[table].arrow_schema
         return self._schemas[table]
 
     def _tmp_path(self, table: str) -> Path:
@@ -489,24 +484,22 @@ class _TableWriters:
         return self.output_dir / table / self.file_name
 
     def write(self, table: str, row: BaseModel) -> None:
-        record = row.model_dump(context={"format": "arrow"})
-        del row
         if table in SMALL_TABLES:
             buffer = self._buffers.setdefault(table, [])
-            buffer.append(record)
+            buffer.append(row)
             if len(buffer) >= SMALL_TABLE_BUFFER:
                 self._flush(table)
         else:
-            self._write_records(table, [record])
+            self._write_rows(table, [row])
 
     def _flush(self, table: str) -> None:
-        if records := self._buffers.pop(table, []):
-            self._write_records(table, records)
+        if rows := self._buffers.pop(table, []):
+            self._write_rows(table, rows)
 
-    def _write_records(self, table: str, records: list[dict]) -> None:
+    def _write_rows(self, table: str, rows: list[BaseModel]) -> None:
         schema = self._schema(table)
-        arrow_table = pa.Table.from_pylist(records, schema=schema)
-        del records
+        arrow_table = PARSED_TABLES[table].to_arrow(rows)
+        del rows
         if table not in self._writers:
             self._tmp_path(table).parent.mkdir(parents=True, exist_ok=True)
             self._writers[table] = pq.ParquetWriter(

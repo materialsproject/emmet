@@ -8,7 +8,7 @@ pyarrow is only imported when `emmet.core.arrow.arrowize` resolves the type.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -87,3 +87,59 @@ Float64Grid = Annotated[list[float], ArrowType(_float64_grid)]
 The doubles counterpart of `Float32Grid`, for arrays that need the precision, such as
 the energies, coordinates and forces of a trajectory.
 """
+
+
+def _array_validator(dtype: str):
+    """A validator for a field that is a 1-D numpy array of a given type.
+
+    None is kept. Anything else is made an array of that type, which is not a copy if it
+    already is one. The arrays are C-contiguous, as Arrow takes their buffer as it is.
+    """
+
+    def validate(value):
+        import numpy as np
+
+        if value is None:
+            return None
+        array = np.ascontiguousarray(value, dtype=dtype)
+        if array.ndim != 1:
+            raise ValueError(
+                f"Expected a 1-D array, flattened in C order, not one of shape {array.shape}."
+            )
+        return array
+
+    return validate
+
+
+def _array_serializer(value, info):
+    """The array itself when it is going to Arrow, otherwise a list, as for any JSON."""
+    if value is None:
+        return None
+    if (info.context or {}).get("format") == "arrow":
+        return value
+    return value.tolist() if hasattr(value, "tolist") else list(value)
+
+
+def _array_annotation(dtype: str, arrow_factory):
+    from pydantic import PlainSerializer, PlainValidator, WithJsonSchema
+
+    return Annotated[
+        Any,
+        PlainValidator(_array_validator(dtype)),
+        PlainSerializer(_array_serializer, when_used="always"),
+        WithJsonSchema({"type": "array", "items": {"type": "number"}}),
+        ArrowType(arrow_factory),
+    ]
+
+
+Float32Array = _array_annotation("float32", _float32_grid)
+"""A flattened array of floats, held as a float32 numpy array and stored as float32.
+
+The in-memory counterpart of `Float32Grid`: a value takes 4 bytes, where a list takes 32.
+A dump is a list of floats, except for the dump with the context `{"format": "arrow"}`,
+which is the array itself, so that Arrow can take its buffer. Arrow stores it
+with 64-bit offsets, like `Float32Grid`.
+"""
+
+Float64Array = _array_annotation("float64", _float64_grid)
+"""The doubles counterpart of `Float32Array`."""

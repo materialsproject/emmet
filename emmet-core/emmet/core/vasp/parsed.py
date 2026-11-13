@@ -74,7 +74,11 @@ from emmet.core.io.pymatgen import (
     Structure,
     Trajectory as PmgTrajectory,
 )
-from emmet.core.types.arrow_annotations import Float32Grid, Float32List, Float64Grid
+from emmet.core.types.arrow_annotations import (
+    Float32Array,
+    Float32List,
+    Float64Array,
+)
 from emmet.core.vasp.models import volumetric_file_type
 
 if TYPE_CHECKING:
@@ -96,8 +100,24 @@ def _optional_datetime(v: Any) -> datetime | None:
     return convert_datetime(v) if v else None
 
 
+def _same(a: Any, b: Any) -> bool:
+    """Whether two values of a field are equal, which arrays are if all their values are."""
+    if isinstance(a, np.ndarray) or isinstance(b, np.ndarray):
+        if a is None or b is None:
+            return False
+        try:
+            return bool(np.array_equal(a, b, equal_nan=True))
+        except TypeError:
+            return bool(np.array_equal(a, b))
+    return bool(a == b)
+
+
 class ParsedRowHeader(BaseModel):
-    """Top-level columns shared by the rows of every table of large VASP objects."""
+    """Top-level columns shared by the rows of every table of large VASP objects.
+
+    Rows have arrays for their large columns, which pydantic cannot compare with `==`,
+    so rows are equal if they are of the same type and all of their fields are.
+    """
 
     identifier: TaskIdentifierType = Field(
         description="The identifier of the calculation. Joins to the task_id "
@@ -130,6 +150,24 @@ class ParsedRowHeader(BaseModel):
         self.month = self.completed_at.month
         self.day = self.completed_at.day
         return self
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, BaseModel) or type(self) is not type(other):
+            return NotImplemented
+        if self.__pydantic_extra__ != other.__pydantic_extra__:
+            return False
+        if any(
+            not _same(getattr(self, name), getattr(other, name))
+            for name in type(self).model_fields
+        ):
+            return False
+        private = self.__pydantic_private__ or {}
+        other_private = other.__pydantic_private__ or {}
+        return private.keys() == other_private.keys() and all(
+            _same(value, other_private[name]) for name, value in private.items()
+        )
+
+    __hash__ = None  # type: ignore[assignment]
 
 
 class SpinMode(ValueEnum):
@@ -180,8 +218,11 @@ class _HasStructure:
 
 
 def _flat(grid: Any) -> Any:
-    """Flatten a grid indexed by `[ix, iy, iz]` in C order, so that z varies fastest."""
-    return np.asarray(grid).flatten(order="C")
+    """Flatten a grid indexed by `[ix, iy, iz]` in C order, so that z varies fastest.
+
+    The values are made float32, which is what a row holds, in the same copy.
+    """
+    return np.asarray(grid).astype(np.float32, order="C").ravel()
 
 
 class VolumetricGridRow(ParsedRowHeader, _HasStructure):
@@ -195,10 +236,14 @@ class VolumetricGridRow(ParsedRowHeader, _HasStructure):
     its lattice, species and fractional coordinates, which is all it has.
     That is not necessarily the final structure of the calculation.
 
-    The columns of the blocks are `list<float32>`. A block is **flattened in C order
-    from an array indexed `[ix, iy, iz]`, so z varies fastest** along the list. It is
+    The columns of the blocks are `list<float32>` in a file, and 1-D float32 numpy arrays
+    in a row, which take 4 bytes a value. A block is **flattened in C order
+    from an array indexed `[ix, iy, iz]`, so z varies fastest** along the array. It is
     rebuilt with `np.reshape(block, grid_shape)`. VASP writes the values
     of its files with x varying fastest, the opposite order.
+
+    A dump of a row has lists, except for the dump with the context `{"format": "arrow"}`,
+    which has the arrays, and is what `TableSpec.to_arrow` takes the buffers of.
     """
 
     BLOCK_COLUMNS: ClassVar[tuple[str, ...]] = ()
@@ -349,23 +394,23 @@ class ChargeDensityRow(VolumetricGridRow):
         "magnetization_3": "diff_z",
     }
 
-    total: Float32Grid | None = Field(
+    total: Float32Array | None = Field(
         None, description="The charge density times the cell volume, flattened."
     )
-    magnetization: Float32Grid | None = Field(
+    magnetization: Float32Array | None = Field(
         None,
         description="The magnetization density (spin up - spin down) times the cell "
         "volume, of a collinear calculation.",
     )
-    magnetization_1: Float32Grid | None = Field(
+    magnetization_1: Float32Array | None = Field(
         None,
         description="The first component of the noncollinear magnetization density.",
     )
-    magnetization_2: Float32Grid | None = Field(
+    magnetization_2: Float32Array | None = Field(
         None,
         description="The second component of the noncollinear magnetization density.",
     )
-    magnetization_3: Float32Grid | None = Field(
+    magnetization_3: Float32Array | None = Field(
         None,
         description="The third component of the noncollinear magnetization density.",
     )
@@ -504,10 +549,10 @@ class AllElectronDensityRow(VolumetricGridRow):
 
     BLOCK_COLUMNS: ClassVar[tuple[str, ...]] = ("total", "magnetization")
 
-    total: Float32Grid | None = Field(
+    total: Float32Array | None = Field(
         None, description="The density times the cell volume, flattened."
     )
-    magnetization: Float32Grid | None = Field(
+    magnetization: Float32Array | None = Field(
         None,
         description="The magnetization density (spin up - spin down) times the cell "
         "volume, if the file has a second block.",
@@ -557,24 +602,24 @@ class LocalPotentialRow(VolumetricGridRow):
         "b_field_3",
     )
 
-    potential: Float32Grid | None = Field(
+    potential: Float32Array | None = Field(
         None, description="The scalar potential, in eV, flattened."
     )
-    spin_up: Float32Grid | None = Field(
+    spin_up: Float32Array | None = Field(
         None, description="The spin-up potential of a collinear calculation, in eV."
     )
-    spin_down: Float32Grid | None = Field(
+    spin_down: Float32Array | None = Field(
         None, description="The spin-down potential of a collinear calculation, in eV."
     )
-    b_field_1: Float32Grid | None = Field(
+    b_field_1: Float32Array | None = Field(
         None,
         description="The first component of the noncollinear B-field-like potential.",
     )
-    b_field_2: Float32Grid | None = Field(
+    b_field_2: Float32Array | None = Field(
         None,
         description="The second component of the noncollinear B-field-like potential.",
     )
-    b_field_3: Float32Grid | None = Field(
+    b_field_3: Float32Array | None = Field(
         None,
         description="The third component of the noncollinear B-field-like potential.",
     )
@@ -664,14 +709,14 @@ class ElectronLocalizationRow(VolumetricGridRow):
 
     BLOCK_COLUMNS: ClassVar[tuple[str, ...]] = ("elf", "elf_up", "elf_down")
 
-    elf: Float32Grid | None = Field(
+    elf: Float32Array | None = Field(
         None, description="The electron localization function, flattened."
     )
-    elf_up: Float32Grid | None = Field(
+    elf_up: Float32Array | None = Field(
         None,
         description="The ELF of the spin-up electrons, of a collinear calculation.",
     )
-    elf_down: Float32Grid | None = Field(
+    elf_down: Float32Array | None = Field(
         None,
         description="The ELF of the spin-down electrons, of a collinear calculation.",
     )
@@ -994,13 +1039,13 @@ class DosProjectionsRow(ParsedRowHeader, _SpinBlocks):
     shape: list[int] = Field(
         description="The shape of the arrays: the number of sites, orbitals and energies."
     )
-    density: Float32Grid | None = Field(
+    density: Float32Array | None = Field(
         None, description="The projected DOS, which counts every spin."
     )
-    density_up: Float32Grid | None = Field(
+    density_up: Float32Array | None = Field(
         None, description="The spin-up projected DOS."
     )
-    density_down: Float32Grid | None = Field(
+    density_down: Float32Array | None = Field(
         None, description="The spin-down projected DOS."
     )
 
@@ -1145,11 +1190,11 @@ class BandStructureRow(ElectronicStructureRow):
     shape: list[int] = Field(
         description="The shape of the bands: the number of bands and k-points."
     )
-    bands: Float32Grid | None = Field(
+    bands: Float32Array | None = Field(
         None, description="The eigenvalues, in eV, of every spin."
     )
-    bands_up: Float32Grid | None = Field(None, description="The spin-up eigenvalues.")
-    bands_down: Float32Grid | None = Field(
+    bands_up: Float32Array | None = Field(None, description="The spin-up eigenvalues.")
+    bands_down: Float32Array | None = Field(
         None, description="The spin-down eigenvalues."
     )
 
@@ -1362,11 +1407,13 @@ class BandStructureProjectionsRow(ParsedRowHeader, _SpinBlocks):
         description="The shape of the weights: the number of bands, k-points, orbitals "
         "and sites."
     )
-    weights: Float32Grid | None = Field(
+    weights: Float32Array | None = Field(
         None, description="The projections, for every spin."
     )
-    weights_up: Float32Grid | None = Field(None, description="The spin-up projections.")
-    weights_down: Float32Grid | None = Field(
+    weights_up: Float32Array | None = Field(
+        None, description="The spin-up projections."
+    )
+    weights_down: Float32Array | None = Field(
         None, description="The spin-down projections."
     )
 
@@ -1493,19 +1540,19 @@ class TrajectoryRow(ParsedRowHeader):
     )
     species: list[str] = Field(description="The element of each site.")
     num_ionic_steps: int = Field(description="The number of ionic steps.")
-    lattice: Float64Grid = Field(
+    lattice: Float64Array = Field(
         description="The lattice vectors of each step, as rows, in Angstrom: "
         "`(step, 3, 3)`. For every step, also if the cell did not change."
     )
-    frac_coords: Float64Grid = Field(
+    frac_coords: Float64Array = Field(
         description="The fractional coordinates of the sites at each step: "
         "`(step, site, 3)`."
     )
-    forces: Float64Grid | None = Field(
+    forces: Float64Array | None = Field(
         None,
         description="The Cartesian forces on the sites at each step: `(step, site, 3)`.",
     )
-    stress: Float64Grid | None = Field(
+    stress: Float64Array | None = Field(
         None, description="The stress tensor at each step: `(step, 3, 3)`."
     )
     selective_dynamics: list[list[bool]] | None = Field(
@@ -1546,7 +1593,7 @@ class TrajectoryRow(ParsedRowHeader):
         description="The total magnetization of the cell at each ionic step, from the "
         "OUTCAR: `(step,)`, or `(step, 3)` for a noncollinear calculation.",
     )
-    magmoms: Float64Grid | None = Field(
+    magmoms: Float64Array | None = Field(
         None,
         description="The magnetic moment of every atom at each ionic step, from the "
         "OUTCAR: `(step, site)`, or `(step, site, 3)` for a noncollinear calculation.",
@@ -2043,6 +2090,109 @@ class TableSpec:
             for name, field in self.row_model.model_fields.items()
             if not field.exclude
         ]
+
+    @property
+    def arrow_schema(self) -> Any:
+        """The Arrow schema of the table, with its columns in `ordered_columns` order.
+
+        Requires pyarrow.
+        """
+        import pyarrow as pa
+
+        from emmet.core.arrow import arrowize
+
+        schema = pa.schema(arrowize(self.row_model))
+        return pa.schema([schema.field(name) for name in self.ordered_columns])
+
+    @property
+    def array_columns(self) -> list[str]:
+        """The columns which rows hold as numpy arrays, and Arrow takes as they are."""
+        from emmet.core.types.arrow_annotations import ArrowType
+
+        return [
+            name
+            for name in self.ordered_columns
+            if any(
+                isinstance(meta, ArrowType)
+                and meta.factory.__name__ in _ARRAY_FACTORIES
+                for meta in _metadata(self.row_model.model_fields[name])
+            )
+        ]
+
+    def to_arrow(self, rows: Sequence[BaseModel]) -> Any:
+        """Make an Arrow table of rows, which is what is written to the files of the table.
+
+        The columns of arrays are made from their buffers, with 64-bit offsets: for a
+        single row they are the row's own memory, and are not copied. The other columns
+        are made from the dump of the rows. Requires pyarrow.
+
+        Parameters
+        -----------
+        rows : sequence of BaseModel
+            The rows, of `row_model`.
+        """
+        import pyarrow as pa
+
+        schema = self.arrow_schema
+        array_columns = set(self.array_columns)
+        records = []
+        arrays: dict[str, list[Any]] = {name: [] for name in array_columns}
+        for row in rows:
+            record = row.model_dump(context={"format": "arrow"})
+            for name in array_columns:
+                arrays[name].append(record.pop(name, None))
+            records.append(record)
+        other = [schema.field(n) for n in schema.names if n not in array_columns]
+        table = pa.Table.from_pylist(records, schema=pa.schema(other))
+
+        columns = {}
+        for name in schema.names:
+            if name not in array_columns:
+                columns[name] = table[name]
+                continue
+            field = schema.field(name)
+            values = arrays[name]
+            present = [v for v in values if v is not None]
+            lengths = [0 if v is None else len(v) for v in values]
+            offsets = pa.array(np.concatenate([[0], np.cumsum(lengths)]), pa.int64())
+            flat = (
+                pa.array(
+                    present[0] if len(present) == 1 else np.concatenate(present),
+                    type=field.type.value_type,
+                )
+                if present
+                else pa.array([], type=field.type.value_type)
+            )
+            mask = pa.array([v is None for v in values], pa.bool_())
+            columns[name] = pa.chunked_array(
+                [
+                    pa.LargeListArray.from_arrays(
+                        offsets, flat, type=field.type, mask=mask
+                    )
+                ]
+            )
+        return pa.Table.from_arrays(
+            [columns[name] for name in schema.names], schema=schema
+        )
+
+
+_ARRAY_FACTORIES = ("_float32_grid", "_float64_grid")
+"""The factories of the Arrow types of `Float32Array` and `Float64Array`."""
+
+
+def _metadata(info: Any) -> list[Any]:
+    """The `Annotated` metadata of the type of a field, including inside a union with None."""
+    import typing
+
+    found = list(info.metadata)
+    stack = [info.annotation]
+    while stack:
+        tp = stack.pop()
+        if typing.get_origin(tp) is typing.Annotated:
+            found.extend(typing.get_args(tp)[1:])
+        else:
+            stack.extend(a for a in typing.get_args(tp) if a is not type(None))
+    return found
 
 
 _VOLUMETRIC_PARTITION = ("year", "month", "day", "run_type")

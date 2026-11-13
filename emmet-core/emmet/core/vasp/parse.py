@@ -169,7 +169,8 @@ class ParsePolicy(BaseModel):
         True,
         description="Whether the task keeps the averages of the LOCPOT along the "
         "axes of the crystal. The LOCPOT is read once for the averages and for "
-        "its row, which is held until its row is made if the policy keeps it.",
+        "its row: the row is made then, if the policy keeps it, and held until "
+        "its turn.",
     )
 
     @field_validator("volumetric_types", mode="before")
@@ -355,9 +356,14 @@ class ParsedCalculation:
     _vasprun: Vasprun | None = field(default=None, repr=False)
     _bandstructure_input: _BandStructureInput | None = field(default=None, repr=False)
     _parameters: dict[str, Any] = field(default_factory=dict, repr=False)
-    _locpot: Any = field(default=None, repr=False)
-    """The LOCPOT which was read for its averages, if its row is to be made from it."""
+    _locpot_row: BaseModel | None = field(default=None, repr=False)
+    """The row of the LOCPOT, made from the file that was read for the averages of the task.
+
+    A row takes less memory than the pymatgen object it is made from, which is freed.
+    """
     _tables: list[str] = field(default_factory=list, repr=False)
+    _locpot_failed: bool = field(default=False, repr=False)
+    """Whether the row of the LOCPOT could not be made, which is not tried again."""
     _started: bool = field(default=False, repr=False)
 
     @property
@@ -483,26 +489,31 @@ class ParsedCalculation:
                     yield self._yielded("projected-bandstructures", projections)
                 del bandstructure, projections
 
-        held_locpot, self._locpot = self._locpot, None
+        held_locpot_row, self._locpot_row = self._locpot_row, None
         for file_type, path in _volumetric_files(files):
             if not policy.wants_volumetric(file_type):
                 continue
             table = volumetric_table_name(path.name)
-            try:
-                if file_type == "LOCPOT" and held_locpot is not None:
-                    pmg_vol, held_locpot = held_locpot, None
-                else:
+            if file_type == "LOCPOT" and (
+                held_locpot_row is not None or self._locpot_failed
+            ):
+                # made when the task was, from the file that was read for its averages
+                if held_locpot_row is None:
+                    continue
+                volumetric, held_locpot_row = held_locpot_row, None
+            else:
+                try:
                     pmg_vol = VOLUMETRIC_PARSERS[file_type].from_file(str(path))
-                volumetric = VOLUMETRIC_FILE_MODELS[file_type].from_pmg(
-                    pmg_vol,
-                    parameters=self._parameters,
-                    file_name=path.name,
-                    **header_kwargs,  # type: ignore[arg-type]
-                )
-                del pmg_vol
-            except Exception as exc:
-                self._record_error(path.name, exc)
-                continue
+                    volumetric = VOLUMETRIC_FILE_MODELS[file_type].from_pmg(
+                        pmg_vol,
+                        parameters=self._parameters,
+                        file_name=path.name,
+                        **header_kwargs,  # type: ignore[arg-type]
+                    )
+                    del pmg_vol
+                except Exception as exc:
+                    self._record_error(path.name, exc)
+                    continue
             assert table is not None
             yield self._yielded(table, volumetric)
             del volumetric
@@ -749,9 +760,21 @@ def _parse_calculation(
             for key in (*_VOLUMETRIC_PARAMETERS, *_ELECTRONIC_PARAMETERS)
             if key in vasprun.parameters
         }
-        # the LOCPOT is kept until its row is made, only if it is going to be
+        # The row of the LOCPOT is made from the file that was read for the averages, only if
+        # it is going to be needed, and what it was made from is freed. It is yielded in its
+        # usual place by `objects`.
         if locpot is not None and policy.wants_volumetric("LOCPOT"):
-            parsed._locpot = locpot
+            try:
+                parsed._locpot_row = VOLUMETRIC_FILE_MODELS["LOCPOT"].from_pmg(
+                    locpot,
+                    parameters=parsed._parameters,
+                    file_name=files.volumetric["LOCPOT"].name,
+                    **parsed._header_kwargs,  # type: ignore[arg-type]
+                )
+            except Exception as exc:
+                parsed._record_error(files.volumetric["LOCPOT"].name, exc)
+                parsed._locpot_failed = True
+        del locpot
         # keep only what the large objects need. The band structure is read from
         # the file again, so it does not need the Vasprun, which can be freed first
         if policy.wants_dos(header.task_type):

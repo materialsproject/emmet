@@ -545,6 +545,203 @@ class TestArrow:
         }
 
 
+def charge_density(**overrides):
+    """A small charge density row, with a magnetization."""
+    values = {
+        "grid_shape": [2, 2, 3],
+        "spin_mode": SpinMode.COLLINEAR,
+        "lattice": np.eye(3).tolist(),
+        "species": ["Si"],
+        "frac_coords": [[0.0, 0.0, 0.0]],
+        "total": np.arange(12, dtype=np.float32),
+        "magnetization": np.arange(12, dtype=np.float32) * 0.1,
+        "file_name": "CHGCAR",
+        **header(),
+    }
+    values.update(overrides)
+    return ChargeDensityRow(**values)
+
+
+class TestRowEquality:
+    """Rows hold arrays, which pydantic cannot compare, so rows compare their values."""
+
+    def test_rows_with_the_same_values_are_equal(self):
+        assert charge_density() == charge_density()
+        assert not charge_density() != charge_density()
+
+    def test_a_copy_is_equal(self):
+        row = charge_density()
+        assert row == row.model_copy(deep=True)
+
+    def test_a_different_value_in_an_array_is_not_equal(self):
+        other = charge_density()
+        other.total[5] += 1
+        assert charge_density() != other
+
+    def test_arrays_of_different_lengths_are_not_equal(self):
+        assert charge_density() != charge_density(total=np.arange(11, dtype=np.float32))
+
+    def test_a_missing_array_is_not_equal_to_one(self):
+        assert charge_density() != charge_density(magnetization=None)
+        assert charge_density(magnetization=None) == charge_density(magnetization=None)
+
+    def test_nan_is_equal_to_nan(self):
+        nan = np.full(12, np.nan, dtype=np.float32)
+        assert charge_density(total=nan) == charge_density(total=nan.copy())
+
+    def test_other_fields_are_compared_too(self):
+        assert charge_density() != charge_density(identifier="mp-2")
+        assert charge_density() != charge_density(species=["Ge"])
+
+    def test_rows_of_other_types_are_not_equal(self):
+        assert charge_density() != "a row"
+        assert charge_density() != charge_density().model_dump()
+
+    def test_a_list_and_an_array_of_the_same_values_are_equal(self):
+        """Values set without validation are compared by value."""
+        row = charge_density()
+        listed = row.model_copy(update={"total": row.total.tolist()})
+        assert row == listed and listed == row
+
+    def test_the_projections_held_by_a_row_are_compared(self, dos):
+        first = DosRow.from_pmg(dos, **header())
+        second = DosRow.from_pmg(dos, **header())
+        assert first == second
+        assert split_dos_row(first)[1] == split_dos_row(second)[1]
+        # one has given its projections away, the other still holds them
+        third = DosRow.from_pmg(dos, **header())
+        split_dos_row(third)
+        fourth = DosRow.from_pmg(dos, **header())
+        assert third != fourth
+
+    def test_rows_are_not_hashable(self):
+        with pytest.raises(TypeError):
+            hash(charge_density())
+
+
+class TestArrayColumns:
+    """Rows hold their large columns as numpy arrays of the type they are stored as."""
+
+    @pytest.mark.parametrize(
+        "table, columns",
+        [
+            ("charge-density", {"total", "magnetization", "magnetization_1"}),
+            ("local-potential", {"potential", "spin_up", "spin_down", "b_field_3"}),
+            ("electron-localization", {"elf", "elf_up", "elf_down"}),
+            ("projected-dos", {"density", "density_up", "density_down"}),
+            ("bandstructures", {"bands", "bands_up", "bands_down"}),
+            ("projected-bandstructures", {"weights", "weights_up", "weights_down"}),
+            ("trajectories", {"lattice", "frac_coords", "forces", "stress", "magmoms"}),
+        ],
+    )
+    def test_the_columns_of_arrays_of_a_table(self, table, columns):
+        assert columns <= set(PARSED_TABLES[table].array_columns)
+
+    def test_small_columns_are_lists(self):
+        for name in ("total-dos", "tasks", "manifest"):
+            assert PARSED_TABLES[name].array_columns == []
+
+    def test_the_types_of_the_arrays(self):
+        row = charge_density()
+        assert row.total.dtype == np.float32
+        trajectory_columns = PARSED_TABLES["trajectories"].array_columns
+        assert set(trajectory_columns) == {
+            "lattice",
+            "frac_coords",
+            "forces",
+            "stress",
+            "magmoms",
+        }
+
+    def test_a_value_takes_four_bytes(self):
+        """A list of floats takes about 32: this is what a row held before."""
+        row = charge_density(
+            grid_shape=[20, 20, 20],
+            total=np.zeros(8000),
+            magnetization=np.zeros(8000),
+        )
+        assert row.total.nbytes + row.magnetization.nbytes == 4 * 16000
+
+    def test_a_dump_is_lists_and_the_dump_for_arrow_is_arrays(self):
+        row = charge_density()
+        assert type(row.model_dump()["total"]) is list
+        assert row.model_dump()["total"] == list(map(float, range(12)))
+        assert row.model_dump(context={"format": "arrow"})["total"] is row.total
+
+
+@pytest.mark.skipif(
+    not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
+)
+class TestToArrow:
+    """`TableSpec.to_arrow` makes the tables that are written, without copying the arrays."""
+
+    spec = PARSED_TABLES["charge-density"]
+
+    def reference(self, rows):
+        return pa.Table.from_pylist(
+            [row.model_dump(context={"format": "arrow"}) for row in rows],
+            schema=self.spec.arrow_schema,
+        )
+
+    def test_the_schema_has_the_columns_of_the_table_in_order(self):
+        schema = self.spec.arrow_schema
+        assert schema.names == self.spec.ordered_columns
+        assert schema.field("total").type == pa.large_list(pa.float32())
+
+    def test_one_row(self):
+        rows = [charge_density()]
+        table = self.spec.to_arrow(rows)
+        assert table.schema.equals(self.reference(rows).schema)
+        assert table.equals(self.reference(rows))
+
+    def test_one_row_is_not_copied(self):
+        row = charge_density(total=np.arange(1000, dtype=np.float32))
+        table = self.spec.to_arrow([row])
+        values = table["total"].chunk(0).values
+        assert values.buffers()[1].address == row.total.ctypes.data
+
+    def test_several_rows_with_columns_that_some_do_not_have(self):
+        rows = [
+            charge_density(),
+            charge_density(
+                magnetization=None, spin_mode=SpinMode.UNPOLARIZED, identifier="mp-2"
+            ),
+            charge_density(total=np.arange(6, dtype=np.float32), grid_shape=[1, 2, 3]),
+        ]
+        table = self.spec.to_arrow(rows)
+        assert table.equals(self.reference(rows))
+        assert table["magnetization"].to_pylist()[1] is None
+        assert table["total"].to_pylist()[2] == [float(i) for i in range(6)]
+
+    def test_no_row_has_a_column(self):
+        rows = [charge_density(magnetization=None), charge_density(magnetization=None)]
+        table = self.spec.to_arrow(rows)
+        assert table["magnetization"].null_count == 2
+        assert table.equals(self.reference(rows))
+
+    def test_the_rows_come_back(self):
+        rows = [charge_density(), charge_density(identifier="mp-2")]
+        table = self.spec.to_arrow(rows)
+        back = [
+            ChargeDensityRow(**record)
+            for record in table.to_pylist(maps_as_pydicts="strict")
+        ]
+        assert back == rows
+
+    def test_a_table_of_lists_and_one_of_arrays(self):
+        """The trajectories and the tasks are buffered, and are not all arrays."""
+        spec = PARSED_TABLES["manifest"]
+        row = ManifestRow(
+            identifier="mp-1",
+            dir_name="d",
+            calc_suffix="standard",
+            completed_at=COMPLETED_AT,
+            outcome=ParseOutcome.PARSED,
+        )
+        table = spec.to_arrow([row, row])
+        assert table.num_rows == 2 and table.schema.equals(spec.arrow_schema)
+
+
 class TestProjections:
     def test_split_dos(self, dos):
         row = DosRow.from_pmg(dos, **header())

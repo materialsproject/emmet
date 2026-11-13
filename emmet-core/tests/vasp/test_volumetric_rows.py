@@ -138,13 +138,29 @@ class TestChargeDensity:
     def test_grid_is_flattened_with_z_fastest(self, volumetric_files):
         pmg_obj = Chgcar.from_file(volumetric_files["unpolarized"])
         row = ChargeDensityRow.from_pmg(pmg_obj, file_name="CHGCAR", **header())
-        grid = pmg_obj.data["total"]
+        # the row holds float32 values, and the order of the axes is checked exactly
+        grid = pmg_obj.data["total"].astype(np.float32)
         flat = np.asarray(row.total)
+        assert flat.dtype == np.float32
         # grid[ix, iy, iz] is at ix * NY * NZ + iy * NZ + iz
         for ix, iy, iz in ((0, 0, 0), (0, 0, 2), (0, 1, 0), (1, 0, 0), (1, 1, 2)):
             assert flat[ix * GRID[1] * GRID[2] + iy * GRID[2] + iz] == grid[ix, iy, iz]
         assert np.array_equal(flat.reshape(row.grid_shape), grid)
         assert not np.array_equal(flat.reshape(row.grid_shape, order="F"), grid)
+
+    def test_the_grid_is_made_float32_in_one_copy(self, volumetric_files):
+        """`_flat` gives float32, and the row does not make another copy of what it is given."""
+        from emmet.core.vasp.parsed import _flat
+
+        grid = np.random.default_rng(0).random((4, 5, 6))
+        flat = _flat(grid)
+        assert flat.dtype == np.float32 and flat.shape == (120,)
+        assert flat.flags["C_CONTIGUOUS"] and not np.shares_memory(flat, grid)
+        # a row takes it as it is
+        pmg_obj = Chgcar.from_file(volumetric_files["unpolarized"])
+        row = ChargeDensityRow.from_pmg(pmg_obj, file_name="CHGCAR", **header())
+        assert row.total.dtype == np.float32
+        assert row.total.base is not None or row.total.flags["OWNDATA"]
 
     def test_structure_is_the_geometry_of_the_file(self, volumetric_files):
         pmg_obj = Chgcar.from_file(volumetric_files["collinear"])
