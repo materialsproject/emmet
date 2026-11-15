@@ -30,7 +30,7 @@ dnspython==2.9.2
     #   pymongo
 email-validator==2.3.0
     # via pydantic
-emmet-core[all]==0.88.1
+emmet-core[all]==0.88.3rc0
     # via emmet-builders (pyproject.toml)
 fonttools==4.68.0
     # via matplotlib
@@ -241,7 +241,7 @@ sympy==1.14.0
     # via pymatgen-core
 tabulate==0.10.0
     # via pymatgen-core
-tifffile==2026.10.15
+tifffile==2026.11.8
     # via scikit-image
 tqdm==4.70.1
     # via pymatgen-core

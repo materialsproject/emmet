@@ -4,12 +4,13 @@
 #
 #    pip-compile --all-extras --output-file=requirements/ubuntu-latest_py3.14_extras.txt
 #
-annotated-doc==0.0.5
+annotated-doc==0.0.6
     # via fastapi
 annotated-types==0.8.0
     # via pydantic
 anyio==4.16.0
     # via
+    #   fastapi
     #   httpx
     #   httpx2
     #   starlette
@@ -19,13 +20,13 @@ bibtexparser==1.4.4
     # via pymatgen-core
 blake3==1.0.11
     # via emmet-core
-boto3==1.43.125
+boto3==1.44.1
     # via emmet-api (pyproject.toml)
-botocore==1.43.125
+botocore==1.44.1
     # via
     #   boto3
     #   s3transfer
-bracex==3.2.1
+bracex==3.2.2
     # via wcmatch
 bytecode==0.19.1
     # via ddtrace
@@ -58,15 +59,15 @@ distlib==0.4.4
     # via virtualenv
 dnspython==2.9.2
     # via pymongo
-emmet-core==0.88.0
+emmet-core==0.88.3rc0
     # via emmet-api (pyproject.toml)
 envier==0.6.1
     # via ddtrace
 execnet==2.1.2
     # via pytest-xdist
-fastapi==0.162.0
+fastapi==0.162.5
     # via emmet-api (pyproject.toml)
-filelock==4.2.9
+filelock==4.2.10
     # via
     #   python-discovery
     #   virtualenv
@@ -336,7 +337,7 @@ pymatgen-io-validation==0.1.4
     # via
     #   emmet-api (pyproject.toml)
     #   emmet-core
-pymdown-extensions==12.3
+pymdown-extensions==13.1
     # via
     #   mkdocs-material
     #   mkdocstrings
@@ -421,9 +422,9 @@ sympy==1.14.0
     # via pymatgen-core
 tabulate==0.10.0
     # via pymatgen-core
-tifffile==2026.10.15
+tifffile==2026.11.8
     # via scikit-image
-tornado==6.6
+tornado==6.6.1
     # via livereload
 tqdm==4.70.1
     # via pymatgen-core
@@ -466,7 +467,7 @@ virtualenv==21.15.6
     # via pre-commit
 watchdog==7.1.0
     # via mkdocs
-wcmatch==12.0
+wcmatch==12.0.1
     # via mkdocs-awesome-pages-plugin
 wrapt==2.5.2
     # via ddtrace
