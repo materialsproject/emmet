@@ -61,6 +61,19 @@ class PhononMethod(ValueEnum):
     PHEASY = "pheasy"
 
 
+class PhononStabilityClass(ValueEnum):
+    """Dynamical stability class of a phonon band structure.
+
+    Bands are followed from Gamma by their eigenvectors. A band is acoustic if it is one of the three
+    translational modes at Gamma, and optical otherwise.
+    """
+
+    REAL_FREQUENCIES = "real_frequencies"
+    GAMMA_ARTIFACT = "gamma_artifact"
+    IMAG_OPTICAL = "imag_optical"
+    IMAG_ACOUSTIC_AWAY_FROM_GAMMA = "imag_acoustic_away_from_gamma"
+
+
 class PhononDOS(BandTheoryBase):
     """Define schema of pymatgen phonon density of states."""
 
@@ -636,6 +649,53 @@ class PhononBSDOSTask(StructureMetadata):
     thermal_displacement_data: ThermalDisplacementData | None = Field(
         None,
         description="Includes all data of the computation of the thermal displacements",
+    )
+
+    phonon_stability_class: PhononStabilityClass | None = Field(
+        None,
+        description="Stability class on the latimer_munro high-symmetry path, with frequencies below "
+        "-0.1 THz counted as imaginary. real_frequencies if there is no imaginary mode. Otherwise the "
+        "deepest imaginary mode decides: gamma_artifact if it is acoustic and its band is negative "
+        "continuously from Gamma, imag_acoustic_away_from_gamma if it is another acoustic mode, and "
+        "imag_optical if it is optical.",
+    )
+
+    min_frequency: float | None = Field(
+        None,
+        description="Lowest phonon frequency on the latimer_munro high-symmetry path in THz. Imaginary "
+        "frequencies are negative.",
+    )
+
+    max_frequency: float | None = Field(
+        None,
+        description="Highest phonon frequency on the latimer_munro high-symmetry path in THz.",
+    )
+
+    debye_temperature: float | None = Field(
+        None,
+        description="Debye temperature in K from the phonon DOS: g(f) = a f^2 fitted to the total DOS for "
+        "0 < f <= f_max / 4, with f_max the highest frequency of the DOS, then theta_D = (h / k_B) "
+        "(9 N / a)^(1/3), with N the number of atoms in the primitive cell. Not the elastic Debye "
+        "temperature. None if phonon_stability_class is not real_frequencies or the fit fails.",
+    )
+
+    pheasy_fit_rmse: float | None = Field(
+        None,
+        description="Root mean square force error in eV/Angstrom of the second-order force constants Phi, "
+        "sqrt(mean((F + Phi u)^2)) over all force components, with F the DFT forces and u the atomic "
+        "displacements of the displaced supercells.",
+    )
+
+    pheasy_fit_relative_error: float | None = Field(
+        None,
+        description="Relative force error of the second-order force constants Phi, ||F + Phi u|| / ||F||, "
+        "with F and u as in pheasy_fit_rmse.",
+    )
+
+    enlarged_supercell_used: bool | None = Field(
+        None,
+        description="Whether the force constants come from an enlarged supercell, with one more cell along "
+        "each lattice direction than the supercell of an earlier phonon calculation of the same material.",
     )
 
     calc_meta: list[CalcMeta] | None = Field(
