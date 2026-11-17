@@ -662,6 +662,13 @@ ref_model_fields = {
         "code",
         "post_process_settings",
         "thermal_displacement_data",
+        "phonon_stability_class",
+        "min_frequency",
+        "max_frequency",
+        "debye_temperature",
+        "pheasy_fit_rmse",
+        "pheasy_fit_relative_error",
+        "enlarged_supercell_used",
         "calc_meta",
     ],
     "emmet.core.polar.DielectricDoc": [

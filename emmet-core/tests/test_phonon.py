@@ -13,7 +13,7 @@ from emmet.core.io.pymatgen import (
 )
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.phonon import PhononBSDOSDoc, PhononDOS
+from emmet.core.phonon import PhononBSDOSDoc, PhononDOS, PhononStabilityClass
 from emmet.core.testing_utils import assert_schemas_equal
 
 if ARROW_COMPATIBLE:
@@ -136,7 +136,12 @@ def test_thermal_displacement_data(legacy_ph_task):
     not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
 )
 def test_arrow(tmp_dir, legacy_ph_task):
-    ph_doc = PhononBSDOSDoc.migrate_fields(**legacy_ph_task)
+    ph_doc = PhononBSDOSDoc.migrate_fields(
+        **legacy_ph_task,
+        phonon_stability_class="gamma_artifact",
+        pheasy_fit_rmse=1e-3,
+        enlarged_supercell_used=True,
+    )
     arrow_struct = pa.scalar(
         ph_doc.model_dump(context={"format": "arrow"}), type=arrowize(PhononBSDOSDoc)
     )
@@ -144,6 +149,9 @@ def test_arrow(tmp_dir, legacy_ph_task):
     assert test_arrow_doc
 
     assert ph_doc.phonon_bandstructure == test_arrow_doc.phonon_bandstructure
+    assert test_arrow_doc.phonon_stability_class is PhononStabilityClass.GAMMA_ARTIFACT
+    assert test_arrow_doc.pheasy_fit_rmse == ph_doc.pheasy_fit_rmse
+    assert test_arrow_doc.enlarged_supercell_used is True
 
     # test primitive structure caching
     assert test_arrow_doc.phonon_bandstructure._primitive_structure is None
