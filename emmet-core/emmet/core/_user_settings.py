@@ -15,6 +15,7 @@ class UserSettings(BaseModel):
     render_legacy_id: bool = True
     is_dev_env: bool = False
     datadog_tracking_consent: bool | None = None
+    denied_time: int | None = None
 
 
 class UserSettingsDoc(BaseModel):
