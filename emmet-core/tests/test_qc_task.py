@@ -124,3 +124,56 @@ def test_task_doc_val_flag(test_dir, object_name):
         dir_name, validate_lot=False, additional_fields={"foo": "bar"}
     )
     assert test_doc.model_dump()["additional_fields"] == {"foo": "bar"}
+
+
+def test_custom_smd_solvation_lot(test_dir):
+    """A custom SMD solvent ("solvent other") is read from the $smx section."""
+    from emmet.core.qc_tasks import TaskDoc
+
+    task_doc = TaskDoc.from_directory(test_dir / "qchem" / "qchem_custom_smd_sp_test")
+    calc = task_doc.calcs_reversed[0]
+    assert calc.solvation_lot_info == (
+        "wB97M-V/def2-SVPD/SMD(DIELECTRIC=18,500;N=1,415;ALPHA=0,000;BETA=0,735;"
+        "GAMMA=20,200;PHI=0,000;PSI=0,000)"
+    )
+    assert task_doc.output.final_energy == pytest.approx(-349.56285443)
+
+
+def test_fragments_input(test_dir):
+    """A $molecule section with fragments (here a fragment-based Hirshfeld CDFT
+    calculation of Li+ and an ethylene carbonate radical anion) is parsed as one
+    molecule with the total charge and spin multiplicity."""
+    from emmet.core.io.pymatgen import QCInput
+    from emmet.core.qc_tasks import TaskDoc
+    from emmet.core.qchem.calculation import CalculationInput
+
+    dir_name = test_dir / "qchem" / "qchem_cdft_fragments_sp_test"
+    qcinput = QCInput.from_file(dir_name / "mol.qin.gz")
+    assert isinstance(qcinput.molecule, list)
+    assert [len(fragment) for fragment in qcinput.molecule] == [10, 1]
+
+    input_doc = CalculationInput.from_qcinput(qcinput)
+    molecule = input_doc.initial_molecule
+    assert len(molecule) == 11
+    assert (molecule.charge, molecule.spin_multiplicity) == (0, 2)
+    assert input_doc.charge == 0
+    assert molecule.cart_coords[:10] == pytest.approx(qcinput.molecule[0].cart_coords)
+
+    task_doc = TaskDoc.from_directory(dir_name)
+    assert task_doc.output.final_energy == pytest.approx(-349.52924705)
+    output_molecule = task_doc.output.initial_molecule
+    assert output_molecule.composition == molecule.composition
+    assert (output_molecule.charge, output_molecule.spin_multiplicity) == (0, 2)
+
+
+def test_input_with_molecule_read():
+    """A $molecule section that reads the molecule from a previous job is
+    still rejected."""
+    from emmet.core.io.pymatgen import QCInput
+    from emmet.core.qchem.calculation import CalculationInput
+
+    qcinput = QCInput(
+        molecule="read", rem={"job_type": "sp", "basis": "sto-3g", "method": "hf"}
+    )
+    with pytest.raises(ValueError, match="multiple molecules"):
+        CalculationInput.from_qcinput(qcinput)
