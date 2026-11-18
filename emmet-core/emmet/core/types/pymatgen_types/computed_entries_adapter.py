@@ -153,7 +153,10 @@ class TypedCEDataDict(TypedDict):
     last_updated: NotRequired[str | None]
     task_id: NotRequired[TaskIdentifierType | None]
     material_id: NotRequired[MaterialIdentifierType | None]
-    oxidation_states: NotRequired[dict[ElementType, float] | None]
+    # Element keys become str, so pymatgen's Entry.as_dict can dump them
+    oxidation_states: NotRequired[
+        dict[Annotated[str, BeforeValidator(str)], float] | None
+    ]
     license: NotRequired[str | None]
     run_type: NotRequired[str | None]
 
