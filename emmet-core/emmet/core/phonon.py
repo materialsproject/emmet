@@ -64,8 +64,8 @@ class PhononMethod(ValueEnum):
 class PhononStabilityClass(ValueEnum):
     """Dynamical stability class of a phonon band structure.
 
-    Bands are followed from Gamma by their eigenvectors. A band is acoustic if it is one of the three
-    translational modes at Gamma, and optical otherwise.
+    The three translational modes are identified at Gamma from their eigenvectors and tracked
+    along each continuous path segment by one-to-one eigenvector overlap.
     """
 
     REAL_FREQUENCIES = "real_frequencies"
@@ -654,10 +654,12 @@ class PhononBSDOSTask(StructureMetadata):
     phonon_stability_class: PhononStabilityClass | None = Field(
         None,
         description="Stability class on the latimer_munro high-symmetry path, with frequencies below "
-        "-0.1 THz counted as imaginary. real_frequencies if there is no imaginary mode. Otherwise the "
-        "deepest imaginary mode decides: gamma_artifact if it is acoustic and its band is negative "
-        "continuously from Gamma, imag_acoustic_away_from_gamma if it is another acoustic mode, and "
-        "imag_optical if it is optical.",
+        "-0.1 THz counted as imaginary. real_frequencies if no frequency is below -0.1 THz. "
+        "Otherwise the deepest imaginary mode decides: gamma_artifact if it is a translational mode "
+        "at Gamma or lies on a translational branch remaining below zero continuously from Gamma to "
+        "the deepest imaginary mode, imag_acoustic_away_from_gamma if it lies on a translational "
+        "branch that reaches zero or positive frequency between Gamma and the deepest imaginary "
+        "mode, and imag_optical if it is not reached by the three translational branches.",
     )
 
     min_frequency: float | None = Field(
