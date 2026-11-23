@@ -1,4 +1,4 @@
-from fastapi import Response, Request
+from fastapi import Response, Request, HTTPException
 from typing import Any
 
 from emmet.api.resource.core import HeaderProcessor
@@ -36,6 +36,7 @@ class GlobalHeaderProcessor(HeaderProcessor):
         query_operator: LicenseQuery,  # type: ignore[override]
         # need to handle the types here^ eventually, narrowing is incorrect
     ) -> STORE_PARAMS:
+        default = query_operator.query(license="BY-C")
 
         if not (
             groups := _get_header_key(
@@ -46,13 +47,30 @@ class GlobalHeaderProcessor(HeaderProcessor):
                 ),
             )
         ):
-            return query_operator.query(license="BY-C")
+            return default
 
-        return query_operator.query(
-            license=(
-                "All"
-                if {group.strip() for group in groups.split(",")}
-                & {"TERMS:ACCEPT-NC", "admin"}
-                else "BY-C"
-            )
+        auth_NC = (
+            True
+            if {group.strip() for group in groups.split(",")}
+            & {
+                "TERMS:ACCEPT-NC",
+                "admin",
+            }
+            else False
         )
+
+        if requested_license := request.query_params.get("license"):
+            if requested_license in {"All", "BY-NC"} and not auth_NC:
+                raise HTTPException(
+                    status_code=403,
+                    detail=(
+                        f"Insufficient permissions to request data with license={requested_license}. "
+                        "Access to non-commercial (BY-NC) data requires accepting the Materials Project's "
+                        "non-commercial terms of use. Otherwise, remove the `license` query param or "
+                        "pass `license=BY-C`."
+                    ),
+                )
+
+            return query_operator.query(license=requested_license)  # type: ignore[arg-type]
+
+        return query_operator.query(license="All") if auth_NC else default
