@@ -119,7 +119,7 @@ class PiezoelectricDoc(PropertyDoc):
         directions, charges, strains = np.linalg.svd(total.voigt, full_matrices=False)
         max_index = np.argmax(np.abs(charges))
 
-        max_direction = directions[max_index]
+        max_direction = directions[:, max_index]
 
         # Allow a max miller index of 10
         min_val = np.abs(max_direction)

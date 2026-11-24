@@ -297,6 +297,8 @@ def test_piezoelectric(piezoelectric_structure, piezo_static, piezo_ionic):
     assert doc.property_name == "piezoelectric"
     assert doc.material_id == "mp-149"
     assert doc.e_ij_max == pytest.approx(0.464365904540805)
+    # the largest response of this tensor is along y (its second row dominates)
+    assert [abs(n) for n in doc.max_direction] == [0, 1, 0]
     assert [abs(n) for n in doc.strain_for_max] == pytest.approx(
         [
             0.0675760207481869,
