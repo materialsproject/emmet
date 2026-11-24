@@ -668,6 +668,8 @@ ref_model_fields = {
         "debye_temperature",
         "pheasy_fit_rmse",
         "pheasy_fit_relative_error",
+        "pheasy_fit_route",
+        "no_nac_reason",
         "enlarged_supercell_used",
         "calc_meta",
     ],

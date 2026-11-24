@@ -140,6 +140,8 @@ def test_arrow(tmp_dir, legacy_ph_task):
         **legacy_ph_task,
         phonon_stability_class="gamma_artifact",
         pheasy_fit_rmse=1e-3,
+        pheasy_fit_route="ASR + BH + H",
+        no_nac_reason="no_dielectric_run",
         enlarged_supercell_used=True,
     )
     arrow_struct = pa.scalar(
@@ -151,6 +153,8 @@ def test_arrow(tmp_dir, legacy_ph_task):
     assert ph_doc.phonon_bandstructure == test_arrow_doc.phonon_bandstructure
     assert test_arrow_doc.phonon_stability_class is PhononStabilityClass.GAMMA_ARTIFACT
     assert test_arrow_doc.pheasy_fit_rmse == ph_doc.pheasy_fit_rmse
+    assert test_arrow_doc.pheasy_fit_route == "ASR + BH + H"
+    assert test_arrow_doc.no_nac_reason == "no_dielectric_run"
     assert test_arrow_doc.enlarged_supercell_used is True
 
     # test primitive structure caching

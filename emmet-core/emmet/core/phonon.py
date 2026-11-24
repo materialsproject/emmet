@@ -694,6 +694,19 @@ class PhononBSDOSTask(StructureMetadata):
         "with F and u as in pheasy_fit_rmse.",
     )
 
+    pheasy_fit_route: str | None = Field(
+        None,
+        description="Invariance constraint level kept for the fitted second-order force constants: "
+        "'ASR', 'ASR + BH', 'ASR + BH + H', 'ASR + BH(dipole)', 'ASR + BH(dipole) + H', or "
+        "'ASR + BH(dipole) + H(dipole)'.",
+    )
+
+    no_nac_reason: str | None = Field(
+        None,
+        description="Reason non-analytical correction was not applied: 'no_dielectric_run', "
+        "'identity_dielectric_tensor', or 'unusable_dielectric_run'. None when NAC is applied.",
+    )
+
     enlarged_supercell_used: bool | None = Field(
         None,
         description="Whether the force constants come from an enlarged supercell, with one more cell along "
