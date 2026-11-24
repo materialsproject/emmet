@@ -713,6 +713,11 @@ class PhononBSDOSTask(StructureMetadata):
         "each lattice direction than the supercell of an earlier phonon calculation of the same material.",
     )
 
+    version: str | None = Field(
+        None,
+        description="Version of the phonon dataset release (e.g., 'v1.1' or 'v1.2').",
+    )
+
     calc_meta: list[CalcMeta] | None = Field(
         None,
         description="Metadata for individual calculations used to build this document.",

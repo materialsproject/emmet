@@ -671,6 +671,7 @@ ref_model_fields = {
         "pheasy_fit_route",
         "no_nac_reason",
         "enlarged_supercell_used",
+        "version",
         "calc_meta",
     ],
     "emmet.core.polar.DielectricDoc": [
