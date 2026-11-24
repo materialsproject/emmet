@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from emmet.api.query_operator import NumericQuery
 from emmet.api.routes.materials.phonon.query_operators import (
     EnlargedSupercellQuery,
+    HasNacQuery,
     NoNacReasonQuery,
     PheasyFitRouteQuery,
     PhononStabilityClassQuery,
@@ -80,6 +81,14 @@ def test_pheasy_fit_route_query():
         with pytest.raises(HTTPException) as exc_info:
             op.query(pheasy_fit_route=bad)
         assert exc_info.value.status_code == 400
+
+
+def test_has_nac_query():
+    op = HasNacQuery()
+
+    assert op.query(has_nac=None) == {"criteria": {}}
+    assert op.query(has_nac=True) == {"criteria": {"has_nac": True}}
+    assert op.query(has_nac=False) == {"criteria": {"has_nac": False}}
 
 
 def test_no_nac_reason_query():

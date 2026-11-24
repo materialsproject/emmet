@@ -162,6 +162,25 @@ class PheasyFitRouteQuery(InQuery):
 
 
 @dataclass
+class HasNacQuery(BoolQuery):
+    """Generate a query on whether non-analytical correction (NAC) was applied."""
+
+    field_name: str = "has_nac"
+
+    def query(
+        self,
+        has_nac: bool | None = Query(
+            None,
+            description=(
+                "Whether non-analytical correction (NAC) was applied. False matches "
+                "only documents with an explicit False value."
+            ),
+        ),
+    ) -> STORE_PARAMS:
+        return self._prepare_query(has_nac)
+
+
+@dataclass
 class NoNacReasonQuery(InQuery):
     """Generate a query for reasons non-analytical correction was not applied."""
 
