@@ -669,6 +669,7 @@ ref_model_fields = {
         "pheasy_fit_rmse",
         "pheasy_fit_relative_error",
         "pheasy_fit_route",
+        "has_nac",
         "no_nac_reason",
         "enlarged_supercell_used",
         "version",

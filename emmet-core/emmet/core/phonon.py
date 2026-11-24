@@ -701,10 +701,16 @@ class PhononBSDOSTask(StructureMetadata):
         "'ASR + BH(dipole) + H(dipole)'.",
     )
 
+    has_nac: bool | None = Field(
+        None,
+        description="Whether non-analytical correction (NAC) was applied to the phonon dispersion.",
+    )
+
     no_nac_reason: str | None = Field(
         None,
         description="Reason non-analytical correction was not applied: 'no_dielectric_run', "
-        "'identity_dielectric_tensor', or 'unusable_dielectric_run'. None when NAC is applied.",
+        "'identity_dielectric_tensor', or 'unusable_dielectric_run'. None when NAC is applied "
+        "or not recorded.",
     )
 
     enlarged_supercell_used: bool | None = Field(

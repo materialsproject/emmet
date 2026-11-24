@@ -145,6 +145,7 @@ def test_arrow(tmp_dir, legacy_ph_task):
         pheasy_fit_rmse=1e-3,
         pheasy_fit_relative_error=0.02,
         pheasy_fit_route="ASR + BH + H",
+        has_nac=False,
         no_nac_reason="no_dielectric_run",
         enlarged_supercell_used=True,
         version="v1.2",
@@ -163,6 +164,7 @@ def test_arrow(tmp_dir, legacy_ph_task):
     assert test_arrow_doc.pheasy_fit_rmse == ph_doc.pheasy_fit_rmse
     assert test_arrow_doc.pheasy_fit_relative_error == pytest.approx(0.02)
     assert test_arrow_doc.pheasy_fit_route == "ASR + BH + H"
+    assert test_arrow_doc.has_nac is False
     assert test_arrow_doc.no_nac_reason == "no_dielectric_run"
     assert test_arrow_doc.enlarged_supercell_used is True
     assert test_arrow_doc.version == "v1.2"
