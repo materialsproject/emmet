@@ -200,9 +200,8 @@ class ThermoDoc(PropertyDoc):
             - LASPH
             - Energy
             """
-
             return (
-                -1 * entry_quality_scores.get(entry.data["run_type"], 0),
+                -1 * entry_quality_scores.get(entry.parameters.get("run_type"), 0),
                 -1 * int(entry.data.get("aspherical", False)),
                 entry.energy,
             )
