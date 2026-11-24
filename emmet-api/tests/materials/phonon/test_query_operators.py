@@ -4,7 +4,10 @@ from fastapi import HTTPException
 from emmet.api.query_operator import NumericQuery
 from emmet.api.routes.materials.phonon.query_operators import (
     EnlargedSupercellQuery,
+    NoNacReasonQuery,
+    PheasyFitRouteQuery,
     PhononStabilityClassQuery,
+    PhononVersionQuery,
 )
 from emmet.core.phonon import PhononBSDOSTask
 
@@ -59,3 +62,59 @@ def test_phonon_numeric_query_fields():
             "debye_temperature": {"$lte": 500.0},
         }
     }
+
+
+def test_pheasy_fit_route_query():
+    op = PheasyFitRouteQuery()
+
+    assert op.query(pheasy_fit_route=None) == {"criteria": {}}
+    assert op.query(pheasy_fit_route="") == {"criteria": {}}
+    assert op.query(pheasy_fit_route="ASR + BH(dipole) + H(dipole)") == {
+        "criteria": {"pheasy_fit_route": {"$in": ["ASR + BH(dipole) + H(dipole)"]}}
+    }
+    assert op.query(pheasy_fit_route="ASR, ASR + BH + H") == {
+        "criteria": {"pheasy_fit_route": {"$in": ["ASR", "ASR + BH + H"]}}
+    }
+
+    for bad in ("invalid", "   ", "ASR,"):
+        with pytest.raises(HTTPException) as exc_info:
+            op.query(pheasy_fit_route=bad)
+        assert exc_info.value.status_code == 400
+
+
+def test_no_nac_reason_query():
+    op = NoNacReasonQuery()
+
+    assert op.query(no_nac_reason=None) == {"criteria": {}}
+    assert op.query(no_nac_reason="") == {"criteria": {}}
+    assert op.query(no_nac_reason="no_dielectric_run") == {
+        "criteria": {"no_nac_reason": {"$in": ["no_dielectric_run"]}}
+    }
+    assert op.query(no_nac_reason="no_dielectric_run, identity_dielectric_tensor") == {
+        "criteria": {
+            "no_nac_reason": {
+                "$in": ["no_dielectric_run", "identity_dielectric_tensor"]
+            }
+        }
+    }
+
+    for bad in ("invalid", "   ", "no_dielectric_run,"):
+        with pytest.raises(HTTPException) as exc_info:
+            op.query(no_nac_reason=bad)
+        assert exc_info.value.status_code == 400
+
+
+def test_phonon_version_query():
+    op = PhononVersionQuery()
+
+    assert op.query(version=None) == {"criteria": {}}
+    assert op.query(version="") == {"criteria": {}}
+    assert op.query(version="v1.2") == {"criteria": {"version": {"$in": ["v1.2"]}}}
+    assert op.query(version="v1.1, v1.2") == {
+        "criteria": {"version": {"$in": ["v1.1", "v1.2"]}}
+    }
+
+    for bad in ("   ", "v1.2,", ",v1.2"):
+        with pytest.raises(HTTPException) as exc_info:
+            op.query(version=bad)
+        assert exc_info.value.status_code == 400
