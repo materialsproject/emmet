@@ -61,6 +61,38 @@ class PhononMethod(ValueEnum):
     PHEASY = "pheasy"
 
 
+class PhononStabilityClass(ValueEnum):
+    """Dynamical stability class of a phonon band structure.
+
+    The three translational modes are identified at Gamma from their eigenvectors and tracked
+    along each continuous path segment by one-to-one eigenvector overlap.
+    """
+
+    REAL_FREQUENCIES = "real_frequencies"
+    GAMMA_ARTIFACT = "gamma_artifact"
+    IMAG_OPTICAL = "imag_optical"
+    IMAG_ACOUSTIC_AWAY_FROM_GAMMA = "imag_acoustic_away_from_gamma"
+
+
+class PheasyFitRoute(ValueEnum):
+    """Invariance conditions imposed on the fitted second-order force constants."""
+
+    ASR = "ASR"
+    ASR_BH = "ASR + BH"
+    ASR_BH_H = "ASR + BH + H"
+    ASR_BH_DIPOLE = "ASR + BH(dipole)"
+    ASR_BH_DIPOLE_H = "ASR + BH(dipole) + H"
+    ASR_BH_DIPOLE_H_DIPOLE = "ASR + BH(dipole) + H(dipole)"
+
+
+class NoNacReason(ValueEnum):
+    """Reason non-analytical correction was not applied."""
+
+    NO_DIELECTRIC_RUN = "no_dielectric_run"
+    IDENTITY_DIELECTRIC_TENSOR = "identity_dielectric_tensor"
+    UNUSABLE_DIELECTRIC_RUN = "unusable_dielectric_run"
+
+
 class PhononDOS(BandTheoryBase):
     """Define schema of pymatgen phonon density of states."""
 
@@ -636,6 +668,79 @@ class PhononBSDOSTask(StructureMetadata):
     thermal_displacement_data: ThermalDisplacementData | None = Field(
         None,
         description="Includes all data of the computation of the thermal displacements",
+    )
+
+    phonon_stability_class: PhononStabilityClass | None = Field(
+        None,
+        description="Stability class on the latimer_munro high-symmetry path, with frequencies below "
+        "-0.1 THz counted as imaginary. real_frequencies if no frequency is below -0.1 THz. "
+        "Otherwise the deepest imaginary mode decides: gamma_artifact if it is a translational mode "
+        "at Gamma or lies on a translational branch remaining below zero continuously from Gamma to "
+        "the deepest imaginary mode, imag_acoustic_away_from_gamma if it lies on a translational "
+        "branch that reaches zero or positive frequency between Gamma and the deepest imaginary "
+        "mode, and imag_optical if it is not reached by the three translational branches. All modes "
+        "within 1e-4 THz of the lowest frequency are compared. When their classes differ, "
+        "gamma_artifact takes priority, followed by imag_acoustic_away_from_gamma and then "
+        "imag_optical.",
+    )
+
+    min_frequency: float | None = Field(
+        None,
+        description="Lowest phonon frequency on the latimer_munro high-symmetry path in THz. Imaginary "
+        "frequencies are negative.",
+    )
+
+    max_frequency: float | None = Field(
+        None,
+        description="Highest phonon frequency on the latimer_munro high-symmetry path in THz.",
+    )
+
+    debye_temperature: float | None = Field(
+        None,
+        description="Debye temperature in K from the phonon DOS: g(f) = a f^2 fitted to the total DOS for "
+        "0 < f <= f_max / 4, with f_max the highest frequency of the DOS, then theta_D = (h / k_B) "
+        "(9 N / a)^(1/3), with N the number of atoms in the primitive cell. Not the elastic Debye "
+        "temperature. None if phonon_stability_class is not real_frequencies or the fit fails.",
+    )
+
+    pheasy_fit_rmse: float | None = Field(
+        None,
+        description="Root mean square force error in eV/Angstrom of the second-order force constants Phi, "
+        "sqrt(mean((F + Phi u)^2)) over all force components, with F the DFT forces and u the atomic "
+        "displacements of the displaced supercells.",
+    )
+
+    pheasy_fit_relative_error: float | None = Field(
+        None,
+        description="Relative force error of the second-order force constants Phi, ||F + Phi u|| / ||F||, "
+        "with F and u as in pheasy_fit_rmse.",
+    )
+
+    pheasy_fit_route: PheasyFitRoute | None = Field(
+        None,
+        description="Invariance constraint level kept for the fitted second-order force constants.",
+    )
+
+    has_nac: bool | None = Field(
+        None,
+        description="Whether non-analytical correction (NAC) was applied to the phonon dispersion.",
+    )
+
+    no_nac_reason: NoNacReason | None = Field(
+        None,
+        description="Reason non-analytical correction was not applied. None when NAC is applied "
+        "or not recorded.",
+    )
+
+    enlarged_supercell_used: bool | None = Field(
+        None,
+        description="Whether the force constants come from an enlarged supercell, with one more cell along "
+        "each lattice direction than the supercell of an earlier phonon calculation of the same material.",
+    )
+
+    version: str | None = Field(
+        None,
+        description="Version of the phonon dataset release (e.g., 'v1.1' or 'v1.2').",
     )
 
     calc_meta: list[CalcMeta] | None = Field(

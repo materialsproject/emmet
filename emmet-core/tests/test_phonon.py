@@ -13,7 +13,13 @@ from emmet.core.io.pymatgen import (
 )
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.phonon import PhononBSDOSDoc, PhononDOS
+from emmet.core.phonon import (
+    NoNacReason,
+    PheasyFitRoute,
+    PhononBSDOSDoc,
+    PhononDOS,
+    PhononStabilityClass,
+)
 from emmet.core.testing_utils import assert_schemas_equal
 
 if ARROW_COMPATIBLE:
@@ -136,7 +142,20 @@ def test_thermal_displacement_data(legacy_ph_task):
     not ARROW_COMPATIBLE, reason="pyarrow must be installed to run this test."
 )
 def test_arrow(tmp_dir, legacy_ph_task):
-    ph_doc = PhononBSDOSDoc.migrate_fields(**legacy_ph_task)
+    ph_doc = PhononBSDOSDoc.migrate_fields(
+        **legacy_ph_task,
+        phonon_stability_class="gamma_artifact",
+        min_frequency=-0.5,
+        max_frequency=15.2,
+        debye_temperature=412.3,
+        pheasy_fit_rmse=1e-3,
+        pheasy_fit_relative_error=0.02,
+        pheasy_fit_route="ASR + BH + H",
+        has_nac=False,
+        no_nac_reason="no_dielectric_run",
+        enlarged_supercell_used=True,
+        version="v1.2",
+    )
     arrow_struct = pa.scalar(
         ph_doc.model_dump(context={"format": "arrow"}), type=arrowize(PhononBSDOSDoc)
     )
@@ -144,6 +163,17 @@ def test_arrow(tmp_dir, legacy_ph_task):
     assert test_arrow_doc
 
     assert ph_doc.phonon_bandstructure == test_arrow_doc.phonon_bandstructure
+    assert test_arrow_doc.phonon_stability_class is PhononStabilityClass.GAMMA_ARTIFACT
+    assert test_arrow_doc.min_frequency == pytest.approx(-0.5)
+    assert test_arrow_doc.max_frequency == pytest.approx(15.2)
+    assert test_arrow_doc.debye_temperature == pytest.approx(412.3)
+    assert test_arrow_doc.pheasy_fit_rmse == ph_doc.pheasy_fit_rmse
+    assert test_arrow_doc.pheasy_fit_relative_error == pytest.approx(0.02)
+    assert test_arrow_doc.pheasy_fit_route is PheasyFitRoute.ASR_BH_H
+    assert test_arrow_doc.has_nac is False
+    assert test_arrow_doc.no_nac_reason is NoNacReason.NO_DIELECTRIC_RUN
+    assert test_arrow_doc.enlarged_supercell_used is True
+    assert test_arrow_doc.version == "v1.2"
 
     # test primitive structure caching
     assert test_arrow_doc.phonon_bandstructure._primitive_structure is None
