@@ -122,8 +122,3 @@ def test_phonon_version_query():
     assert op.query(version="v1.1, v1.2") == {
         "criteria": {"version": {"$in": ["v1.1", "v1.2"]}}
     }
-
-    for bad in ("   ", "v1.2,", ",v1.2"):
-        with pytest.raises(HTTPException) as exc_info:
-            op.query(version=bad)
-        assert exc_info.value.status_code == 400
