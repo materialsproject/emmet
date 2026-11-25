@@ -16,6 +16,7 @@ from emmet.core.io.pymatgen import Molecule, QCInput, QCOutput
 
 from emmet.core.qchem.calc_types import CalcType, LevelOfTheory, TaskType
 from emmet.core.qchem.calc_types.calc_types import BASIS_SETS, FUNCTIONALS
+from emmet.core.qchem.calc_types.utils import custom_smd_from_smx
 from emmet.core.qchem.task import QChemStatus
 from emmet.core.utils import arrow_incompatible
 
@@ -126,18 +127,28 @@ class CalculationInput(BaseModel):
             The input document.
         """
 
-        # QCInput.molecule is either a Molecule, list of Molecule, or a str-literal
-        # Catch latter two cases here and error out
-        if not isinstance(qcinput.molecule, Molecule):
+        # QCInput.molecule is either a Molecule, list of Molecule, or a str-literal.
+        # A list of Molecules is a $molecule section split into fragments (e.g. for
+        # fragment-based constrained DFT or EDA): combine them into one Molecule,
+        # with the total charge and the (high-spin) multiplicity that pymatgen's
+        # QCInput writes for the fragments. Catch the str-literal case and error out
+        molecule = qcinput.molecule
+        if isinstance(molecule, list) and all(
+            isinstance(m, Molecule) for m in molecule
+        ):
+            molecule = Molecule(
+                species=[site.species for fragment in molecule for site in fragment],
+                coords=[site.coords for fragment in molecule for site in fragment],
+                charge=sum(fragment.charge for fragment in molecule),
+                spin_multiplicity=1
+                + sum(fragment.spin_multiplicity - 1 for fragment in molecule),
+            )
+        if not isinstance(molecule, Molecule):
             raise ValueError("QCInput contains multiple molecules.")
 
         return cls(  # type: ignore[call-arg]
-            initial_molecule=qcinput.molecule,
-            charge=(
-                int(qcinput.molecule.as_dict()["charge"])
-                if qcinput.molecule.as_dict()
-                else None
-            ),
+            initial_molecule=molecule,
+            charge=(int(molecule.as_dict()["charge"]) if molecule.as_dict() else None),
             rem=qcinput.rem,
             job_type=qcinput.rem.get("job_type", None),
             opt=qcinput.opt,
@@ -646,6 +657,9 @@ def solvent(
     elif solvation == "SMD":
         solvent = (parameters.smx or {}).get("solvent", "water")
         if solvent == "other":
+            if custom_smd is None:
+                # the custom solvent descriptors are in the input's $smx section
+                custom_smd = custom_smd_from_smx(parameters.smx)
             if custom_smd is None:
                 raise ValueError(
                     "SMD calculation with solvent=other requires custom_smd!"
