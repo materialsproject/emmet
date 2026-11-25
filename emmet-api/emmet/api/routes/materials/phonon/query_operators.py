@@ -6,8 +6,10 @@ from functools import partial
 
 from fastapi import Query
 
-from emmet.api.query_operator import InQuery, QueryOperator
-from emmet.api.utils import STORE_PARAMS, process_identifiers
+from emmet.api.query_operator import BoolQuery, InQuery, QueryOperator
+from emmet.api.utils import STORE_PARAMS, process_identifiers, split_csv
+from emmet.core.phonon import NoNacReason, PheasyFitRoute, PhononStabilityClass
+from emmet.core.types.enums import ValueEnum
 
 
 @dataclass
@@ -45,3 +47,136 @@ class PhononMethodQuery(QueryOperator):
             crit = {"phonon_method": phonon_method}
 
         return {"criteria": crit}
+
+
+_STABILITY_CLASSES = ", ".join(c.value for c in PhononStabilityClass)
+_PHEASY_FIT_ROUTES = ", ".join(r.value for r in PheasyFitRoute)
+_NO_NAC_REASONS = ", ".join(r.value for r in NoNacReason)
+
+
+def _parse_enum_values(enum_cls: type[ValueEnum], values: str) -> list[str]:
+    return [enum_cls(v).value for v in split_csv(values)]
+
+
+@dataclass
+class PhononStabilityClassQuery(InQuery):
+    """Generate a query for phonon stability classes."""
+
+    field_name: str = "phonon_stability_class"
+    pre_processor: Callable[[str], list[str]] = field(
+        default=partial(_parse_enum_values, PhononStabilityClass)
+    )
+
+    def query(
+        self,
+        phonon_stability_class: str | None = Query(
+            None,
+            description=(
+                "Comma-separated list of phonon stability classes to query on "
+                f"({_STABILITY_CLASSES})."
+            ),
+        ),
+    ) -> STORE_PARAMS:
+        return self._prepare_query(phonon_stability_class)
+
+
+@dataclass
+class EnlargedSupercellQuery(BoolQuery):
+    """Generate a query on whether an enlarged supercell was used."""
+
+    field_name: str = "enlarged_supercell_used"
+
+    def query(
+        self,
+        enlarged_supercell_used: bool | None = Query(
+            None,
+            description=(
+                "Whether an enlarged supercell was used. False matches only "
+                "documents with an explicit False value."
+            ),
+        ),
+    ) -> STORE_PARAMS:
+        return self._prepare_query(enlarged_supercell_used)
+
+
+@dataclass
+class PheasyFitRouteQuery(InQuery):
+    """Generate a query for Pheasy invariance fit routes."""
+
+    field_name: str = "pheasy_fit_route"
+    pre_processor: Callable[[str], list[str]] = field(
+        default=partial(_parse_enum_values, PheasyFitRoute)
+    )
+
+    def query(
+        self,
+        pheasy_fit_route: str | None = Query(
+            None,
+            description=(
+                "Comma-separated list of Pheasy invariance fit routes to query on "
+                f"({_PHEASY_FIT_ROUTES})."
+            ),
+        ),
+    ) -> STORE_PARAMS:
+        return self._prepare_query(pheasy_fit_route)
+
+
+@dataclass
+class HasNacQuery(BoolQuery):
+    """Generate a query on whether non-analytical correction (NAC) was applied."""
+
+    field_name: str = "has_nac"
+
+    def query(
+        self,
+        has_nac: bool | None = Query(
+            None,
+            description=(
+                "Whether non-analytical correction (NAC) was applied. False matches "
+                "only documents with an explicit False value."
+            ),
+        ),
+    ) -> STORE_PARAMS:
+        return self._prepare_query(has_nac)
+
+
+@dataclass
+class NoNacReasonQuery(InQuery):
+    """Generate a query for reasons non-analytical correction was not applied."""
+
+    field_name: str = "no_nac_reason"
+    pre_processor: Callable[[str], list[str]] = field(
+        default=partial(_parse_enum_values, NoNacReason)
+    )
+
+    def query(
+        self,
+        no_nac_reason: str | None = Query(
+            None,
+            description=(
+                "Comma-separated list of no-NAC reasons to query on "
+                f"({_NO_NAC_REASONS})."
+            ),
+        ),
+    ) -> STORE_PARAMS:
+        return self._prepare_query(no_nac_reason)
+
+
+@dataclass
+class PhononVersionQuery(InQuery):
+    """Generate a query for phonon dataset release versions."""
+
+    field_name: str = "version"
+    pre_processor: Callable[[str], list[str]] = field(default=split_csv)
+
+    def query(
+        self,
+        version: str | None = Query(
+            None,
+            description=(
+                "Comma-separated list of phonon dataset versions to query on "
+                "(e.g. 'v1.1', 'v1.2')."
+            ),
+        ),
+    ) -> STORE_PARAMS:
+        return self._prepare_query(version)

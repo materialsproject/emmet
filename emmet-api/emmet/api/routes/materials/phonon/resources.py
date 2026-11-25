@@ -14,8 +14,14 @@ from emmet.api.routes.materials.materials.query_operators import (
     SymmetryQuery,
 )
 from emmet.api.routes.materials.phonon.query_operators import (
+    EnlargedSupercellQuery,
+    HasNacQuery,
     MultiPhononIDQuery,
+    NoNacReasonQuery,
+    PheasyFitRouteQuery,
     PhononMethodQuery,
+    PhononStabilityClassQuery,
+    PhononVersionQuery,
 )
 from emmet.core.phonon import PhononBSDOSTask
 
@@ -31,6 +37,12 @@ def phonon_bsdos_resource(phonon_bs_store):
             ElementsQuery(),
             SymmetryQuery(),
             PhononMethodQuery(),
+            PhononStabilityClassQuery(),
+            EnlargedSupercellQuery(),
+            PheasyFitRouteQuery(),
+            HasNacQuery(),
+            NoNacReasonQuery(),
+            PhononVersionQuery(),
             NumericQuery(model=PhononBSDOSTask, excluded_fields=["composition"]),
             PaginationQuery(),
             SparseFieldsQuery(
