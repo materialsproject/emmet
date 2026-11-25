@@ -74,6 +74,25 @@ class PhononStabilityClass(ValueEnum):
     IMAG_ACOUSTIC_AWAY_FROM_GAMMA = "imag_acoustic_away_from_gamma"
 
 
+class PheasyFitRoute(ValueEnum):
+    """Invariance conditions imposed on the fitted second-order force constants."""
+
+    ASR = "ASR"
+    ASR_BH = "ASR + BH"
+    ASR_BH_H = "ASR + BH + H"
+    ASR_BH_DIPOLE = "ASR + BH(dipole)"
+    ASR_BH_DIPOLE_H = "ASR + BH(dipole) + H"
+    ASR_BH_DIPOLE_H_DIPOLE = "ASR + BH(dipole) + H(dipole)"
+
+
+class NoNacReason(ValueEnum):
+    """Reason non-analytical correction was not applied."""
+
+    NO_DIELECTRIC_RUN = "no_dielectric_run"
+    IDENTITY_DIELECTRIC_TENSOR = "identity_dielectric_tensor"
+    UNUSABLE_DIELECTRIC_RUN = "unusable_dielectric_run"
+
+
 class PhononDOS(BandTheoryBase):
     """Define schema of pymatgen phonon density of states."""
 
@@ -659,7 +678,10 @@ class PhononBSDOSTask(StructureMetadata):
         "at Gamma or lies on a translational branch remaining below zero continuously from Gamma to "
         "the deepest imaginary mode, imag_acoustic_away_from_gamma if it lies on a translational "
         "branch that reaches zero or positive frequency between Gamma and the deepest imaginary "
-        "mode, and imag_optical if it is not reached by the three translational branches.",
+        "mode, and imag_optical if it is not reached by the three translational branches. All modes "
+        "within 1e-4 THz of the lowest frequency are compared. When their classes differ, "
+        "gamma_artifact takes priority, followed by imag_acoustic_away_from_gamma and then "
+        "imag_optical.",
     )
 
     min_frequency: float | None = Field(
@@ -694,11 +716,9 @@ class PhononBSDOSTask(StructureMetadata):
         "with F and u as in pheasy_fit_rmse.",
     )
 
-    pheasy_fit_route: str | None = Field(
+    pheasy_fit_route: PheasyFitRoute | None = Field(
         None,
-        description="Invariance constraint level kept for the fitted second-order force constants: "
-        "'ASR', 'ASR + BH', 'ASR + BH + H', 'ASR + BH(dipole)', 'ASR + BH(dipole) + H', or "
-        "'ASR + BH(dipole) + H(dipole)'.",
+        description="Invariance constraint level kept for the fitted second-order force constants.",
     )
 
     has_nac: bool | None = Field(
@@ -706,10 +726,9 @@ class PhononBSDOSTask(StructureMetadata):
         description="Whether non-analytical correction (NAC) was applied to the phonon dispersion.",
     )
 
-    no_nac_reason: str | None = Field(
+    no_nac_reason: NoNacReason | None = Field(
         None,
-        description="Reason non-analytical correction was not applied: 'no_dielectric_run', "
-        "'identity_dielectric_tensor', or 'unusable_dielectric_run'. None when NAC is applied "
+        description="Reason non-analytical correction was not applied. None when NAC is applied "
         "or not recorded.",
     )
 

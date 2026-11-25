@@ -13,7 +13,13 @@ from emmet.core.io.pymatgen import (
 )
 
 from emmet.core import ARROW_COMPATIBLE
-from emmet.core.phonon import PhononBSDOSDoc, PhononDOS, PhononStabilityClass
+from emmet.core.phonon import (
+    NoNacReason,
+    PheasyFitRoute,
+    PhononBSDOSDoc,
+    PhononDOS,
+    PhononStabilityClass,
+)
 from emmet.core.testing_utils import assert_schemas_equal
 
 if ARROW_COMPATIBLE:
@@ -163,9 +169,9 @@ def test_arrow(tmp_dir, legacy_ph_task):
     assert test_arrow_doc.debye_temperature == pytest.approx(412.3)
     assert test_arrow_doc.pheasy_fit_rmse == ph_doc.pheasy_fit_rmse
     assert test_arrow_doc.pheasy_fit_relative_error == pytest.approx(0.02)
-    assert test_arrow_doc.pheasy_fit_route == "ASR + BH + H"
+    assert test_arrow_doc.pheasy_fit_route is PheasyFitRoute.ASR_BH_H
     assert test_arrow_doc.has_nac is False
-    assert test_arrow_doc.no_nac_reason == "no_dielectric_run"
+    assert test_arrow_doc.no_nac_reason is NoNacReason.NO_DIELECTRIC_RUN
     assert test_arrow_doc.enlarged_supercell_used is True
     assert test_arrow_doc.version == "v1.2"
 
